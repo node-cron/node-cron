@@ -2,9 +2,9 @@
   "name": "cron.js",
   "version": "0.1.0-beta1",
   "description": "A simple cron-like task scheduler for Node.js",
-  "main": "cron.js",
+  "main": "src/cron.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -22,5 +22,10 @@
   "bugs": {
     "url": "https://github.com/merencia/cron.js/issues"
   },
-  "homepage": "https://github.com/merencia/cron.js#readme"
+  "homepage": "https://github.com/merencia/cron.js#readme",
+  "devDependencies": {
+    "expect.js": "^0.3.1",
+    "mocha": "^2.4.5",
+    "sinon": "^1.17.3"
+  }
 }
