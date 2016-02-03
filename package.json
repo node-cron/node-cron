@@ -1,0 +1,26 @@
+{
+  "name": "cron.js",
+  "version": "0.1.0-beta1",
+  "description": "A simple cron-like task scheduler for Node.js",
+  "main": "cron.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/merencia/cron.js.git"
+  },
+  "keywords": [
+    "cron",
+    "scheduler",
+    "schedule",
+    "task",
+    "job"
+  ],
+  "author": "Lucas Merencia",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/merencia/cron.js/issues"
+  },
+  "homepage": "https://github.com/merencia/cron.js#readme"
+}
