@@ -1,5 +1,5 @@
 {
-  "name": "cron.js",
+  "name": "cronjs",
   "version": "0.1.0-beta1",
   "description": "A simple cron-like task scheduler for Node.js",
   "main": "cron.js",
