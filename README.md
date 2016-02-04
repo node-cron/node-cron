@@ -1,12 +1,14 @@
 # Node Cron
 
+[![npm](https://img.shields.io/npm/l/node-cron.svg)](https://github.com/merencia/node-cron/blob/master/LICENSE.md)
+[![npm](https://img.shields.io/npm/v/node-cron.svg)](https://img.shields.io/npm/v/node-cron.svg)
 [![Coverage Status](https://coveralls.io/repos/github/merencia/node-cron/badge.svg?branch=master)](https://coveralls.io/github/merencia/node-cron?branch=master)
 [![Dependency Status](https://david-dm.org/merencia/node-cron.svg)](https://david-dm.org/merencia/node-cron)
 [![devDependency Status](https://david-dm.org/merencia/node-cron/dev-status.svg)](https://david-dm.org/merencia/node-cron#info=devDependencies)
 [![Build Status](https://travis-ci.org/merencia/node-cron.svg?branch=master)](https://travis-ci.org/merencia/node-cron)
 
-
 The node-cron module is tiny task scheduler in pure JavaScrip for node.js based on GNU crontab. Besides, node-cron wont stop your node.js application if your task throw an exception, rather than it going to try run your task again in the next time occurrence.
+
 ## Getting Started 
 
 Install node-cron using npm:
