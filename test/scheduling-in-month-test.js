@@ -15,7 +15,8 @@ describe('scheduling on month', function(){
 
   it('should execute a task every month', function() {
     var executed = 0;
-    var initialDate = new Date(2015, 2, 1);
+    var initialDate = new Date(2015, 2, 31);
+    this.clock = sinon.useFakeTimers(initialDate.getTime());
     cron.schedule('0 0 1 * *', function(){
       executed += 1;
     });
@@ -42,7 +43,7 @@ describe('scheduling on month', function(){
     cron.schedule('0 0 1 */2 *', function(){
       executed += 1;
     });
-    this.clock.tick(1000 * 60 * 60 * 24 * 92);
+    this.clock.tick(1000 * 60 * 60 * 24 * 63);
     expect(executed).to.equal(2);
   });
 });
