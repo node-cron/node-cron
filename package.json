@@ -9,7 +9,8 @@
   "scripts": {
     "test": "mocha -t 20000",
     "coverage": "istanbul cover _mocha -- -t 2000000",
-    "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "check": "npm run coverage && npm run coveralls"
   },
   "repository": {
     "type": "git",
