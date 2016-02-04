@@ -4,4 +4,6 @@ machine:
 
 test:
   override:
+    - npm run coverage
+  post
     - npm run coveralls

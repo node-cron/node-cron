@@ -8,8 +8,8 @@
   "main": "src/cron.js",
   "scripts": {
     "test": "mocha -t 20000",
-    "coverage": "mocha -t 2000000 -r jscoverage --covignore .covignore --covout=html --covinject=true test",
-    "coveralls": "YOURPACKAGE_COVERAGE=1 mocha test -t 2000000 -R mocha-lcov-reporter | ./node_modules/coveralls/bin/coveralls.js"
+    "coverage": "istanbul cover _mocha -- -t 2000000",
+    "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   },
   "repository": {
     "type": "git",
@@ -23,13 +23,12 @@
     "job"
   ],
   "bugs": {
-    "url": "https://github.com/merencia/cron.js/issues"
+    "url": "https://github.com/merencia/node-cron/issues"
   },
   "devDependencies": {
     "coveralls": "^2.11.6",
     "expect.js": "^0.3.1",
     "istanbul": "^0.4.2",
-    "jscoverage": "^0.6.0",
     "mocha": "^2.4.5",
     "mocha-lcov-reporter": "^1.0.0",
     "sinon": "^1.17.3"
