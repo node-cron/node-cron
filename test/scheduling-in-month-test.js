@@ -36,14 +36,13 @@ describe('scheduling on month', function(){
   });
 
   it('should execute a task on months multiples of 2', function() {
-    var initialDate = new Date();
-    initialDate.setMinutes(0);
+    var initialDate = new Date(2015, 2, 31);
     this.clock = sinon.useFakeTimers(initialDate.getTime());
     var executed = 0;
     cron.schedule('0 0 1 */2 *', function(){
       executed += 1;
     });
-    this.clock.tick(1000 * 60 * 60 * 24 * 31 * 3);
+    this.clock.tick(1000 * 60 * 60 * 24 * 65);
     expect(executed).to.equal(2);
   });
 });
