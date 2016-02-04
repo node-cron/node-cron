@@ -42,7 +42,7 @@ describe('scheduling on month', function(){
     cron.schedule('0 0 1 */2 *', function(){
       executed += 1;
     });
-    this.clock.tick(1000 * 60 * 60 * 24 * 65);
+    this.clock.tick(1000 * 60 * 60 * 24 * 92);
     expect(executed).to.equal(2);
   });
 });
