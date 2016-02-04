@@ -6,9 +6,7 @@
 [![Build Status](https://travis-ci.org/merencia/node-cron.svg?branch=master)](https://travis-ci.org/merencia/node-cron)
 
 
-node-cron is thiny task scheduller in pure and native JavaScrip for node.js based on [GNU crontab](http://www.gnu.org/software/mcron/manual/html_node/Crontab-file.html).
-Besides, node-cron wont stop your node.js application if your task throw an exception, rather than it going to try run your task again in the next time occurrence.  
-
+The node-cron module is tiny task scheduler in pure JavaScrip for node.js based on GNU crontab. Besides, node-cron wont stop your node.js application if your task throw an exception, rather than it going to try run your task again in the next time occurrence.
 ## Getting Started 
 
 Install node-cron using npm:
