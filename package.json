@@ -1,10 +1,13 @@
 {
-  "name": "cron.js",
-  "version": "0.1.0-beta1",
+  "name": "node-cron",
+  "version": "0.0.1",
   "description": "A simple cron-like task scheduler for Node.js",
+  "author": "Lucas Merencia",
+  "license": "ISC",
+  "homepage": "https://github.com/merencia/cron.js#readme",
   "main": "src/cron.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha -t 20000"
   },
   "repository": {
     "type": "git",
@@ -17,14 +20,12 @@
     "task",
     "job"
   ],
-  "author": "Lucas Merencia",
-  "license": "ISC",
   "bugs": {
     "url": "https://github.com/merencia/cron.js/issues"
   },
-  "homepage": "https://github.com/merencia/cron.js#readme",
   "devDependencies": {
     "expect.js": "^0.3.1",
+    "istanbul": "^0.4.2",
     "mocha": "^2.4.5",
     "sinon": "^1.17.3"
   }
