@@ -2,9 +2,9 @@
 
 var expect = require('expect.js');
 var sinon = require('sinon');
-var cron = require('../src/cron.js');
+var cron = require('../src/node-cron');
 
-describe('scheduling on minutes', function(){
+describe('scheduling with multiples values', function(){
   beforeEach(function(){
     this.clock = sinon.useFakeTimers();
   });

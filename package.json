@@ -5,7 +5,7 @@
   "author": "Lucas Merencia",
   "license": "ISC",
   "homepage": "https://github.com/merencia/node-cron#readme",
-  "main": "src/cron.js",
+  "main": "src/node-cron.js",
   "scripts": {
     "test": "mocha -t 20000",
     "coverage": "istanbul cover _mocha -- -t 2000000",
