@@ -11,7 +11,9 @@ module.exports = {
       var runOnHour   = matchPattern(patterns[2], time.getHours());
       var runOnDayOfMonth = matchPattern(patterns[3], time.getDate());
       var runOnMonth = matchPattern(patterns[4], time.getMonth() + 1);
-      var runOnDayOfWeek = matchPattern(patterns[5], time.getDay());
+      var weekDay = time.getDay();
+      if (weekDay === 0 ) weekDay = 7;
+      var runOnDayOfWeek = matchPattern(patterns[5], weekDay);
 
       if (runInSecond && runOnMinute && runOnHour &&
         runOnDayOfMonth && runOnMonth && runOnDayOfWeek)
@@ -31,7 +33,7 @@ module.exports = {
         return value % parseInt(match[1]) === 0;
       else
         return pattern === value.toString();
-    }
+    };
 
     setInterval(execution, 1000);
   }
