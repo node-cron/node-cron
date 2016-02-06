@@ -4,7 +4,7 @@ var expect = require('expect.js');
 var sinon = require('sinon');
 var cron = require('../src/cron.js');
 
-describe('scheduling on minutes', function(){
+describe('scheduling on day of the week', function(){
   beforeEach(function(){
     this.clock = sinon.useFakeTimers();
   });

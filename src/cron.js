@@ -31,7 +31,10 @@ module.exports = {
       if (pattern === '*') return true;
       if (isPartialMatch)
         return value % parseInt(match[1]) === 0;
-      else
+      else if( pattern.indexOf(',') !== -1 ){
+        var patterns = pattern.split(',');
+        return patterns.indexOf(value.toString()) !== -1;
+      } else
         return pattern === value.toString();
     };
 
