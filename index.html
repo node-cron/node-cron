@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Node-cron by merencia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Node-cron</h1>
+      <h2 class="project-tagline">A simple cron-like job scheduler for Node.js</h2>
+      <a href="https://github.com/merencia/node-cron" class="btn">View on GitHub</a>
+      <a href="https://github.com/merencia/node-cron/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/merencia/node-cron/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="node-cron" class="anchor" href="#node-cron" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Node Cron</h1>
+
+<p><a href="https://github.com/merencia/node-cron/blob/master/LICENSE.md"><img src="https://img.shields.io/npm/l/node-cron.svg" alt="npm"></a>
+<a href="https://img.shields.io/npm/v/node-cron.svg"><img src="https://img.shields.io/npm/v/node-cron.svg" alt="npm"></a>
+<a href="https://coveralls.io/github/merencia/node-cron?branch=master"><img src="https://coveralls.io/repos/github/merencia/node-cron/badge.svg?branch=master" alt="Coverage Status"></a>
+<a href="https://david-dm.org/merencia/node-cron"><img src="https://david-dm.org/merencia/node-cron.svg" alt="Dependency Status"></a>
+<a href="https://david-dm.org/merencia/node-cron#info=devDependencies"><img src="https://david-dm.org/merencia/node-cron/dev-status.svg" alt="devDependency Status"></a>
+<a href="https://travis-ci.org/merencia/node-cron"><img src="https://travis-ci.org/merencia/node-cron.svg?branch=master" alt="Build Status"></a></p>
+
+<p>The node-cron module is tiny task scheduler in pure JavaScrip for node.js based on GNU crontab. Besides, node-cron wont stop your node.js application if your task throw an exception, rather than it going to try run your task again in the next time occurrence.</p>
+
+<h2>
+<a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Getting Started</h2>
+
+<p>Install node-cron using npm:</p>
+
+<div class="highlight highlight-source-shell"><pre>
+$ npm install --save node-cron</pre></div>
+
+<p>Import node-cron and schedule a task:</p>
+
+<div class="highlight highlight-source-js"><pre>
+<span class="pl-k">var</span> cron <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>node-cron<span class="pl-pds">'</span></span>);
+
+<span class="pl-smi">cron</span>.<span class="pl-en">schedule</span>(<span class="pl-s"><span class="pl-pds">'</span>* * * * *<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>running a task in every minute<span class="pl-pds">'</span></span>);
+});</pre></div>
+
+<h2>
+<a id="quick-cron-reference" class="anchor" href="#quick-cron-reference" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Quick Cron Reference</h2>
+
+<pre><code>
+ # ┌───────────── min (0 - 59)
+ # │ ┌────────────── hour (0 - 23)
+ # │ │ ┌─────────────── day of month (1 - 31)
+ # │ │ │ ┌──────────────── month (1 - 12)
+ # │ │ │ │ ┌───────────────── day of week (0 - 6) (0 to 6 are Sunday to Saturday)
+ # │ │ │ │ │
+ # │ │ │ │ │
+ # * * * * *
+</code></pre>
+
+<h2>
+<a id="issues" class="anchor" href="#issues" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Issues</h2>
+
+<p>Feel free to submit issues and enhancement requests <a href="https://github.com/merencia/node-cron/issues">here</a>.</p>
+
+<h2>
+<a id="contributors" class="anchor" href="#contributors" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Contributors</h2>
+
+<p>In general, we follow the "fork-and-pull" Git workflow.</p>
+
+<ul>
+<li>Fork the repo on GitHub;</li>
+<li>Commit changes to a branch in your fork;</li>
+<li>Pull request "upstream" with your changes;</li>
+</ul>
+
+<p>NOTE: Be sure to merge the latest from "upstream" before making a pull request!</p>
+
+<p>Please do not contribute code you did not write yourself, unless you are certain you have the legal ability to do so. Also ensure all contributed code can be distributed under the ISC License.</p>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
+
+<p>node-cron is under <a href="https://github.com/merencia/node-cron/blob/master/LICENSE.md">ISC License</a>.</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/merencia/node-cron">Node-cron</a> is maintained by <a href="https://github.com/merencia">merencia</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+            <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-40045005-2");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+  </body>
+</html>
