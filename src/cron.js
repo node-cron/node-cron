@@ -1,7 +1,12 @@
 'use strict';
+
+var interpretPattern = require('./pattern-interpreter');
+
 module.exports = {
   schedule : function(pattern, task){
-    function execution(){
+    pattern = interpretPattern(pattern);
+
+    var execution = function(){
       var time = new Date();
       var patterns = pattern.split(' ');
       if (patterns.length === 5 )
@@ -22,7 +27,7 @@ module.exports = {
         } catch(err) {
           console.error(err);
         }
-    }
+    };
 
     var matchPattern = function(pattern, value){
       var multiplePattern = /\*\/(\d+)/g;

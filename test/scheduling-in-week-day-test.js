@@ -36,6 +36,17 @@ describe('scheduling on day of the week', function(){
     expect(executed).to.equal(1);
   });
 
+  it('should execute a task on mondays passing name', function() {
+    var initialDate = new Date(2016, 0, 31);
+    this.clock = sinon.useFakeTimers(initialDate.getTime());
+    var executed = 0;
+    cron.schedule('0 1 * * Monday', function(){
+      executed += 1;
+    });
+    this.clock.tick(3000 * 60 * 60 * 24);
+    expect(executed).to.equal(1);
+  });
+
   it('should execute a task on days of the week multiple of 2', function() {
     var initialDate = new Date(2016, 1, 1);
     this.clock = sinon.useFakeTimers(initialDate.getTime());
