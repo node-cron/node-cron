@@ -27,4 +27,21 @@ describe('pattern-interpreter.js', function(){
       expect(pattern).to.equal('0 1 0 0,1,2,3,4,5,6 *');
     });
   });
+
+  describe('interpret ranges', function(){
+    it('should convert a range to a sequence of numbers', function(){
+      var pattern = interpret('1-9 * * * *');
+      expect(pattern).to.equal('1,2,3,4,5,6,7,8,9 * * * *');
+    });
+
+    it('should convert all ranges to sequences of numbers', function(){
+      var pattern = interpret('1-9 * * 3-6 *');
+      expect(pattern).to.equal('1,2,3,4,5,6,7,8,9 * * 3,4,5,6 *');
+    });
+
+    it('should convert multiples ranges to a sequence of numbers', function(){
+      var pattern = interpret('1-9,13-16 * * * *');
+      expect(pattern).to.equal('1,2,3,4,5,6,7,8,9,13,14,15,16 * * * *');
+    });
+  });
 });

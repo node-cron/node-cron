@@ -45,4 +45,28 @@ describe('scheduling on minutes', function(){
     this.clock.tick(1000 * 60 * 23);
     expect(executed).to.equal(4);
   });
+
+  it('should execute a task every minute from 10 to 20', function() {
+    var initialDate = new Date();
+    initialDate.setMinutes(0);
+    this.clock = sinon.useFakeTimers(initialDate.getTime());
+    var executed = 0;
+    cron.schedule('10-20 * * * *', function(){
+      executed += 1;
+    });
+    this.clock.tick(1000 * 60 * 30);
+    expect(executed).to.equal(11);
+  });
+
+  it('should execute a task every minute from 10 to 20 and from 30 to 35', function() {
+    var initialDate = new Date();
+    initialDate.setMinutes(0);
+    this.clock = sinon.useFakeTimers(initialDate.getTime());
+    var executed = 0;
+    cron.schedule('10-20,30-35 * * * *', function(){
+      executed += 1;
+    });
+    this.clock.tick(1000 * 60 * 40);
+    expect(executed).to.equal(17);
+  });
 });
