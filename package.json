@@ -1,10 +1,10 @@
 {
   "name": "node-cron",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A simple cron-like task scheduler for Node.js",
   "author": "Lucas Merencia",
   "license": "ISC",
-  "homepage": "https://github.com/merencia/node-cron#readme",
+  "homepage": "http://merencia.com/node-cron/",
   "main": "src/node-cron.js",
   "scripts": {
     "test": "mocha -t 20000",
