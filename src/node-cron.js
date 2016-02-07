@@ -2,14 +2,14 @@
 
 var Task = require('./task');
 
-module.exports = {
-  schedule : function(pattern, task){
-    var task = new Task(pattern, task);
-    var execution = function(){
-      var time = new Date();
-      task.update(time);
-    };
-
-    setInterval(execution, 1000);
+module.exports = (function(){
+  function createTask(expression, func){
+    var task = new Task(expression, func);
+    setInterval(function(){
+      task.update(new Date());
+    }, 1000);
   }
-};
+  return {
+    schedule: createTask
+  }
+})();
