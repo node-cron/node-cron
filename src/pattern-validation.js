@@ -31,7 +31,16 @@ function validate(pattern){
     throw patterns[5] + ' is a invalid expression for week day';
 }
 
+function removeStepValue(expression){
+  var multiplePattern = /^((\d+(\,\d+){0,})|\*)\/(\d+)$/g
+  var match = multiplePattern.exec(expression);
+  if(match !== null && match.length > 0 )
+    expression = match[1];
+  return expression;
+}
+
 function isValidExpression(expression, min, max){
+  expression = removeStepValue(expression);
   var options = expression.split(',');
   var regexValidation = /^\d+$|^\*$|^\*\/\d+$/;
   for(var i = 0; i < options.length; i++){

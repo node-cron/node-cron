@@ -5,12 +5,15 @@ var validatePattern = require('./pattern-validation');
 
 module.exports = (function(){
   function matchPattern(pattern, value){
-    var multiplePattern = /\*\/(\d+)/g;
-    var match = multiplePattern.exec(pattern);
-    var isPartialMatch = match !== null && match.length > 0;
+    var stepValuePattern = /^((\d+(\,\d+){0,})|\*)\/(\d+)$/g
+    var match = stepValuePattern.exec(pattern);
+    var isStepValue = match !== null && match.length > 0;
     if (pattern === '*') return true;
-    if (isPartialMatch)
-      return value % parseInt(match[1]) === 0;
+    if (isStepValue){
+      var values = match[1].split(',');
+      if(values[0] === '*' || values.indexOf(value.toString()) !== -1)
+        return value % parseInt(match[4]) === 0;
+    }
     else if( pattern.indexOf(',') !== -1 ){
       var patterns = pattern.split(',');
       return patterns.indexOf(value.toString()) !== -1;
