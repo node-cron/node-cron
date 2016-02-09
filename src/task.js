@@ -12,14 +12,14 @@ module.exports = (function(){
     if (isStepValue){
       var values = match[1].split(',');
       if(values[0] === '*' || values.indexOf(value.toString()) !== -1)
-        return value % parseInt(match[4]) === 0;
+        return value % parseInt(match[4], 10) === 0;
     }
     else if( pattern.indexOf(',') !== -1 ){
       var patterns = pattern.split(',');
       return patterns.indexOf(value.toString()) !== -1;
     } else
       return pattern === value.toString();
-  };
+  }
 
   function mustRun(task, date){
     var runInSecond = matchPattern(task.expressions[0], date.getSeconds());
@@ -54,4 +54,4 @@ module.exports = (function(){
   }
 
   return Task;
-})();
+}());
