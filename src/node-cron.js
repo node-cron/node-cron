@@ -12,4 +12,4 @@ module.exports = (function(){
   return {
     schedule: createTask
   }
-})();
+}());
