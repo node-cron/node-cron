@@ -100,7 +100,7 @@ var cron = require('node-cron');
 cron.schedule('* * * Jan,Sep Sun', function(){
   console.log('running on Sundays of January and September');
 });
-
+```
 
 ## Issues
 
