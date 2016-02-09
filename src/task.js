@@ -19,7 +19,7 @@ module.exports = (function(){
       return patterns.indexOf(value.toString()) !== -1;
     } else
       return pattern === value.toString();
-  };
+  }
 
   function mustRun(task, date){
     var runInSecond = matchPattern(task.expressions[0], date.getSeconds());
