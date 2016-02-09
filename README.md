@@ -24,7 +24,7 @@ Import node-cron and schedule a task:
 var cron = require('node-cron');
 
 cron.schedule('* * * * *', function(){
-  console.log('running a task in every minute');
+  console.log('running a task every minute');
 });
 ```
 
