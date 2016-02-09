@@ -56,6 +56,7 @@ This is a quick reference to cron syntax and also shows the options supported by
 |     month    |     1-12 (or names) |
 |  day of week |     0-7 (or names)  |
 
+
 #### Using multiples values
 
 You may use multiples values separated by comma:
@@ -64,7 +65,7 @@ You may use multiples values separated by comma:
 var cron = require('node-cron');
 
 cron.schedule('1,2,4,5 * * * *', function(){
-  console.log('running in every minute 1, 2, 4 and 5');
+  console.log('running every minute 1, 2, 4 and 5');
 });
 ```
 
@@ -76,7 +77,19 @@ You may also define a range of values:
 var cron = require('node-cron');
 
 cron.schedule('1-5 * * * *', function(){
-  console.log('running in every minute to 1 from 5');
+  console.log('running every minute to 1 from 5');
+});
+```
+
+#### Using step values
+
+Step values can be used in conjunction with ranges, following a range with '/' and a number. e.g: `1-10/2` that is the same as `2,4,6,8,10`. Steps are also permitted after an asterisk, so if you want to say “every two hours”, just use `*/2`.
+
+```javascript
+var cron = require('node-cron');
+
+cron.schedule('*/2 * * * *', function(){
+  console.log('running a task every two hours');
 });
 ```
 
