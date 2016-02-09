@@ -29,38 +29,131 @@
 <a href="https://david-dm.org/merencia/node-cron#info=devDependencies"><img src="https://david-dm.org/merencia/node-cron/dev-status.svg" alt="devDependency Status"></a>
 <a href="https://travis-ci.org/merencia/node-cron"><img src="https://travis-ci.org/merencia/node-cron.svg?branch=master" alt="Build Status"></a></p>
 
-<p>The node-cron module is tiny task scheduler in pure JavaScrip for node.js based on GNU crontab. Besides, node-cron wont stop your node.js application if your task throw an exception, rather than it going to try run your task again in the next time occurrence.</p>
+<p>The node-cron module is tiny task scheduler in pure JavaScrip for node.js based on <a href="https://www.gnu.org/software/mcron/manual/html_node/Crontab-file.html">GNU crontab</a>. This module allows you to schedule task in node.js using full crontab syntax.</p>
 
 <h2>
 <a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Getting Started</h2>
 
 <p>Install node-cron using npm:</p>
 
-<div class="highlight highlight-source-shell"><pre>
-$ npm install --save node-cron</pre></div>
+<div class="highlight highlight-source-shell"><pre>$ npm install --save node-cron</pre></div>
 
 <p>Import node-cron and schedule a task:</p>
 
-<div class="highlight highlight-source-js"><pre>
-<span class="pl-k">var</span> cron <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>node-cron<span class="pl-pds">'</span></span>);
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> cron <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>node-cron<span class="pl-pds">'</span></span>);
 
 <span class="pl-smi">cron</span>.<span class="pl-en">schedule</span>(<span class="pl-s"><span class="pl-pds">'</span>* * * * *<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
-  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>running a task in every minute<span class="pl-pds">'</span></span>);
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>running a task every minute<span class="pl-pds">'</span></span>);
 });</pre></div>
 
 <h2>
-<a id="quick-cron-reference" class="anchor" href="#quick-cron-reference" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Quick Cron Reference</h2>
+<a id="cron-syntax" class="anchor" href="#cron-syntax" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Cron Syntax</h2>
 
-<pre><code>
- # ┌───────────── min (0 - 59)
- # │ ┌────────────── hour (0 - 23)
- # │ │ ┌─────────────── day of month (1 - 31)
- # │ │ │ ┌──────────────── month (1 - 12)
- # │ │ │ │ ┌───────────────── day of week (0 - 6) (0 to 6 are Sunday to Saturday)
- # │ │ │ │ │
- # │ │ │ │ │
- # * * * * *
+<p>This is a quick reference to cron syntax and also shows the options supported by node-cron.</p>
+
+<h3>
+<a id="allowed-fields" class="anchor" href="#allowed-fields" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Allowed fields</h3>
+
+<pre><code> # ┌────────────── second (optional)
+ # │ ┌──────────── minute
+ # │ │ ┌────────── hour
+ # │ │ │ ┌──────── day of month
+ # │ │ │ │ ┌────── month
+ # │ │ │ │ │ ┌──── day of week
+ # │ │ │ │ │ │
+ # │ │ │ │ │ │
+ # * * * * * *
 </code></pre>
+
+<h3>
+<a id="allowed-values" class="anchor" href="#allowed-values" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Allowed values</h3>
+
+<table>
+<thead>
+<tr>
+<th>field</th>
+<th>value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>second</td>
+<td>0-59</td>
+</tr>
+<tr>
+<td>minute</td>
+<td>0-59</td>
+</tr>
+<tr>
+<td>hour</td>
+<td>0-23</td>
+</tr>
+<tr>
+<td>day of month</td>
+<td>1-31</td>
+</tr>
+<tr>
+<td>month</td>
+<td>1-12 (or names)</td>
+</tr>
+<tr>
+<td>day of week</td>
+<td>0-7 (or names)</td>
+</tr>
+</tbody>
+</table>
+
+<h4>
+<a id="using-multiples-values" class="anchor" href="#using-multiples-values" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Using multiples values</h4>
+
+<p>You may use multiples values separated by comma:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> cron <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>node-cron<span class="pl-pds">'</span></span>);
+
+<span class="pl-smi">cron</span>.<span class="pl-en">schedule</span>(<span class="pl-s"><span class="pl-pds">'</span>1,2,4,5 * * * *<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>running every minute 1, 2, 4 and 5<span class="pl-pds">'</span></span>);
+});</pre></div>
+
+<h4>
+<a id="using-ranges" class="anchor" href="#using-ranges" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Using ranges</h4>
+
+<p>You may also define a range of values:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> cron <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>node-cron<span class="pl-pds">'</span></span>);
+
+<span class="pl-smi">cron</span>.<span class="pl-en">schedule</span>(<span class="pl-s"><span class="pl-pds">'</span>1-5 * * * *<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>running every minute to 1 from 5<span class="pl-pds">'</span></span>);
+});</pre></div>
+
+<h4>
+<a id="using-step-values" class="anchor" href="#using-step-values" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Using step values</h4>
+
+<p>Step values can be used in conjunction with ranges, following a range with '/' and a number. e.g: <code>1-10/2</code> that is the same as <code>2,4,6,8,10</code>. Steps are also permitted after an asterisk, so if you want to say “every two hours”, just use <code>*/2</code>.</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> cron <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>node-cron<span class="pl-pds">'</span></span>);
+
+<span class="pl-smi">cron</span>.<span class="pl-en">schedule</span>(<span class="pl-s"><span class="pl-pds">'</span>*/2 * * * *<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>running a task every two hours<span class="pl-pds">'</span></span>);
+});</pre></div>
+
+<h4>
+<a id="using-names" class="anchor" href="#using-names" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Using names</h4>
+
+<p>For month and week day you also may use names or short names. e.g:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> cron <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>node-cron<span class="pl-pds">'</span></span>);
+
+<span class="pl-smi">cron</span>.<span class="pl-en">schedule</span>(<span class="pl-s"><span class="pl-pds">'</span>* * * January,September Sunday<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>running on Sundays of January and September<span class="pl-pds">'</span></span>);
+});</pre></div>
+
+<p>Or with short names:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> cron <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>node-cron<span class="pl-pds">'</span></span>);
+
+<span class="pl-smi">cron</span>.<span class="pl-en">schedule</span>(<span class="pl-s"><span class="pl-pds">'</span>* * * Jan,Sep Sun<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>running on Sundays of January and September<span class="pl-pds">'</span></span>);
+});</pre></div>
 
 <h2>
 <a id="issues" class="anchor" href="#issues" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Issues</h2>
