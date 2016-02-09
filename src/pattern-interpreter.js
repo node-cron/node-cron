@@ -27,13 +27,13 @@ var shortWeekDays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
  */
 function interpretPattern(pattern){
   var convertMonthName = function(pattern, items){
-    for(var i in items)
+    for(var i = 0; i < items.length; i++)
       pattern = pattern.replace(new RegExp(items[i], 'gi'), parseInt(i, 10) + 1);
     return pattern;
   }
 
   var convertWeekDayName = function(pattern, items){
-    for(var i in items)
+    for(var i = 0; i < items.length; i++)
       pattern = pattern.replace(new RegExp(items[i], 'gi'), parseInt(i, 10));
     return pattern;
   }
