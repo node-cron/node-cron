@@ -7,7 +7,7 @@
 [![devDependency Status](https://david-dm.org/merencia/node-cron/dev-status.svg)](https://david-dm.org/merencia/node-cron#info=devDependencies)
 [![Build Status](https://travis-ci.org/merencia/node-cron.svg?branch=master)](https://travis-ci.org/merencia/node-cron)
 
-The node-cron module is tiny task scheduler in pure JavaScrip for node.js based on [GNU crontab](https://www.gnu.org/software/mcron/manual/html_node/Crontab-file.html). This module allows you to schedule task in node.js using full crontab syntax and it wont stop your node process if your task throw a exception, rather than it going to try run your task again in the next time occurrence.
+The node-cron module is tiny task scheduler in pure JavaScrip for node.js based on [GNU crontab](https://www.gnu.org/software/mcron/manual/html_node/Crontab-file.html). This module allows you to schedule task in node.js using full crontab syntax.
 
 
 ## Getting Started
