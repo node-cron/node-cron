@@ -45,7 +45,7 @@ function isValidExpression(expression, min, max){
   var regexValidation = /^\d+$|^\*$|^\*\/\d+$/;
   for(var i = 0; i < options.length; i++){
     var option = options[i];
-    var optionAsInt = parseInt(options[i]);
+    var optionAsInt = parseInt(options[i], 10);
     if(optionAsInt < min || optionAsInt > max || !regexValidation.test(option))
       return false;
   }
