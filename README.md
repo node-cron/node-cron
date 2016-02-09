@@ -14,7 +14,7 @@ The node-cron module is tiny task scheduler in pure JavaScrip for node.js based 
 
 Install node-cron using npm:
 
-```sh
+```console
 $ npm install --save node-cron
 ```
 
@@ -33,6 +33,7 @@ cron.schedule('* * * * *', function(){
 This is a quick reference to cron syntax and also shows the options supported by node-cron.
 
 ### Allowed fields
+
 ```
  # ┌────────────── second (optional)
  # │ ┌──────────── minute
