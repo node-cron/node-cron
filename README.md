@@ -58,7 +58,7 @@ This is a quick reference to cron syntax and also shows the options supported by
 
 #### Using multiples values
 
-You are may use multiples values separated by comma:
+You may use multiples values separated by comma:
 
 ```javascript
 var cron = require('node-cron');
