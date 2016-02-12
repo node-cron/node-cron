@@ -7,6 +7,9 @@ module.exports = (function(){
     this.start();
   }
 
+  /**
+   * Starts the cron task.
+   */
   ScheduledTask.prototype.start = function(){
     if(!this.running){
       var self = this;
@@ -16,6 +19,9 @@ module.exports = (function(){
     }
   }
 
+  /**
+   * Stops the cron task.
+   */
   ScheduledTask.prototype.stop = function(){
     if(this.timerId)
       clearInterval(this.timerId);
