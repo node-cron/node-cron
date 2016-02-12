@@ -20,7 +20,7 @@ describe('stopping a task', function() {
       });
 
     this.clock.tick(1000 * 60);
-    cron.stop(task);
+    task.stop();
     this.clock.tick(1000 * 60);
     expect(executed).to.equal(1);
   });
