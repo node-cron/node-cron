@@ -16,7 +16,7 @@ module.exports = (function() {
     var task = new Task(expression, func);
 
     return setInterval(function() {
-      task.update(new Date());
+      task.update(new Date())
     }, 1000);
   }
 
