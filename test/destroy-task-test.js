@@ -4,7 +4,7 @@ var expect = require('expect.js');
 var sinon = require('sinon');
 var cron = require('../src/node-cron');
 
-describe('stopping a task', function() {
+describe('destroying a task', function() {
   beforeEach(function() {
     this.clock = sinon.useFakeTimers();
   });
@@ -13,15 +13,18 @@ describe('stopping a task', function() {
     this.clock.restore();
   });
 
-  it('should stop a task', function() {
+  it('should destroy the task', function() {
     var executed = 0,
       task = cron.schedule('* * * * *', function() {
         executed++;
       });
 
     this.clock.tick(1000 * 60);
-    task.stop();
+    task.destroy();
     this.clock.tick(1000 * 60);
+    task.start();
+    this.clock.tick(1000 * 60);
+
     expect(executed).to.equal(1);
   });
 });

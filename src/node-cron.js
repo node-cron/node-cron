@@ -1,6 +1,7 @@
 'use strict';
 
-var Task = require('./task');
+var Task = require('./task'),
+  ScheduledTask = require('./scheduled-task');
 
 module.exports = (function() {
 
@@ -10,27 +11,16 @@ module.exports = (function() {
    *
    * @param {string} expression - cron expression.
    * @param {Function} func - task to be executed.
-   * @returns {intervalObject} update function.
+   * @param {boolean} immediateStart - whether to start the task immediately.
+   * @returns {ScheduledTask} update function.
    */
-  function createTask(expression, func) {
+  function createTask(expression, func, immediateStart) {
     var task = new Task(expression, func);
 
-    return setInterval(function() {
-      task.update(new Date());
-    }, 1000);
-  }
-
-  /**
-   * Stops a cron task.
-   *
-   * @param {intervalObject} task - task to be stopped.
-   */
-  function stopTask(task) {
-    clearInterval(task);
+    return new ScheduledTask(task, immediateStart);
   }
 
   return {
-    schedule: createTask,
-    stop: stopTask
+    schedule: createTask
   };
 }());
