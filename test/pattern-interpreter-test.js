@@ -1,6 +1,6 @@
 'use strict';
 
-var expect = require('expect.js')
+var expect = require('expect.js');
 var interpret = require('../src/pattern-interpreter');
 
 describe('pattern-interpreter.js', function(){
