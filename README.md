@@ -85,13 +85,13 @@ cron.schedule('1-5 * * * *', function(){
 
 #### Using step values
 
-Step values can be used in conjunction with ranges, following a range with '/' and a number. e.g: `1-10/2` that is the same as `2,4,6,8,10`. Steps are also permitted after an asterisk, so if you want to say “every two hours”, just use `*/2`.
+Step values can be used in conjunction with ranges, following a range with '/' and a number. e.g: `1-10/2` that is the same as `2,4,6,8,10`. Steps are also permitted after an asterisk, so if you want to say “every two minutes”, just use `*/2`.
 
 ```javascript
 var cron = require('node-cron');
 
 cron.schedule('*/2 * * * *', function(){
-  console.log('running a task every two hours');
+  console.log('running a task every two minutes');
 });
 ```
 

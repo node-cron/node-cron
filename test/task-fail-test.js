@@ -17,7 +17,7 @@ describe('scheduling a task with exception', function(){
     var executed = 0;
     cron.schedule('* * * * *', function(){
       executed += 1;
-      throw 'exception!'
+      throw 'exception!';
     });
     this.clock.tick(3000 * 60);
     expect(executed).to.equal(3);
