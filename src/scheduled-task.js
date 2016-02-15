@@ -15,9 +15,7 @@ module.exports = (function() {
 
     this.tick = null;
 
-    if (typeof immediateStart === 'boolean') {
-      immediateStart && this.start();
-    } else {
+    if (immediateStart !== false) {
       this.start();
     }
   }
