@@ -129,12 +129,12 @@
 <h4>
 <a id="using-step-values" class="anchor" href="#using-step-values" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Using step values</h4>
 
-<p>Step values can be used in conjunction with ranges, following a range with '/' and a number. e.g: <code>1-10/2</code> that is the same as <code>2,4,6,8,10</code>. Steps are also permitted after an asterisk, so if you want to say “every two hours”, just use <code>*/2</code>.</p>
+<p>Step values can be used in conjunction with ranges, following a range with '/' and a number. e.g: <code>1-10/2</code> that is the same as <code>2,4,6,8,10</code>. Steps are also permitted after an asterisk, so if you want to say “every two minutes”, just use <code>*/2</code>.</p>
 
 <div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> cron <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>node-cron<span class="pl-pds">'</span></span>);
 
 <span class="pl-smi">cron</span>.<span class="pl-en">schedule</span>(<span class="pl-s"><span class="pl-pds">'</span>*/2 * * * *<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
-  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>running a task every two hours<span class="pl-pds">'</span></span>);
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>running a task every two minutes<span class="pl-pds">'</span></span>);
 });</pre></div>
 
 <h4>
@@ -155,6 +155,64 @@
 <span class="pl-smi">cron</span>.<span class="pl-en">schedule</span>(<span class="pl-s"><span class="pl-pds">'</span>* * * Jan,Sep Sun<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(){
   <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>running on Sundays of January and September<span class="pl-pds">'</span></span>);
 });</pre></div>
+
+<h2>
+<a id="cron-methods" class="anchor" href="#cron-methods" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Cron methods</h2>
+
+<h3>
+<a id="schedule" class="anchor" href="#schedule" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Schedule</h3>
+
+<p>Schedules given task to be executed whenever the cron expression ticks.</p>
+
+<p>Arguments:</p>
+
+<ul>
+<li>!string expression - Cron expression</li>
+<li>!Function func - Task to be executed</li>
+<li>boolean? immediateStart - Whether to start scheduler immediately after create.</li>
+</ul>
+
+<h2>
+<a id="scheduledtask-methods" class="anchor" href="#scheduledtask-methods" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>ScheduledTask methods</h2>
+
+<h3>
+<a id="start" class="anchor" href="#start" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Start</h3>
+
+<p>Starts the scheduled task.</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> cron <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>node-cron<span class="pl-pds">'</span></span>);
+
+<span class="pl-k">var</span> task <span class="pl-k">=</span> <span class="pl-smi">cron</span>.<span class="pl-en">schedule</span>(<span class="pl-s"><span class="pl-pds">'</span>* * * * *<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>() {
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>immediately started<span class="pl-pds">'</span></span>);
+}, <span class="pl-c1">false</span>);
+
+<span class="pl-smi">task</span>.<span class="pl-c1">start</span>();</pre></div>
+
+<h3>
+<a id="stop" class="anchor" href="#stop" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Stop</h3>
+
+<p>The task won't be executed unless re-started.</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> cron <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>node-cron<span class="pl-pds">'</span></span>);
+
+<span class="pl-k">var</span> task <span class="pl-k">=</span> <span class="pl-smi">cron</span>.<span class="pl-en">schedule</span>(<span class="pl-s"><span class="pl-pds">'</span>* * * * *<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>() {
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>will execute every minute until stopped<span class="pl-pds">'</span></span>);
+});
+
+<span class="pl-smi">task</span>.<span class="pl-c1">stop</span>();</pre></div>
+
+<h3>
+<a id="destroy" class="anchor" href="#destroy" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Destroy</h3>
+
+<p>The task will be stopped and completely destroyed.</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> cron <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>node-cron<span class="pl-pds">'</span></span>);
+
+<span class="pl-k">var</span> task <span class="pl-k">=</span> <span class="pl-smi">cron</span>.<span class="pl-en">schedule</span>(<span class="pl-s"><span class="pl-pds">'</span>* * * * *<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>() {
+  <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>will not execute anymore, nor be able to restart<span class="pl-pds">'</span></span>);
+});
+
+<span class="pl-smi">task</span>.<span class="pl-en">destroy</span>();</pre></div>
 
 <h2>
 <a id="issues" class="anchor" href="#issues" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Issues</h2>
