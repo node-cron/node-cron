@@ -85,13 +85,13 @@ cron.schedule('1-5 * * * *', function(){
 
 #### Using step values
 
-Step values can be used in conjunction with ranges, following a range with '/' and a number. e.g: `1-10/2` that is the same as `2,4,6,8,10`. Steps are also permitted after an asterisk, so if you want to say “every two hours”, just use `*/2`.
+Step values can be used in conjunction with ranges, following a range with '/' and a number. e.g: `1-10/2` that is the same as `2,4,6,8,10`. Steps are also permitted after an asterisk, so if you want to say “every two minutes”, just use `*/2`.
 
 ```javascript
 var cron = require('node-cron');
 
 cron.schedule('*/2 * * * *', function(){
-  console.log('running a task every two hours');
+  console.log('running a task every two minutes');
 });
 ```
 
@@ -115,6 +115,62 @@ var cron = require('node-cron');
 cron.schedule('* * * Jan,Sep Sun', function(){
   console.log('running on Sundays of January and September');
 });
+```
+
+## Cron methods
+
+### Schedule
+
+Schedules given task to be executed whenever the cron expression ticks.
+
+Arguments:
+
+- !string expression - Cron expression
+- !Function func - Task to be executed
+- boolean? immediateStart - Whether to start scheduler immediately after create.
+
+## ScheduledTask methods
+
+### Start
+
+Starts the scheduled task.
+
+```javascript
+var cron = require('node-cron');
+
+var task = cron.schedule('* * * * *', function() {
+  console.log('immediately started');
+}, false);
+
+task.start();
+```
+
+### Stop
+
+The task won't be executed unless re-started.
+
+```javascript
+var cron = require('node-cron');
+
+var task = cron.schedule('* * * * *', function() {
+  console.log('will execute every minute until stopped');
+});
+
+task.stop();
+```
+
+### Destroy
+
+The task will be stopped and completely destroyed.
+
+```javascript
+var cron = require('node-cron');
+
+var task = cron.schedule('* * * * *', function() {
+  console.log('will not execute anymore, nor be able to restart');
+});
+
+task.destroy();
 ```
 
 ## Issues
