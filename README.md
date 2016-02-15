@@ -117,6 +117,62 @@ cron.schedule('* * * Jan,Sep Sun', function(){
 });
 ```
 
+## Cron methods
+
+### Schedule
+
+Schedules given task to be executed whenever the cron expression ticks.
+
+Arguments:
+
+- !string expression - Cron expression
+- !Function func - Task to be executed
+- boolean? immediateStart - Whether to start scheduler immediately after create.
+
+## ScheduledTask methods
+
+### Start
+
+Starts the scheduled task.
+
+```javascript
+var cron = require('node-cron');
+
+var task = cron.schedule('* * * * *', function() {
+  console.log('immediately started');
+}, false);
+
+task.start();
+```
+
+### Stop
+
+The task won't be executed unless re-started.
+
+```javascript
+var cron = require('node-cron');
+
+var task = cron.schedule('* * * * *', function() {
+  console.log('will execute every minute until stopped');
+});
+
+task.stop();
+```
+
+### Destroy
+
+The task will be stopped and completely destroyed.
+
+```javascript
+var cron = require('node-cron');
+
+var task = cron.schedule('* * * * *', function() {
+  console.log('will not execute anymore, nor be able to restart');
+});
+
+task.destroy();
+```
+
 ## Issues
 
 Feel free to submit issues and enhancement requests [here](https://github.com/merencia/node-cron/issues).
