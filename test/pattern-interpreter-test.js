@@ -7,24 +7,28 @@ describe('pattern-interpreter.js', function(){
   describe('interpret month names', function(){
     it('should convert month names to int', function(){
       var pattern = interpret('0 1 0 January,February,March,April,May,June,July,August,September,October,November,December *');
-      expect(pattern).to.equal('0 0 1 0 1,2,3,4,5,6,7,8,9,10,11,12 *');
+      var patterns = pattern.split(' ');
+      expect(patterns[4]).to.equal('1,2,3,4,5,6,7,8,9,10,11,12');
     });
 
     it('should convert month short names to int', function(){
       var pattern = interpret('0 1 0 Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec *');
-      expect(pattern).to.equal('0 0 1 0 1,2,3,4,5,6,7,8,9,10,11,12 *');
+      var patterns = pattern.split(' ');
+      expect(patterns[4]).to.equal('1,2,3,4,5,6,7,8,9,10,11,12');
     });
   });
 
   describe('interpret week days names', function(){
     it('should convert names to int', function(){
-      var pattern = interpret('0 1 0 Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday *');
-      expect(pattern).to.equal('0 0 1 0 1,2,3,4,5,6,0 *');
+      var pattern = interpret('0 1 0 * Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday');
+      var patterns = pattern.split(' ');
+      expect(patterns[5]).to.equal('1,2,3,4,5,6,0');
     });
 
     it('should convert short names to int', function(){
-      var pattern = interpret('0 1 0 Sunday,Mon,Tue,Wed,Thu,Fri,Sat *');
-      expect(pattern).to.equal('0 0 1 0 0,1,2,3,4,5,6 *');
+      var pattern = interpret('0 1 0 * Sunday,Mon,Tue,Wed,Thu,Fri,Sat');
+      var patterns = pattern.split(' ');
+      expect(patterns[5]).to.equal('0,1,2,3,4,5,6');
     });
   });
 
@@ -85,6 +89,14 @@ describe('pattern-interpreter.js', function(){
       var seconds = pattern.split(' ')[3].split(',');
       for(var i = 0; i < 12; i++){
         expect(seconds[i]).to.equal((i+1).toString());
+      }
+    });
+
+    it('should convert * on week day to numbers', function(){
+      var pattern = interpret('* * * * * *');
+      var seconds = pattern.split(' ')[5].split(',');
+      for(var i = 0; i < 6; i++){
+        expect(seconds[i]).to.equal(i.toString());
       }
     });
   });

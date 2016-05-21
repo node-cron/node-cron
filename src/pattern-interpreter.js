@@ -68,6 +68,10 @@ module.exports = (function() {
       expressions[4] = '1-12';
     }
 
+    if(expressions[5] === '*'){
+      expressions[5] = '0-6';
+    }
+
     return expressions.join(' ');
   }
 
