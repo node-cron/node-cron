@@ -42,37 +42,25 @@ module.exports = (function() {
     return expression;
   }
 
-  function convertAsteriskToRange(expression){
+  function convertAsterisk(expression, index, replecement){
     var expressions = expression.split(' ');
     if(expressions.length == 5){
       expressions = ['0'].concat(expressions);
     }
-
-    if(expressions[0] === '*'){
-      expressions[0] = '0-59';
+    if(expressions[index] === '*'){
+      expressions[index] = replecement;
     }
-
-    if(expressions[1] === '*'){
-      expressions[1] = '0-59';
-    }
-
-    if(expressions[2] === '*'){
-      expressions[2] = '0-23';
-    }
-
-    if(expressions[3] === '*'){
-      expressions[3] = '1-31';
-    }
-
-    if(expressions[4] === '*'){
-      expressions[4] = '1-12';
-    }
-
-    if(expressions[5] === '*'){
-      expressions[5] = '0-6';
-    }
-
     return expressions.join(' ');
+  }
+
+  function convertAsteriskToRange(expression){
+    expression = convertAsterisk(expression, 0, '0-59');
+    expression = convertAsterisk(expression, 1, '0-59');
+    expression = convertAsterisk(expression, 2, '0-23');
+    expression = convertAsterisk(expression, 3, '1-31');
+    expression = convertAsterisk(expression, 4, '1-12');
+    expression = convertAsterisk(expression, 5, '0-6');
+    return expression;
   }
 
   /*
