@@ -48,7 +48,7 @@ describe('pattern-interpreter.js', function(){
       expect(patterns[1]).to.equal('1,2,3,4,5,6,7,8,9,13,14,15,16');
     });
 
-    it('should * on seconds to numbers', function(){
+    it('should convert * on seconds to numbers', function(){
       var pattern = interpret('* * * * * *');
       var seconds = pattern.split(' ')[0].split(',');
       for(var i = 0; i < 60; i++){
@@ -56,7 +56,7 @@ describe('pattern-interpreter.js', function(){
       }
     });
 
-    it('should * on minutes to numbers', function(){
+    it('should convert * on minutes to numbers', function(){
       var pattern = interpret('* * * * * *');
       var seconds = pattern.split(' ')[1].split(',');
       for(var i = 0; i < 60; i++){
@@ -64,11 +64,19 @@ describe('pattern-interpreter.js', function(){
       }
     });
 
-    it('should * on hours to numbers', function(){
+    it('should convert * on hours to numbers', function(){
       var pattern = interpret('* * * * * *');
       var seconds = pattern.split(' ')[2].split(',');
       for(var i = 0; i < 23; i++){
         expect(seconds[i]).to.equal(i.toString());
+      }
+    });
+
+    it('should convert * on days to numbers', function(){
+      var pattern = interpret('* * * * * *');
+      var seconds = pattern.split(' ')[3].split(',');
+      for(var i = 0; i < 31; i++){
+        expect(seconds[i]).to.equal((i+1).toString());
       }
     });
   });

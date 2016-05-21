@@ -60,6 +60,10 @@ module.exports = (function() {
       expressions[2] = '0-23';
     }
 
+    if(expressions[3] === '*'){
+      expressions[3] = '1-31';
+    }
+
     return expressions.join(' ');
   }
 
