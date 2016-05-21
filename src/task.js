@@ -28,11 +28,7 @@ module.exports = (function(){
     var runOnHour   = matchPattern(task.expressions[2], date.getHours());
     var runOnDayOfMonth = matchPattern(task.expressions[3], date.getDate());
     var runOnMonth = matchPattern(task.expressions[4], date.getMonth() + 1);
-    var weekDay = date.getDay();
-    if (weekDay === 7 ) {
-      weekDay = 0;
-    }
-    var runOnDayOfWeek = matchPattern(task.expressions[5], weekDay);
+    var runOnDayOfWeek = matchPattern(task.expressions[5], date.getDay());
     return runInSecond && runOnMinute && runOnHour && runOnDayOfMonth &&
       runOnMonth && runOnDayOfWeek;
   }
@@ -42,9 +38,6 @@ module.exports = (function(){
     this.pattern = interpretPattern(pattern);
     this.execution = execution;
     this.expressions = this.pattern.split(' ');
-    if (this.expressions.length === 5 ){
-      this.expressions = [ '0' ].concat(this.expressions);
-    }
   }
 
   Task.prototype.update = function(date){

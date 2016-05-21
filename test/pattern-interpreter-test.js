@@ -62,42 +62,48 @@ describe('pattern-interpreter.js', function(){
 
     it('should convert * on minutes to numbers', function(){
       var pattern = interpret('* * * * * *');
-      var seconds = pattern.split(' ')[1].split(',');
+      var minutes = pattern.split(' ')[1].split(',');
       for(var i = 0; i < 60; i++){
-        expect(seconds[i]).to.equal(i.toString());
+        expect(minutes[i]).to.equal(i.toString());
       }
     });
 
     it('should convert * on hours to numbers', function(){
       var pattern = interpret('* * * * * *');
-      var seconds = pattern.split(' ')[2].split(',');
+      var hours = pattern.split(' ')[2].split(',');
       for(var i = 0; i < 23; i++){
-        expect(seconds[i]).to.equal(i.toString());
+        expect(hours[i]).to.equal(i.toString());
       }
     });
 
     it('should convert * on days to numbers', function(){
       var pattern = interpret('* * * * * *');
-      var seconds = pattern.split(' ')[3].split(',');
+      var days = pattern.split(' ')[3].split(',');
       for(var i = 0; i < 31; i++){
-        expect(seconds[i]).to.equal((i+1).toString());
+        expect(days[i]).to.equal((i+1).toString());
       }
     });
 
     it('should convert * on months to numbers', function(){
       var pattern = interpret('* * * * * *');
-      var seconds = pattern.split(' ')[3].split(',');
+      var months = pattern.split(' ')[3].split(',');
       for(var i = 0; i < 12; i++){
-        expect(seconds[i]).to.equal((i+1).toString());
+        expect(months[i]).to.equal((i+1).toString());
       }
     });
 
     it('should convert * on week day to numbers', function(){
       var pattern = interpret('* * * * * *');
-      var seconds = pattern.split(' ')[5].split(',');
+      var weekDays = pattern.split(' ')[5].split(',');
       for(var i = 0; i < 6; i++){
-        expect(seconds[i]).to.equal(i.toString());
+        expect(weekDays[i]).to.equal(i.toString());
       }
+    });
+
+    it('should convert week day 7 to 0', function(){
+      var pattern = interpret('* * * * * 7');
+      var weekDay = pattern.split(' ')[5];
+      expect(weekDay).to.equal('0');
     });
   });
 });

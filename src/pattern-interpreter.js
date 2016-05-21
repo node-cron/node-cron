@@ -17,6 +17,16 @@ module.exports = (function() {
     return expression;
   }
 
+  function convertWeekDay(expression){
+    var expressions = expression.split(' ');
+    if (expressions[5] === '7'){
+      expressions[5] = '0';
+    }
+    expression = expressions.join(' ');
+    expression = convertWeekDayName(expression, weekDays);
+    return convertWeekDayName(expression, shortWeekDays);
+  }
+
   function convertWeekDayName(expression, items){
     for(var i = 0; i < items.length; i++){
       expression = expression.replace(new RegExp(items[i], 'gi'), parseInt(i, 10));
@@ -83,8 +93,7 @@ module.exports = (function() {
    function interpretExpression(expression){
     expression = convertMonthName(expression, months);
     expression = convertMonthName(expression, shortMonths);
-    expression = convertWeekDayName(expression, weekDays);
-    expression = convertWeekDayName(expression, shortWeekDays);
+    expression = convertWeekDay(expression);
     expression = convertAsteriskToRange(expression);
     expression = convertRanges(expression);
     return expression;
