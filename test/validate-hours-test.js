@@ -7,7 +7,7 @@ describe('pattern-validation.js', function(){
   describe('validate hour', function(){
     it('should fail with invalid hour', function(){
       expect(function(){
-        validate('0 * 25 * * *');
+        validate('* 25 * * *');
       }).to.throwException(function(e){
         expect('25 is a invalid expression for hour').to.equal(e);
       });

@@ -7,7 +7,7 @@ describe('pattern-validation.js', function(){
   describe('validate minutes', function(){
     it('should fail with invalid minute', function(){
       expect(function(){
-        validate('0 63 * * * *');
+        validate('63 * * * *');
       }).to.throwException(function(e){
         expect('63 is a invalid expression for minute').to.equal(e);
       });
@@ -15,7 +15,7 @@ describe('pattern-validation.js', function(){
 
     it('should not fail with valid minute', function(){
       expect(function(){
-        validate('0 30 * * * *');
+        validate('30 * * * *');
       }).to.not.throwException();
     });
 
