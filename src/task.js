@@ -1,6 +1,6 @@
 'use strict';
 
-var interpretPattern = require('./pattern-interpreter');
+var convertExpression = require('./convert-expression');
 var validatePattern = require('./pattern-validation');
 
 module.exports = (function(){
@@ -25,7 +25,7 @@ module.exports = (function(){
 
   function Task(pattern, execution){
     validatePattern(pattern);
-    this.pattern = interpretPattern(pattern);
+    this.pattern = convertExpression(pattern);
     this.execution = execution;
     this.expressions = this.pattern.split(' ');
   }

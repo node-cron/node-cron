@@ -1,6 +1,6 @@
 'use strict';
 
-var interprete = require('./pattern-interpreter');
+var convertExpression = require('./convert-expression');
 
 module.exports = ( function(){
 
@@ -53,7 +53,7 @@ module.exports = ( function(){
 
   function validate(pattern){
     var patterns = pattern.split(' ');
-    var executablePattern = interprete(pattern);
+    var executablePattern = convertExpression(pattern);
     var executablePatterns = executablePattern.split(' ');
 
     if(patterns.length === 5){
