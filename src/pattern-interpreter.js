@@ -42,6 +42,19 @@ module.exports = (function() {
     return expression;
   }
 
+  function convertAsteriskToRange(expression){
+    var expressions = expression.split(' ');
+    if(expressions.length == 5){
+      expressions = ['0'].concat(expressions);
+    }
+
+    if(expressions[0] === '*'){
+      expressions[0] = '0-59';
+    }
+
+    return expressions.join(' ');
+  }
+
   /*
    * The node-cron core allows only numbers (including multiple numbers e.g 1,2).
    * This module is going to translate the month names, week day names and ranges
@@ -64,6 +77,7 @@ module.exports = (function() {
     expression = convertMonthName(expression, shortMonths);
     expression = convertWeekDayName(expression, weekDays);
     expression = convertWeekDayName(expression, shortWeekDays);
+    expression = convertAsteriskToRange(expression);
     expression = convertRanges(expression);
     return expression;
   }
