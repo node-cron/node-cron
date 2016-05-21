@@ -51,7 +51,9 @@ describe('pattern-interpreter.js', function(){
       var patterns = pattern.split(' ');
       expect(patterns[1]).to.equal('1,2,3,4,5,6,7,8,9,13,14,15,16');
     });
+  });
 
+  describe('convert *', function(){
     it('should convert * on seconds to numbers', function(){
       var pattern = interpret('* * * * * *');
       var seconds = pattern.split(' ')[0].split(',');
@@ -104,6 +106,14 @@ describe('pattern-interpreter.js', function(){
       var pattern = interpret('* * * * * 7');
       var weekDay = pattern.split(' ')[5];
       expect(weekDay).to.equal('0');
+    });
+  });
+
+  describe('convert step value', function(){
+    it('should convert * with step value to numbers', function(){
+      var pattern = interpret('*/2 * * * * *');
+      var seconds = pattern.split(' ')[0].split(',');
+      expect(seconds.length).to.equal(30);
     });
   });
 });

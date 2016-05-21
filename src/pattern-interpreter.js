@@ -57,8 +57,8 @@ module.exports = (function() {
     if(expressions.length === 5){
       expressions = ['0'].concat(expressions);
     }
-    if(expressions[index] === '*'){
-      expressions[index] = replecement;
+    if(expressions[index].indexOf('*') !== -1){
+      expressions[index] = expressions[index].replace('*', replecement);
     }
     return expressions.join(' ');
   }
@@ -71,6 +71,28 @@ module.exports = (function() {
     expression = convertAsterisk(expression, 4, '1-12');
     expression = convertAsterisk(expression, 5, '0-6');
     return expression;
+  }
+
+  function convertSteps(expression){
+    var expressions = expression.split(' ');
+    var stepValuePattern = /^(.+)\/(\d+)$/g;
+    for(var i = 0; i < expressions.length; i++){
+      var match = stepValuePattern.exec(expressions[i]);
+      var isStepValue = match !== null && match.length > 0;
+      if(isStepValue){
+        var values = match[1].split(',');
+        var setpValues = [];
+        var divider = parseInt(match[2], 10);
+        for(var j = 0; j <= values.length; j++){
+          var value = parseInt(values[j], 10);
+          if(value % divider === 0){
+            setpValues.push(value);
+          }
+        }
+        expressions[i] = setpValues.join(',');
+      }
+    }
+    return expressions.join(' ');
   }
 
   /*
@@ -96,6 +118,7 @@ module.exports = (function() {
     expression = convertWeekDay(expression);
     expression = convertAsteriskToRange(expression);
     expression = convertRanges(expression);
+    expression = convertSteps(expression);
     return expression;
   }
 
