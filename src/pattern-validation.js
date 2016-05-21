@@ -58,7 +58,6 @@ module.exports = ( function(){
 
     if(patterns.length === 5){
       patterns = ['0'].concat(patterns);
-      executablePatterns = ['0'].concat(executablePatterns);
     }
 
     if (isInvalidSecond(executablePatterns[0])) {

@@ -8,17 +8,13 @@ module.exports = (function(){
     var stepValuePattern = /^((\d+(\,\d+){0,})|\*)\/(\d+)$/g;
     var match = stepValuePattern.exec(pattern);
     var isStepValue = match !== null && match.length > 0;
-    if (pattern === '*') {
-      return true;
-    }
 
     if (isStepValue) {
       var values = match[1].split(',');
       if(values[0] === '*' || values.indexOf(value.toString()) !== -1) {
         return value % parseInt(match[4], 10) === 0;
       }
-    }
-    else if( pattern.indexOf(',') !== -1 ){
+    } else if( pattern.indexOf(',') !== -1 ){
       var patterns = pattern.split(',');
       return patterns.indexOf(value.toString()) !== -1;
     }
@@ -32,11 +28,7 @@ module.exports = (function(){
     var runOnHour   = matchPattern(task.expressions[2], date.getHours());
     var runOnDayOfMonth = matchPattern(task.expressions[3], date.getDate());
     var runOnMonth = matchPattern(task.expressions[4], date.getMonth() + 1);
-    var weekDay = date.getDay();
-    if (weekDay === 0 ) {
-      weekDay = 7;
-    }
-    var runOnDayOfWeek = matchPattern(task.expressions[5], weekDay);
+    var runOnDayOfWeek = matchPattern(task.expressions[5], date.getDay());
     return runInSecond && runOnMinute && runOnHour && runOnDayOfMonth &&
       runOnMonth && runOnDayOfWeek;
   }
@@ -46,9 +38,6 @@ module.exports = (function(){
     this.pattern = interpretPattern(pattern);
     this.execution = execution;
     this.expressions = this.pattern.split(' ');
-    if (this.expressions.length === 5 ){
-      this.expressions = [ '0' ].concat(this.expressions);
-    }
   }
 
   Task.prototype.update = function(date){

@@ -17,6 +17,16 @@ module.exports = (function() {
     return expression;
   }
 
+  function convertWeekDay(expression){
+    var expressions = expression.split(' ');
+    if (expressions[5] === '7'){
+      expressions[5] = '0';
+    }
+    expression = expressions.join(' ');
+    expression = convertWeekDayName(expression, weekDays);
+    return convertWeekDayName(expression, shortWeekDays);
+  }
+
   function convertWeekDayName(expression, items){
     for(var i = 0; i < items.length; i++){
       expression = expression.replace(new RegExp(items[i], 'gi'), parseInt(i, 10));
@@ -42,6 +52,27 @@ module.exports = (function() {
     return expression;
   }
 
+  function convertAsterisk(expression, index, replecement){
+    var expressions = expression.split(' ');
+    if(expressions.length === 5){
+      expressions = ['0'].concat(expressions);
+    }
+    if(expressions[index] === '*'){
+      expressions[index] = replecement;
+    }
+    return expressions.join(' ');
+  }
+
+  function convertAsteriskToRange(expression){
+    expression = convertAsterisk(expression, 0, '0-59');
+    expression = convertAsterisk(expression, 1, '0-59');
+    expression = convertAsterisk(expression, 2, '0-23');
+    expression = convertAsterisk(expression, 3, '1-31');
+    expression = convertAsterisk(expression, 4, '1-12');
+    expression = convertAsterisk(expression, 5, '0-6');
+    return expression;
+  }
+
   /*
    * The node-cron core allows only numbers (including multiple numbers e.g 1,2).
    * This module is going to translate the month names, week day names and ranges
@@ -62,8 +93,8 @@ module.exports = (function() {
    function interpretExpression(expression){
     expression = convertMonthName(expression, months);
     expression = convertMonthName(expression, shortMonths);
-    expression = convertWeekDayName(expression, weekDays);
-    expression = convertWeekDayName(expression, shortWeekDays);
+    expression = convertWeekDay(expression);
+    expression = convertAsteriskToRange(expression);
     expression = convertRanges(expression);
     return expression;
   }
