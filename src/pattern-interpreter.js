@@ -54,7 +54,7 @@ module.exports = (function() {
 
   function convertAsterisk(expression, index, replecement){
     var expressions = expression.split(' ');
-    if(expressions.length == 5){
+    if(expressions.length === 5){
       expressions = ['0'].concat(expressions);
     }
     if(expressions[index] === '*'){
