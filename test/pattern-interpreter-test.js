@@ -79,5 +79,13 @@ describe('pattern-interpreter.js', function(){
         expect(seconds[i]).to.equal((i+1).toString());
       }
     });
+
+    it('should convert * on months to numbers', function(){
+      var pattern = interpret('* * * * * *');
+      var seconds = pattern.split(' ')[3].split(',');
+      for(var i = 0; i < 12; i++){
+        expect(seconds[i]).to.equal((i+1).toString());
+      }
+    });
   });
 });
