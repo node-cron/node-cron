@@ -15,7 +15,7 @@ describe('pattern-validation.js', function(){
 
     it('should not fail with valid day of month', function(){
       expect(function(){
-        validate('* * 15 * *');
+        validate('0 * * 15 * *');
       }).to.not.throwException();
     });
 
