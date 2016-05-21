@@ -52,6 +52,14 @@ module.exports = (function() {
       expressions[0] = '0-59';
     }
 
+    if(expressions[1] === '*'){
+      expressions[1] = '0-59';
+    }
+
+    if(expressions[2] === '*'){
+      expressions[2] = '0-23';
+    }
+
     return expressions.join(' ');
   }
 
