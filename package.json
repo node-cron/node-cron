@@ -7,8 +7,8 @@
   "homepage": "http://merencia.com/node-cron/",
   "main": "src/node-cron.js",
   "scripts": {
-    "test": "mocha -t 20000",
-    "coverage": "istanbul cover _mocha -- -t 2000000",
+    "test": "mocha -t 20000 --recursive",
+    "coverage": "istanbul cover _mocha -- -t 2000000 --recursive",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "check": "npm run coverage && npm run coveralls"
   },
