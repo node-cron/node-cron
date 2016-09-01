@@ -68,6 +68,23 @@ describe('Task', function(){
       task.update(date);
       expect(2).to.equal(task.executed);
     });
+
+    it('should run every hour on range', function(){
+      var task = new Task('* 8-20 * * *', function(){
+        this.executed += 1;
+      });
+      task.executed = 0;
+      var date = new Date(2016, 1, 1);
+      date.setHours(0);
+      task.update(date);
+      date.setHours(8);
+      task.update(date);
+      date.setHours(19);
+      task.update(date);
+      date.setHours(21);
+      task.update(date);
+      expect(2).to.equal(task.executed);
+    });
   });
 });
 

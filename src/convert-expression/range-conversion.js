@@ -2,7 +2,8 @@
 module.exports = (function() {
   function replaceWithRange(expression, text, init, end) {
     var numbers = [];
-    for(var i = init; i <= end; i++) {
+    var last = parseInt(end);
+    for(var i = parseInt(init); i <= last; i++) {
       numbers.push(i);
     }
     return expression.replace(new RegExp(text, 'gi'), numbers.join());
