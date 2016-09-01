@@ -30,5 +30,11 @@ describe('pattern-validation.js', function(){
         validate('* */2 * * *');
       }).to.not.throwException();
     });
+
+    it('should accept range for hours', function(){
+      expect(function(){
+        validate('* 3-20 * * *');
+      }).to.not.throwException();
+    });
   });
 });

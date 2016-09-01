@@ -9,4 +9,10 @@ describe('range-conversion.js', function() {
     var expression = conversion(expressions).join(' ');
     expect(expression).to.equal('0,1,2,3 0,1,2,3 0,1,2 1,2,3 1,2 0,1,2,3');
   });
+
+  it('shuld convert ranges to numbers', function() {
+    var expressions = '0-3 0-3 8-10 1-3 1-2 0-3'.split(' ');
+    var expression = conversion(expressions).join(' ');
+    expect(expression).to.equal('0,1,2,3 0,1,2,3 8,9,10 1,2,3 1,2 0,1,2,3');
+  });
 });
