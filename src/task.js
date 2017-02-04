@@ -13,12 +13,12 @@ module.exports = (function(){
   }
 
   function mustRun(task, date){
-    var runInSecond     = matchPattern(task.expressions[0], date.getSeconds());
-    var runOnMinute     = matchPattern(task.expressions[1], date.getMinutes());
-    var runOnHour       = matchPattern(task.expressions[2], date.getHours());
+    var runInSecond = matchPattern(task.expressions[0], date.getSeconds());
+    var runOnMinute = matchPattern(task.expressions[1], date.getMinutes());
+    var runOnHour = matchPattern(task.expressions[2], date.getHours());
     var runOnDayOfMonth = matchPattern(task.expressions[3], date.getDate());
-    var runOnMonth      = matchPattern(task.expressions[4], date.getMonth() + 1);
-    var runOnDayOfWeek  = matchPattern(task.expressions[5], date.getDay());
+    var runOnMonth = matchPattern(task.expressions[4], date.getMonth() + 1);
+    var runOnDayOfWeek = matchPattern(task.expressions[5], date.getDay());
 
     var runOnDay = false;
 
