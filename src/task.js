@@ -21,10 +21,11 @@ module.exports = (function(){
     var runOnDayOfWeek = matchPattern(task.expressions[5], date.getDay());
 
     var runOnDay = false;
+    var delta = task.initialPattern.length === 6 ? 0 : -1;
 
-    if (task.initialPattern[2] === '*') {
+    if (task.initialPattern[3 + delta] === '*') {
       runOnDay = runOnDayOfWeek;
-    } else if (task.initialPattern[4] === '*') {
+    } else if (task.initialPattern[5 + delta] === '*') {
       runOnDay = runOnDayOfMonth;
     } else {
       runOnDay = runOnDayOfMonth || runOnDayOfWeek;
