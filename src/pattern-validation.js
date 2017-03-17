@@ -41,7 +41,7 @@ module.exports = ( function(){
   }
 
   function validate(pattern){
-    if (pattern.constructor != String) {
+    if (pattern.constructor !== String) {
       throw new Error('Expression must be of type "String"');
     }
     var patterns = pattern.split(' ');
