@@ -46,7 +46,7 @@ module.exports = (function(){
   Task.prototype.update = function(date){
     if(mustRun(this, date)){
       try {
-        this.execution(...args);
+        this.execution(...this.arguments);
       } catch(err) {
         console.error(err);
       }
