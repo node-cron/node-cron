@@ -34,19 +34,20 @@ module.exports = (function(){
     return runInSecond && runOnMinute && runOnHour && runOnDay && runOnMonth;
   }
 
-  function Task(pattern, execution, args){
+  function Task(pattern, execution, thisArg, args){
     validatePattern(pattern);
     this.initialPattern = pattern.split(' ');
     this.pattern = convertExpression(pattern);
     this.execution = execution;
     this.arguments = args;
+    this.thisArg = thisArg || execution;
     this.expressions = this.pattern.split(' ');
   }
 
   Task.prototype.update = function(date){
     if(mustRun(this, date)){
       try {
-        this.execution(...this.arguments);
+        this.execution.call(this.thisArg, ...this.arguments);
       } catch(err) {
         console.error(err);
       }
