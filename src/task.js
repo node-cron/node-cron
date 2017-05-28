@@ -39,13 +39,14 @@ module.exports = (function(){
     this.initialPattern = pattern.split(' ');
     this.pattern = convertExpression(pattern);
     this.execution = execution;
+    this.arguments = arguments;
     this.expressions = this.pattern.split(' ');
   }
 
   Task.prototype.update = function(date){
     if(mustRun(this, date)){
       try {
-        this.execution();
+        this.execution(...arguments);
       } catch(err) {
         console.error(err);
       }
