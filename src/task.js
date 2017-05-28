@@ -34,19 +34,19 @@ module.exports = (function(){
     return runInSecond && runOnMinute && runOnHour && runOnDay && runOnMonth;
   }
 
-  function Task(pattern, execution){
+  function Task(pattern, execution, args){
     validatePattern(pattern);
     this.initialPattern = pattern.split(' ');
     this.pattern = convertExpression(pattern);
     this.execution = execution;
-    this.arguments = arguments;
+    this.arguments = args;
     this.expressions = this.pattern.split(' ');
   }
 
   Task.prototype.update = function(date){
     if(mustRun(this, date)){
       try {
-        this.execution(...arguments);
+        this.execution(...args);
       } catch(err) {
         console.error(err);
       }
