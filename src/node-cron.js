@@ -15,7 +15,7 @@ module.exports = (function() {
    * @returns {ScheduledTask} update function.
    */
   function createTask(expression, func, immediateStart) {
-    var task = new Task(expression, func);
+    var task = new Task(expression, func, arguments);
 
     return new ScheduledTask(task, immediateStart);
   }
