@@ -175,6 +175,17 @@ var task = cron.schedule('* * * * *', function() {
 task.destroy();
 ```
 
+### Validate
+
+Validate that the given string is a valid cron expression.
+
+```javascript
+var cron = require('node-cron');
+
+var valid = cron.validate('59 * * * *');
+var invalid = cron.validate('60 * * * *');
+```
+
 ## Issues
 
 Feel free to submit issues and enhancement requests [here](https://github.com/merencia/node-cron/issues).
