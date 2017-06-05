@@ -44,5 +44,17 @@ describe('pattern-validation.js', function(){
         validate('* * * */2 *');
       }).to.not.throwException();
     });
+
+    it('should not fail with Monday-Sunday for week day', function(){
+      expect(function(){
+        validate('* * * * Monday-Sunday');
+      }).to.not.throwException();
+    });
+
+    it('should not fail with 1-7 for week day', function(){
+      expect(function(){
+        validate('0 0 1 1 1-7');
+      }).to.not.throwException();
+    });
   });
 });
