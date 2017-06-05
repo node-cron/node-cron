@@ -1,11 +1,20 @@
 'use strict';
 module.exports = (function() {
   function replaceWithRange(expression, text, init, end) {
+
     var numbers = [];
     var last = parseInt(end);
-    for(var i = parseInt(init); i <= last; i++) {
+    var first = parseInt(init);
+
+    if(first > last){
+      last = parseInt(init);
+      first = parseInt(end);
+    }
+
+    for(var i = first; i <= last; i++) {
       numbers.push(i);
     }
+
     return expression.replace(new RegExp(text, 'gi'), numbers.join());
   }
 
