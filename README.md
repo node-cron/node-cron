@@ -130,6 +130,7 @@ Arguments:
 - !string expression - Cron expression
 - !Function func - Task to be executed
 - boolean? immediateStart - Whether to start scheduler immediately after create.
+- mixed args - arguments to pass to the function
 
 ## ScheduledTask methods
 
