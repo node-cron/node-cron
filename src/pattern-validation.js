@@ -41,6 +41,10 @@ module.exports = ( function(){
   }
 
   function validate(pattern){
+    if (typeof pattern !== 'string'){
+      throw 'pattern must be a string!';
+    }
+
     var patterns = pattern.split(' ');
     var executablePattern = convertExpression(pattern);
     var executablePatterns = executablePattern.split(' ');
