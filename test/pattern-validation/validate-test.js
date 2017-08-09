@@ -1,7 +1,7 @@
 'use strict';
 
 var expect = require('expect.js');
-var cron = require('../src/node-cron');
+var cron = require('../../src/node-cron');
 
 describe('public .validate() method', function(){
   it('should succeed with a valid expression', function() {
