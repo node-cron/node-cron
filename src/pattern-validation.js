@@ -41,7 +41,7 @@ module.exports = ( function(){
   }
 
   function validate(pattern){
-    if (typeof pattern != 'string'){
+    if (typeof pattern !== 'string'){
       throw 'pattern must be a string!';
     }
 
