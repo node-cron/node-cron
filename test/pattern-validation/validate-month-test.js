@@ -1,7 +1,7 @@
 'use strict';
 
 var expect = require('expect.js');
-var validate = require('../src/pattern-validation');
+var validate = require('../../src/pattern-validation');
 
 describe('pattern-validation.js', function(){
   describe('validate month', function(){

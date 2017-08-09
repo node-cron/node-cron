@@ -1,7 +1,7 @@
 'use strict';
 
 var expect = require('expect.js');
-var Task = require('../src/task');
+var Task = require('../../src/task');
 
 describe('Task', function(){
   describe('week day & day of month', function(){
