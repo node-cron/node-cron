@@ -2,7 +2,7 @@
 
 var expect = require('expect.js');
 var sinon = require('sinon');
-var cron = require('../src/node-cron');
+var cron = require('../../src/node-cron');
 
 describe('scheduling a task with exception', function(){
   beforeEach(function(){
