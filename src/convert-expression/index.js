@@ -15,6 +15,10 @@ module.exports = (function() {
     return expressions;
   }
 
+  function removeSpaces(str) {
+    return str.replace(/\s{2,}/g, ' ').trim();
+  }
+
   /*
    * The node-cron core allows only numbers (including multiple numbers e.g 1,2).
    * This module is going to translate the month names, week day names and ranges
@@ -33,7 +37,7 @@ module.exports = (function() {
    *  - Will be translated to 1,2,3,4,5 * * * *
    */
   function interprete(expression){
-    var expressions = expression.split(' ');
+    var expressions = removeSpaces(expression).split(' ');
     expressions = appendSeccondExpression(expressions);
     expressions[4] = monthNamesConversion(expressions[4]);
     expressions[5] = weekDayNamesConversion(expressions[5]);
@@ -43,5 +47,6 @@ module.exports = (function() {
 
     return expressions.join(' ');
   }
+
   return interprete;
 }());

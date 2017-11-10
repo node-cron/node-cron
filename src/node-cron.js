@@ -16,23 +16,19 @@ module.exports = (function() {
    * @returns {ScheduledTask} update function.
    */
   function createTask(expression, func, immediateStart) {
-    var task = new Task( removeSpaces(expression), func );
+    var task = new Task(expression, func);
 
     return new ScheduledTask(task, immediateStart);
   }
 
   function validate(expression) {
     try {
-      validation( removeSpaces(expression) );
+      validation(expression);
     } catch(e) {
       return false;
     }
 
     return true;
-  }
-
-  function removeSpaces(str) {
-    return str.replace(/\s{2,}/g, ' ').trim();
   }
 
   return {
