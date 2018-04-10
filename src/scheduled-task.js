@@ -9,9 +9,9 @@ module.exports = (function() {
    * @param {boolean} immediateStart - whether to start the task immediately.
    */
   function ScheduledTask(task, immediateStart) {
-    this.task = () => {
+    this.task = function () {
       var date = new Date()
-      this.tick = setTimeout(this.task, 1000 - date.getMilliseconds());
+      this.tick = setTimeout(this.task.bind(this), 1000 - date.getMilliseconds());
       task.update(date);
     };
 
@@ -29,7 +29,7 @@ module.exports = (function() {
    */
   ScheduledTask.prototype.start = function() {
     if (this.task && !this.tick) {
-      this.tick = setTimeout(this.task, 1000);
+      this.tick = setTimeout(this.task.bind(this), 1000);
     }
 
     return this;
