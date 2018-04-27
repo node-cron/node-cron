@@ -4,7 +4,7 @@
   "description": "A simple cron-like task scheduler for Node.js",
   "author": "Lucas Merencia",
   "license": "ISC",
-  "homepage": "http://merencia.com/node-cron/",
+  "homepage": "https://github.com/merencia/node-cron",
   "main": "src/node-cron.js",
   "scripts": {
     "test": "./node_modules/mocha/bin/mocha --recursive",
