@@ -10,7 +10,8 @@
     "test": "./node_modules/mocha/bin/mocha --recursive",
     "coverage": "istanbul cover _mocha -- --recursive",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "check": "npm run coverage && npm run coveralls"
+    "check": "npm run coverage && npm run coveralls",
+    "postinstall": "opencollective-postinstall"
   },
   "repository": {
     "type": "git",
@@ -32,5 +33,12 @@
     "istanbul": "^0.4.2",
     "mocha": "^4.0.1",
     "sinon": "^4.1.2"
+  },
+  "dependencies": {
+    "opencollective": "^1.0.3"
+  },
+  "collective": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/node-cron"
   }
 }
