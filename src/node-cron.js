@@ -15,10 +15,23 @@ module.exports = (function() {
    * @param {boolean} immediateStart - whether to start the task immediately.
    * @returns {ScheduledTask} update function.
    */
-  function createTask(expression, func, immediateStart) {
-    var task = new Task(expression, func);
+  function createTask(expression, func, options) {
+    // Added for immediateStart depreciation
+    if(typeof options === 'boolean'){
+      console.warn('DEPRECIATION: imediateStart is deprecated and will be removed soon in favor of the options param.');
+      options = {
+        scheduled: options
+      }
+    }
+    
+    if(!options){
+      options = {
+        scheduled: true
+      }
+    }
 
-    return new ScheduledTask(task, immediateStart);
+    var task = new Task(expression, func);
+    return new ScheduledTask(task, options);
   }
 
   function validate(expression) {
