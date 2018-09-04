@@ -6,16 +6,16 @@ module.exports = (function() {
    * Creates a new scheduled task.
    *
    * @param {Task} task - task to schedule.
-   * @param {boolean} immediateStart - whether to start the task immediately.
+   * @param {*} options - task options.
    */
-  function ScheduledTask(task, immediateStart) {
+  function ScheduledTask(task, options) {
     this.task = function() {
       task.update(new Date());
     };
 
     this.tick = null;
 
-    if (immediateStart !== false) {
+    if (options.scheduled !== false) {
       this.start();
     }
   }
