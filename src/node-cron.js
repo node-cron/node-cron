@@ -21,13 +21,13 @@ module.exports = (function() {
       console.warn('DEPRECIATION: imediateStart is deprecated and will be removed soon in favor of the options param.');
       options = {
         scheduled: options
-      }
+      };
     }
     
     if(!options){
       options = {
         scheduled: true
-      }
+      };
     }
 
     var task = new Task(expression, func);
