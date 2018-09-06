@@ -10,7 +10,8 @@ module.exports = (function() {
    * @param {Task} task - task to schedule.
    * @param {*} options - task options.
    */
-  function ScheduledTask(task, immediateStart) {
+  function ScheduledTask(task, options) {
+    var timezone = options.timezone;
     this.task = function () {
       var date = new Date();
       if(timezone){
