@@ -1,5 +1,7 @@
 'use strict';
 
+var tzOffset = require('tz-offset');
+
 module.exports = (function() {
 
   /**
@@ -9,8 +11,14 @@ module.exports = (function() {
    * @param {*} options - task options.
    */
   function ScheduledTask(task, options) {
+    var timezone = options.timezone;
+    
     this.task = function() {
-      task.update(new Date());
+      var date = new Date();
+      if(timezone){
+        date = tzOffset.timeAt(date, timezone);
+      }
+      task.update(date);
     };
 
     this.tick = null;
