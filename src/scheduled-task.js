@@ -48,7 +48,7 @@ module.exports = (function() {
    * @returns {ScheduledTask} instance of this task.
    */
   ScheduledTask.prototype.start = function() {
-    this.status = 'waiting';
+    this.status = 'scheduled';
     if (this.task && !this.tick) {
       this.tick = setInterval(this.task, 1000);
     }
@@ -71,12 +71,17 @@ module.exports = (function() {
     return this;
   };
 
+
+  ScheduledTask.prototype.getStatus = function() {
+    return this.status;
+  }
+
   /**
-   * Destoys the scheduled task.
+   * Destroys the scheduled task.
    */
   ScheduledTask.prototype.destroy = function() {
-    this.status = 'destroyed';
     this.stop();
+    this.status = 'destroyed';
 
     this.task = null;
   };
