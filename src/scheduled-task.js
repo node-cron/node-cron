@@ -1,16 +1,21 @@
 'use strict';
 
+var tzOffset = require('tz-offset');
+
 module.exports = (function() {
 
   /**
    * Creates a new scheduled task.
    *
    * @param {Task} task - task to schedule.
-   * @param {boolean} immediateStart - whether to start the task immediately.
+   * @param {*} options - task options.
    */
   function ScheduledTask(task, immediateStart) {
     this.task = function () {
       var date = new Date();
+      if(timezone){
+        date = tzOffset.timeAt(date, timezone);
+      }
       this.tick = setTimeout(this.task.bind(this), 
         1000 - date.getMilliseconds());
       task.update(date);
@@ -18,7 +23,7 @@ module.exports = (function() {
 
     this.tick = null;
 
-    if (immediateStart !== false) {
+    if (options.scheduled !== false) {
       this.start();
     }
   }
