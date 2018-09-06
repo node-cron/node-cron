@@ -2,6 +2,8 @@ language: node_js
 node_js:
   - stable
 before_script:
+  - echo 'America/Sao_Paulo' | sudo tee /etc/timezone
+  - sudo dpkg-reconfigure --frontend noninteractive tzdata
   - npm install
 script:
   - npm run check
