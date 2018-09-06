@@ -11,8 +11,22 @@ module.exports = (function() {
    * @param {*} options - task options.
    */
   function ScheduledTask(task, options) {
+
     var timezone = options.timezone;
-    
+    var self = this;
+
+    task.on('started', function() {
+      self.status = 'running';
+    });
+
+    task.on('done', function() {
+      self.status = 'waiting';
+    });
+
+    task.on('failed', function() {
+      self.status = 'failed';
+    });
+
     this.task = function() {
       var date = new Date();
       if(timezone){
@@ -34,6 +48,7 @@ module.exports = (function() {
    * @returns {ScheduledTask} instance of this task.
    */
   ScheduledTask.prototype.start = function() {
+    this.status = 'waiting';
     if (this.task && !this.tick) {
       this.tick = setInterval(this.task, 1000);
     }
@@ -47,6 +62,7 @@ module.exports = (function() {
    * @returns {ScheduledTask} instance of this task.
    */
   ScheduledTask.prototype.stop = function() {
+    this.status = 'stoped';
     if (this.tick) {
       clearInterval(this.tick);
       this.tick = null;
@@ -59,6 +75,7 @@ module.exports = (function() {
    * Destoys the scheduled task.
    */
   ScheduledTask.prototype.destroy = function() {
+    this.status = 'destroyed';
     this.stop();
 
     this.task = null;
