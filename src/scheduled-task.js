@@ -12,12 +12,13 @@ module.exports = (function() {
    */
   function ScheduledTask(task, options) {
     var timezone = options.timezone;
-    
-    this.task = function() {
+    this.task = function () {
       var date = new Date();
       if(timezone){
         date = tzOffset.timeAt(date, timezone);
       }
+      this.tick = setTimeout(this.task.bind(this), 
+        1000 - date.getMilliseconds());
       task.update(date);
     };
 
@@ -35,7 +36,7 @@ module.exports = (function() {
    */
   ScheduledTask.prototype.start = function() {
     if (this.task && !this.tick) {
-      this.tick = setInterval(this.task, 1000);
+      this.tick = setTimeout(this.task.bind(this), 1000);
     }
 
     return this;
@@ -48,7 +49,7 @@ module.exports = (function() {
    */
   ScheduledTask.prototype.stop = function() {
     if (this.tick) {
-      clearInterval(this.tick);
+      clearTimeout(this.tick);
       this.tick = null;
     }
 
