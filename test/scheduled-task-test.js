@@ -17,7 +17,6 @@ describe('scheduling with timezone', function() {
     it('should schedule a task without timezone', function() {
         var executed = 0;
         cron.schedule('0 0 * * *', function() {
-            console.log(new Date().toString())
             executed++;
         });
         
