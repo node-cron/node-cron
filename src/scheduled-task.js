@@ -10,8 +10,9 @@ module.exports = (function() {
    */
   function ScheduledTask(task, immediateStart) {
     this.task = function () {
-      var date = new Date()
-      this.tick = setTimeout(this.task.bind(this), 1000 - date.getMilliseconds());
+      var date = new Date();
+      this.tick = setTimeout(this.task.bind(this), 
+        1000 - date.getMilliseconds());
       task.update(date);
     };
 
