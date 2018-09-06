@@ -4,8 +4,6 @@ var expect = require('expect.js');
 var sinon = require('sinon');
 var cron = require('../src/node-cron');
 
-process.env.TZ = 'America/Sao_Paulo';
-
 describe('scheduling with timezone', function() {
     beforeEach(function(){
         this.clock = sinon.useFakeTimers();
