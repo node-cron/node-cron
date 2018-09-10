@@ -3,6 +3,8 @@
 var convertExpression = require('./convert-expression');
 var validatePattern = require('./pattern-validation');
 
+var events = require('events');
+
 module.exports = (function(){
   function matchPattern(pattern, value){
     if( pattern.indexOf(',') !== -1 ){
@@ -11,7 +13,7 @@ module.exports = (function(){
     }
     return pattern === value.toString();
   }
-
+  
   function mustRun(task, date){
     var runInSecond = matchPattern(task.expressions[0], date.getSeconds());
     var runOnMinute = matchPattern(task.expressions[1], date.getMinutes());
@@ -19,10 +21,10 @@ module.exports = (function(){
     var runOnDayOfMonth = matchPattern(task.expressions[3], date.getDate());
     var runOnMonth = matchPattern(task.expressions[4], date.getMonth() + 1);
     var runOnDayOfWeek = matchPattern(task.expressions[5], date.getDay());
-
+    
     var runOnDay = false;
     var delta = task.initialPattern.length === 6 ? 0 : -1;
-
+    
     if (task.initialPattern[3 + delta] === '*') {
       runOnDay = runOnDayOfWeek;
     } else if (task.initialPattern[5 + delta] === '*') {
@@ -30,27 +32,44 @@ module.exports = (function(){
     } else {
       runOnDay = runOnDayOfMonth || runOnDayOfWeek;
     }
-
+    
     return runInSecond && runOnMinute && runOnHour && runOnDay && runOnMonth;
   }
-
+  
   function Task(pattern, execution){
     validatePattern(pattern);
     this.initialPattern = pattern.split(' ');
     this.pattern = convertExpression(pattern);
     this.execution = execution;
     this.expressions = this.pattern.split(' ');
-  }
 
+    events.EventEmitter.call(this);
+  }
+  
+  Task.prototype = events.EventEmitter.prototype;
+  
   Task.prototype.update = function(date){
     if(mustRun(this, date)){
+      var self = this;
       try {
-        this.execution();
-      } catch(err) {
-        console.error(err);
-      }
+        var execution = new Promise(function(resolve, reject){
+          self.emit('started', self);
+          var ex = self.execution();
+          if( execution instanceof Promise){
+            ex.then(resolve).catch(reject);
+          }
+        }).then(function(){
+          self.emit('done', self);
+        }).catch(function(error){
+          console.error(error);
+          self.emit('failed', error);
+        });
+      } catch (error) {
+        console.error(error);
+        self.emit('failed', error);
+      }  
     }
   };
-
+  
   return Task;
 }());
