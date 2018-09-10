@@ -3,11 +3,11 @@
 var expect = require('expect.js');
 var Task = require('../../src/task');
 
-describe('Task', function(){
-  describe('week day & day of month', function(){
+describe('Task', () => {
+  describe('week day & day of month', () => {
 
-    it('should run on week day', function(){
-      var task = new Task('* * * * 1', function(){
+    it('should run on week day', () => {
+      var task = new Task('* * * * 1', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -19,8 +19,8 @@ describe('Task', function(){
       expect(1).to.equal(task.executed);
     });
 
-    it('should run on day of month', function(){
-      var task = new Task('* * 1 * *', function(){
+    it('should run on day of month', () => {
+      var task = new Task('* * 1 * *', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -32,8 +32,8 @@ describe('Task', function(){
       expect(1).to.equal(task.executed);
     });
 
-    it('should run on week day & day of month', function(){
-      var task = new Task('* * 1 * 1', function(){
+    it('should run on week day & day of month', () => {
+      var task = new Task('* * 1 * 1', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -45,8 +45,8 @@ describe('Task', function(){
       expect(2).to.equal(task.executed);
     });
 
-    it('should run on week day with seconds', function(){
-      var task = new Task('0 * * * * 1', function(){
+    it('should run on week day with seconds', () => {
+      var task = new Task('0 * * * * 1', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -58,8 +58,8 @@ describe('Task', function(){
       expect(1).to.equal(task.executed);
     });
 
-    it('should run on day of month with seconds', function(){
-      var task = new Task('0 * * 1 * *', function(){
+    it('should run on day of month with seconds', () => {
+      var task = new Task('0 * * 1 * *', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -71,8 +71,8 @@ describe('Task', function(){
       expect(1).to.equal(task.executed);
     });
 
-    it('should run on week day & day of month with seconds', function(){
-      var task = new Task('0 * * 1 * 1', function(){
+    it('should run on week day & day of month with seconds', () => {
+      var task = new Task('0 * * 1 * 1', () => {
         this.executed += 1;
       });
       task.executed = 0;

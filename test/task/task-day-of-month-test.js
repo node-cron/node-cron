@@ -3,10 +3,10 @@
 var expect = require('expect.js');
 var Task = require('../../src/task');
 
-describe('Task', function(){
-  describe('day of day', function(){
-    it('should run on day', function(){
-      var task = new Task('* * * * *', function(){
+describe('Task', () => {
+  describe('day of day', () => {
+    it('should run on day', () => {
+      var task = new Task('* * * * *', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -20,8 +20,8 @@ describe('Task', function(){
       expect(3).to.equal(task.executed);
     });
 
-    it('should run only on day 9', function(){
-      var task = new Task('* * 9 * *', function(){
+    it('should run only on day 9', () => {
+      var task = new Task('* * 9 * *', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -35,8 +35,8 @@ describe('Task', function(){
       expect(1).to.equal(task.executed);
     });
 
-    it('should run only on day 4, 6 and 12 ', function(){
-      var task = new Task('* * 4,6,12 * *', function(){
+    it('should run only on day 4, 6 and 12 ', () => {
+      var task = new Task('* * 4,6,12 * *', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -54,8 +54,8 @@ describe('Task', function(){
       expect(3).to.equal(task.executed);
     });
 
-    it('should run in even day', function(){
-      var task = new Task('* * */2 * *', function(){
+    it('should run in even day', () => {
+      var task = new Task('* * */2 * *', () => {
         this.executed += 1;
       });
       task.executed = 0;

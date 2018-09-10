@@ -5,7 +5,7 @@ var validatePattern = require('./pattern-validation');
 
 var events = require('events');
 
-module.exports = (function(){
+module.exports = (() => {
   function matchPattern(pattern, value){
     if( pattern.indexOf(',') !== -1 ){
       var patterns = pattern.split(',');
@@ -58,7 +58,7 @@ module.exports = (function(){
           if( execution instanceof Promise){
             ex.then(resolve).catch(reject);
           }
-        }).then(function(){
+        }).then(() => {
           self.emit('done', self);
         }).catch(function(error){
           console.error(error);

@@ -1,5 +1,5 @@
 'use strict';
-module.exports = (function() {
+module.exports = ( () => {
   function replaceWithRange(expression, text, init, end) {
 
     var numbers = [];

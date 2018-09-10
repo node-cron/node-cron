@@ -2,7 +2,7 @@
 
 var tzOffset = require('tz-offset');
 
-module.exports = (function() {
+module.exports = (() => {
 
   /**
    * Creates a new scheduled task.
@@ -11,23 +11,21 @@ module.exports = (function() {
    * @param {*} options - task options.
    */
   function ScheduledTask(task, options) {
-    var self = this;
-    
     var timezone = options.timezone;
 
-    task.on('started', function() {
-      self.status = 'running';
+    task.on('started', () => {
+      this.status = 'running';
     });
 
-    task.on('done', function() {
-      self.status = 'waiting';
+    task.on('done', () => {
+      this.status = 'waiting';
     });
 
-    task.on('failed', function() {
-      self.status = 'failed';
+    task.on('failed', () => {
+      this.status = 'failed';
     });
 
-    this.task = function () {
+    this.task =  () => {
       var date = new Date();
       if(timezone){
         date = tzOffset.timeAt(date, timezone);
@@ -49,7 +47,7 @@ module.exports = (function() {
    *
    * @returns {ScheduledTask} instance of this task.
    */
-  ScheduledTask.prototype.start = function() {
+  ScheduledTask.prototype.start = () => {
     this.status = 'scheduled';
     if (this.task && !this.tick) {
       this.tick = setTimeout(this.task.bind(this), 1000);
@@ -63,7 +61,7 @@ module.exports = (function() {
    *
    * @returns {ScheduledTask} instance of this task.
    */
-  ScheduledTask.prototype.stop = function() {
+  ScheduledTask.prototype.stop = () => {
     this.status = 'stoped';
     if (this.tick) {
       clearTimeout(this.tick);
@@ -74,14 +72,14 @@ module.exports = (function() {
   };
 
 
-  ScheduledTask.prototype.getStatus = function() {
+  ScheduledTask.prototype.getStatus = () => {
     return this.status;
   }
 
   /**
    * Destroys the scheduled task.
    */
-  ScheduledTask.prototype.destroy = function() {
+  ScheduledTask.prototype.destroy = () => {
     this.stop();
     this.status = 'destroyed';
 

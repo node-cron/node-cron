@@ -1,5 +1,5 @@
 'use strict';
-module.exports = (function() {
+module.exports = (() => {
   var weekDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday',
   'friday', 'saturday'];
   var shortWeekDays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];

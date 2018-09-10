@@ -3,10 +3,10 @@
 var expect = require('expect.js');
 var Task = require('../../src/task');
 
-describe('Task', function(){
-  describe('month', function(){
-    it('should run a task on month', function(){
-      var task = new Task('* * * * *', function(){
+describe('Task', () => {
+  describe('month', () => {
+    it('should run a task on month', () => {
+      var task = new Task('* * * * *', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -20,8 +20,8 @@ describe('Task', function(){
       expect(3).to.equal(task.executed);
     });
 
-    it('should run only on month 9', function(){
-      var task = new Task('* * * 9 *', function(){
+    it('should run only on month 9', () => {
+      var task = new Task('* * * 9 *', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -35,8 +35,8 @@ describe('Task', function(){
       expect(1).to.equal(task.executed);
     });
 
-    it('should run only on months 2, 4 and 6 ', function(){
-      var task = new Task('* * * 2,4,6 *', function(){
+    it('should run only on months 2, 4 and 6 ', () => {
+      var task = new Task('* * * 2,4,6 *', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -54,8 +54,8 @@ describe('Task', function(){
       expect(3).to.equal(task.executed);
     });
 
-    it('should run in even months', function(){
-      var task = new Task('* * * */2 *', function(){
+    it('should run in even months', () => {
+      var task = new Task('* * * */2 *', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -69,8 +69,8 @@ describe('Task', function(){
       expect(2).to.equal(task.executed);
     });
 
-    it('should run on September', function(){
-      var task = new Task('* * * Sep *', function(){
+    it('should run on September', () => {
+      var task = new Task('* * * Sep *', () => {
         this.executed += 1;
       });
       task.executed = 0;

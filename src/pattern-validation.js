@@ -2,7 +2,7 @@
 
 var convertExpression = require('./convert-expression');
 
-module.exports = ( function(){
+module.exports = ( () => {
   function isValidExpression(expression, min, max){
     var options = expression.split(',');
     var regexValidation = /^\d+$|^\*$|^\*\/\d+$/;

@@ -3,10 +3,10 @@
 var expect = require('expect.js');
 var Task = require('../../src/task');
 
-describe('Task', function(){
-  describe('hour', function(){
-    it('should run a task on hour', function(){
-      var task = new Task('* * * * *', function(){
+describe('Task', () => {
+  describe('hour', () => {
+    it('should run a task on hour', () => {
+      var task = new Task('* * * * *', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -20,8 +20,8 @@ describe('Task', function(){
       expect(3).to.equal(task.executed);
     });
 
-    it('should run only on hour 12', function(){
-      var task = new Task('0 12 * * *', function(){
+    it('should run only on hour 12', () => {
+      var task = new Task('0 12 * * *', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -35,8 +35,8 @@ describe('Task', function(){
       expect(1).to.equal(task.executed);
     });
 
-    it('should run only on hours 20, 30 and 40 ', function(){
-      var task = new Task('0 5,10,20 * * *', function(){
+    it('should run only on hours 20, 30 and 40 ', () => {
+      var task = new Task('0 5,10,20 * * *', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -54,8 +54,8 @@ describe('Task', function(){
       expect(3).to.equal(task.executed);
     });
 
-    it('should run in even hours', function(){
-      var task = new Task('* */2 * * *', function(){
+    it('should run in even hours', () => {
+      var task = new Task('* */2 * * *', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -69,8 +69,8 @@ describe('Task', function(){
       expect(2).to.equal(task.executed);
     });
 
-    it('should run every hour on range', function(){
-      var task = new Task('* 8-20 * * *', function(){
+    it('should run every hour on range', () => {
+      var task = new Task('* 8-20 * * *', () => {
         this.executed += 1;
       });
       task.executed = 0;

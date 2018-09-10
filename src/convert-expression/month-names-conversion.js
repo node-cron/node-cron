@@ -1,5 +1,5 @@
 'use strict';
-module.exports = (function() {
+module.exports = (() => {
   var months = ['january','february','march','april','may','june','july',
     'august','september','october','november','december'];
   var shortMonths = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug',

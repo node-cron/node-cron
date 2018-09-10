@@ -3,10 +3,10 @@
 var expect = require('expect.js');
 var Task = require('../../src/task');
 
-describe('Task', function(){
-  describe('second', function(){
-    it('should run a task on second', function(){
-      var task = new Task('* * * * * *', function(){
+describe('Task', () => {
+  describe('second', () => {
+    it('should run a task on second', () => {
+      var task = new Task('* * * * * *', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -20,8 +20,8 @@ describe('Task', function(){
       expect(3).to.equal(task.executed);
     });
 
-    it('should run only on second 33', function(){
-      var task = new Task('33 * * * * *', function(){
+    it('should run only on second 33', () => {
+      var task = new Task('33 * * * * *', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -35,8 +35,8 @@ describe('Task', function(){
       expect(1).to.equal(task.executed);
     });
 
-    it('should run only on seconds 20, 30 and 40 ', function(){
-      var task = new Task('20,30,40 * * * * *', function(){
+    it('should run only on seconds 20, 30 and 40 ', () => {
+      var task = new Task('20,30,40 * * * * *', () => {
         this.executed += 1;
       });
       task.executed = 0;
@@ -54,8 +54,8 @@ describe('Task', function(){
       expect(3).to.equal(task.executed);
     });
 
-    it('should run in even seconds', function(){
-      var task = new Task('*/2 * * * * *', function(){
+    it('should run in even seconds', () => {
+      var task = new Task('*/2 * * * * *', () => {
         this.executed += 1;
       });
       task.executed = 0;
