@@ -1,5 +1,5 @@
 'use strict';
-module.exports = (function() {
+module.exports = (() => {
   function convertAsterisk(expression, replecement){
     if(expression.indexOf('*') !== -1){
       return expression.replace('*', replecement);
@@ -18,4 +18,4 @@ module.exports = (function() {
   }
 
   return convertAsterisksToRanges;
-}());
+})();

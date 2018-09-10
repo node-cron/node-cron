@@ -4,18 +4,18 @@ var expect = require('expect.js');
 var sinon = require('sinon');
 var cron = require('../src/node-cron');
 
-describe('scheduling with timezone', function() {
-    beforeEach(function(){
+describe('scheduling with timezone', () => {
+    beforeEach(() =>{
         this.clock = sinon.useFakeTimers();
     });
     
-    afterEach(function(){
+    afterEach(() =>{
         this.clock.restore();
     });
     
-    it('should schedule a task without timezone', function() {
+    it('should schedule a task without timezone', () => {
         var executed = 0;
-        cron.schedule('0 0 * * *', function() {
+        cron.schedule('0 0 * * *', () => {
             executed++;
         });
         
@@ -23,9 +23,9 @@ describe('scheduling with timezone', function() {
         expect(executed).to.equal(1);
     });
     
-    it('should schedule a task with timezone', function() {
+    it('should schedule a task with timezone', () => {
         var executedAt;
-        cron.schedule('0 0 * * *', function() {
+        cron.schedule('0 0 * * *', () => {
             executedAt = new Date();
         }, {
             timezone: 'Etc/UTC'

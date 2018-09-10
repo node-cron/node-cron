@@ -2,91 +2,85 @@
 
 var tzOffset = require('tz-offset');
 
-module.exports = (function() {
-
+/**
+* Creates a new scheduled task.
+*
+* @param {Task} task - task to schedule.
+* @param {*} options - task options.
+*/
+function ScheduledTask(task, options) {
+  var timezone = options.timezone;
+  
   /**
-   * Creates a new scheduled task.
-   *
-   * @param {Task} task - task to schedule.
-   * @param {*} options - task options.
-   */
-  function ScheduledTask(task, options) {
-    var self = this;
-    
-    var timezone = options.timezone;
-
-    task.on('started', function() {
-      self.status = 'running';
-    });
-
-    task.on('done', function() {
-      self.status = 'waiting';
-    });
-
-    task.on('failed', function() {
-      self.status = 'failed';
-    });
-
-    this.task = function () {
-      var date = new Date();
-      if(timezone){
-        date = tzOffset.timeAt(date, timezone);
-      }
-      this.tick = setTimeout(this.task.bind(this), 
-        1000 - date.getMilliseconds());
-      task.update(date);
-    };
-
-    this.tick = null;
-
-    if (options.scheduled !== false) {
-      this.start();
-    }
+  * Starts updating the task.
+  *
+  * @returns {ScheduledTask} instance of this task.
+  */
+ this.start = () => {
+  this.status = 'scheduled';
+  if (this.task && !this.tick) {
+    this.tick = setTimeout(this.task.bind(this), 1000);
   }
+  
+  return this;
+};
 
-  /**
-   * Starts updating the task.
-   *
-   * @returns {ScheduledTask} instance of this task.
-   */
-  ScheduledTask.prototype.start = function() {
-    this.status = 'scheduled';
-    if (this.task && !this.tick) {
-      this.tick = setTimeout(this.task.bind(this), 1000);
+/**
+* Stops updating the task.
+*
+* @returns {ScheduledTask} instance of this task.
+*/
+this.stop = () => {
+  this.status = 'stoped';
+  if (this.tick) {
+    clearTimeout(this.tick);
+    this.tick = null;
+  }
+  
+  return this;
+};
+
+this.getStatus = () => {
+  return this.status;
+};
+
+/**
+* Destroys the scheduled task.
+*/
+this.destroy = () => {
+  this.stop();
+  this.status = 'destroyed';
+  
+  this.task = null;
+};
+
+  task.on('started', () => {
+    this.status = 'running';
+  });
+  
+  task.on('done', () => {
+    this.status = 'waiting';
+  });
+  
+  task.on('failed', () => {
+    this.status = 'failed';
+  });
+  
+  this.task =  () => {
+    var date = new Date();
+    if(timezone){
+      date = tzOffset.timeAt(date, timezone);
     }
-
-    return this;
+    this.tick = setTimeout(this.task.bind(this), 
+    1000 - date.getMilliseconds());
+    task.update(date);
   };
+  
+  this.tick = null;
+  
+  if (options.scheduled !== false) {
+    this.start();
+  }
+}
 
-  /**
-   * Stops updating the task.
-   *
-   * @returns {ScheduledTask} instance of this task.
-   */
-  ScheduledTask.prototype.stop = function() {
-    this.status = 'stoped';
-    if (this.tick) {
-      clearTimeout(this.tick);
-      this.tick = null;
-    }
-
-    return this;
-  };
-
-
-  ScheduledTask.prototype.getStatus = function() {
-    return this.status;
-  };
-
-  /**
-   * Destroys the scheduled task.
-   */
-  ScheduledTask.prototype.destroy = function() {
-    this.stop();
-    this.status = 'destroyed';
-
-    this.task = null;
-  };
-
-  return ScheduledTask;
-}());
+module.exports = ScheduledTask;
