@@ -69,4 +69,40 @@ describe('scheduling on minutes', () => {
     this.clock.tick(1000 * 60 * 40);
     expect(executed).to.equal(17);
   });
+
+  it('should allows lead zeros', () =>  {
+    var initialDate = new Date();
+    initialDate.setMinutes(0);
+    this.clock = sinon.useFakeTimers(initialDate.getTime());
+    var executed = 0;
+    cron.schedule('01 * * * * *', () => {
+      executed += 1;
+    });
+    this.clock.tick(2000);
+    expect(executed).to.equal(1);
+  });
+
+  it('should allows lead zeros range', () =>  {
+    var initialDate = new Date();
+    initialDate.setMinutes(0);
+    this.clock = sinon.useFakeTimers(initialDate.getTime());
+    var executed = 0;
+    cron.schedule('01-05 * * * * *', () => {
+      executed += 1;
+    });
+    this.clock.tick(6000);
+    expect(executed).to.equal(5);
+  });
+
+  it('should allows lead zeros step', () =>  {
+    var initialDate = new Date();
+    initialDate.setMinutes(0);
+    this.clock = sinon.useFakeTimers(initialDate.getTime());
+    var executed = 0;
+    cron.schedule('*/02 * * * * *', () => {
+      executed += 1;
+    });
+    this.clock.tick(6000);
+    expect(executed).to.equal(3);
+  });
 });
