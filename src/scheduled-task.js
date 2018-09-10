@@ -87,4 +87,4 @@ module.exports = (() => {
   };
 
   return ScheduledTask;
-}());
+})();

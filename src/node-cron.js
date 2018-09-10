@@ -48,4 +48,4 @@ module.exports = (() => {
     schedule: createTask,
     validate: validate
   };
-}());
+})();

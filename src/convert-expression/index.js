@@ -49,4 +49,4 @@ module.exports = (() => {
   }
 
   return interprete;
-}());
+})();

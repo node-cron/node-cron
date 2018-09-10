@@ -79,4 +79,4 @@ module.exports = ( () => {
   }
 
   return validate;
-}());
+})();
