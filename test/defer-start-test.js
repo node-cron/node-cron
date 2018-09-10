@@ -4,18 +4,18 @@ var expect = require('expect.js');
 var sinon = require('sinon');
 var cron = require('../src/node-cron');
 
-describe('defer a task', function() {
-  beforeEach(function() {
+describe('defer a task', () => {
+  beforeEach(() => {
     this.clock = sinon.useFakeTimers();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     this.clock.restore();
   });
 
-  it('should defer start of a task', function() {
+  it('should defer start of a task', () => {
     var executed = 0,
-      task = cron.schedule('* * * * *', function() {
+      task = cron.schedule('* * * * *', () => {
         executed++;
       }, false);
 

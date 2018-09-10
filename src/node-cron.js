@@ -4,7 +4,7 @@ var Task = require('./task'),
   ScheduledTask = require('./scheduled-task'),
   validation = require('./pattern-validation');
 
-module.exports = (function() {
+module.exports = (() => {
 
   /**
    * Creates a new task to execute given function when the cron
@@ -48,4 +48,4 @@ module.exports = (function() {
     schedule: createTask,
     validate: validate
   };
-}());
+})();

@@ -12,6 +12,9 @@
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "check": "npm run coverage && npm run coveralls"
   },
+  "engines" : { 
+    "node" : ">=6.0.0" 
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/merencia/node-cron.git"

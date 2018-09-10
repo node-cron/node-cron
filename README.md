@@ -26,7 +26,7 @@ Import node-cron and schedule a task:
 ```javascript
 var cron = require('node-cron');
 
-cron.schedule('* * * * *', function(){
+cron.schedule('* * * * *', () => {
   console.log('running a task every minute');
 });
 ```
@@ -68,7 +68,7 @@ You may use multiples values separated by comma:
 ```javascript
 var cron = require('node-cron');
 
-cron.schedule('1,2,4,5 * * * *', function(){
+cron.schedule('1,2,4,5 * * * *', () => {
   console.log('running every minute 1, 2, 4 and 5');
 });
 ```
@@ -80,7 +80,7 @@ You may also define a range of values:
 ```javascript
 var cron = require('node-cron');
 
-cron.schedule('1-5 * * * *', function(){
+cron.schedule('1-5 * * * *', () => {
   console.log('running every minute to 1 from 5');
 });
 ```
@@ -92,7 +92,7 @@ Step values can be used in conjunction with ranges, following a range with '/' a
 ```javascript
 var cron = require('node-cron');
 
-cron.schedule('*/2 * * * *', function(){
+cron.schedule('*/2 * * * *', () => {
   console.log('running a task every two minutes');
 });
 ```
@@ -104,7 +104,7 @@ For month and week day you also may use names or short names. e.g:
 ```javascript
 var cron = require('node-cron');
 
-cron.schedule('* * * January,September Sunday', function(){
+cron.schedule('* * * January,September Sunday', () => {
   console.log('running on Sundays of January and September');
 });
 ```
@@ -114,7 +114,7 @@ Or with short names:
 ```javascript
 var cron = require('node-cron');
 
-cron.schedule('* * * Jan,Sep Sun', function(){
+cron.schedule('* * * Jan,Sep Sun', () => {
   console.log('running on Sundays of January and September');
 });
 ```
@@ -140,7 +140,7 @@ Starts the scheduled task.
 ```javascript
 var cron = require('node-cron');
 
-var task = cron.schedule('* * * * *', function() {
+var task = cron.schedule('* * * * *', () =>  {
   console.log('immediately started');
 }, false);
 
@@ -154,7 +154,7 @@ The task won't be executed unless re-started.
 ```javascript
 var cron = require('node-cron');
 
-var task = cron.schedule('* * * * *', function() {
+var task = cron.schedule('* * * * *', () =>  {
   console.log('will execute every minute until stopped');
 });
 
@@ -168,7 +168,7 @@ The task will be stopped and completely destroyed.
 ```javascript
 var cron = require('node-cron');
 
-var task = cron.schedule('* * * * *', function() {
+var task = cron.schedule('* * * * *', () =>  {
   console.log('will not execute anymore, nor be able to restart');
 });
 

@@ -1,14 +1,8 @@
 'use strict';
-module.exports = (function() {
+module.exports = (() => {
   var weekDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday',
   'friday', 'saturday'];
   var shortWeekDays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-
-  function convertWeekDays(expression){
-    expression = expression.replace('7', '0');
-    expression = convertWeekDayName(expression, weekDays);
-    return convertWeekDayName(expression, shortWeekDays);
-  }
 
   function convertWeekDayName(expression, items){
     for(var i = 0; i < items.length; i++){
@@ -16,6 +10,12 @@ module.exports = (function() {
     }
     return expression;
   }
+  
+  function convertWeekDays(expression){
+    expression = expression.replace('7', '0');
+    expression = convertWeekDayName(expression, weekDays);
+    return convertWeekDayName(expression, shortWeekDays);
+  }
 
   return convertWeekDays;
-}());
+})();

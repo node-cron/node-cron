@@ -4,18 +4,18 @@ var expect = require('expect.js');
 var sinon = require('sinon');
 var cron = require('../../src/node-cron');
 
-describe('scheduling a task with exception', function(){
-  beforeEach(function(){
+describe('scheduling a task with exception', () =>{
+  beforeEach(() =>{
     this.clock = sinon.useFakeTimers();
   });
 
-  afterEach(function(){
+  afterEach(() =>{
     this.clock.restore();
   });
 
-  it('should not stop on task exception', function() {
+  it('should not stop on task exception', () => {
     var executed = 0;
-    cron.schedule('* * * * *', function(){
+    cron.schedule('* * * * *', () =>{
       executed += 1;
       throw 'exception!';
     });
