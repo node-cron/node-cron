@@ -129,7 +129,25 @@ Arguments:
 
 - !string expression - Cron expression
 - !Function func - Task to be executed
-- boolean? immediateStart - Whether to start scheduler immediately after create.
+- boolean? options - Optional configuration for job scheduling.
+
+#### Options
+
+ - **scheduled**: A `boolean` to set if the created task is schaduled. Default `true`;
+ - **timezone**: The timezone that is used for job scheduling;
+
+ **Example**:
+
+ ```js
+  var cron = require('node-cron');
+
+  cron.schedule('0 1 * * *', () => {
+    console.log('Runing a job at 01:00 at America/Sao_Paulo timezone');
+  }, {
+    scheduled: true,
+    timezone: "America/Sao_Paulo"
+  });
+ ```
 
 ## ScheduledTask methods
 
@@ -141,8 +159,10 @@ Starts the scheduled task.
 var cron = require('node-cron');
 
 var task = cron.schedule('* * * * *', () =>  {
-  console.log('immediately started');
-}, false);
+  console.log('stoped task');
+}, {
+  scheduled: false
+});
 
 task.start();
 ```
