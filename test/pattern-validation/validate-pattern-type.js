@@ -12,7 +12,7 @@ describe('Task', () => {
 
    it('should fail with a non string value for pattern', () => {
      expect(() => {
-        new Task([]);
+      new Task([]);
       }).to.throwException((e) => {
         expect('pattern must be a string!').to.equal(e);
       });

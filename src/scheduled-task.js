@@ -43,7 +43,7 @@ this.stop = () => {
 
 this.getStatus = () => {
   return this.status;
-}
+};
 
 /**
 * Destroys the scheduled task.

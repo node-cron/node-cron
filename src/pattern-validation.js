@@ -2,6 +2,7 @@
 
 var convertExpression = require('./convert-expression');
 
+
 module.exports = ( () => {
   function isValidExpression(expression, min, max){
     var options = expression.split(',');
@@ -40,19 +41,7 @@ module.exports = ( () => {
     return !isValidExpression(expression, 0, 7);
   }
 
-  function validate(pattern){
-    if (typeof pattern !== 'string'){
-      throw 'pattern must be a string!';
-    }
-
-    var patterns = pattern.split(' ');
-    var executablePattern = convertExpression(pattern);
-    var executablePatterns = executablePattern.split(' ');
-
-    if(patterns.length === 5){
-      patterns = ['0'].concat(patterns);
-    }
-
+  function validateFields(patterns, executablePatterns){
     if (isInvalidSecond(executablePatterns[0])) {
       throw patterns[0] + ' is a invalid expression for second';
     }
@@ -76,6 +65,22 @@ module.exports = ( () => {
     if (isInvalidWeekDay(executablePatterns[5])) {
       throw patterns[5] + ' is a invalid expression for week day';
     }
+  }
+
+  function validate(pattern){
+    if (typeof pattern !== 'string'){
+      throw 'pattern must be a string!';
+    }
+
+    var patterns = pattern.split(' ');
+    var executablePattern = convertExpression(pattern);
+    var executablePatterns = executablePattern.split(' ');
+
+    if(patterns.length === 5){
+      patterns = ['0'].concat(patterns);
+    }
+
+    validateFields(patterns, executablePatterns);
   }
 
   return validate;
