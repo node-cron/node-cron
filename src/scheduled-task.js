@@ -40,6 +40,17 @@ this.stop = () => {
   return this;
 };
 
+/**
+* Returns the current task status.
+*
+* @returns {string} current task status.
+* The return may be:
+* - scheduled: when a task is scheduled and waiting to be executed.
+* - running: the task status while the task is executing. 
+* - stoped: when the task is stoped.
+* - destroyed: whe the task is destroyed, in that status the task cannot be re-started.
+* - failed: a task is maker as failed when the previous execution fails.
+*/
 this.getStatus = () => {
   return this.status;
 };
@@ -59,7 +70,7 @@ this.destroy = () => {
   });
   
   task.on('done', () => {
-    this.status = 'waiting';
+    this.status = 'scheduled';
   });
   
   task.on('failed', () => {

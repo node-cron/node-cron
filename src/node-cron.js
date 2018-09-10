@@ -12,7 +12,17 @@ module.exports = (() => {
    *
    * @param {string} expression - cron expression.
    * @param {Function} func - task to be executed.
-   * @param {boolean} immediateStart - whether to start the task immediately.
+   * @param {Object} options - a set of options for the scheduled task:
+   *    - scheduled <boolean>: if a schaduled task is ready and running to be 
+   *      performed when the time mach with the cron excpression.
+   *    - timezone <string>: the tiemzone to execute the tasks.
+   * 
+   *    Example: 
+   *    {
+   *      "scheduled": true,
+   *      "timezone": "America/Sao_Paulo"
+   *    } 
+   * 
    * @returns {ScheduledTask} update function.
    */
   function createTask(expression, func, options) {
