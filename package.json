@@ -1,6 +1,6 @@
 {
   "name": "node-cron",
-  "version": "1.2.1",
+  "version": "2.0.0",
   "description": "A simple cron-like task scheduler for Node.js",
   "author": "Lucas Merencia",
   "license": "ISC",
@@ -11,6 +11,9 @@
     "coverage": "istanbul cover _mocha -- --recursive",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "check": "npm run coverage && npm run coveralls"
+  },
+  "engines" : { 
+    "node" : ">=6.0.0" 
   },
   "repository": {
     "type": "git",
@@ -27,10 +30,13 @@
     "url": "https://github.com/merencia/node-cron/issues"
   },
   "devDependencies": {
-    "coveralls": "^3.0.0",
+    "coveralls": "^3.0.2",
     "expect.js": "^0.3.1",
-    "istanbul": "^0.4.2",
-    "mocha": "^4.0.1",
-    "sinon": "^4.1.2"
+    "istanbul": "^0.4.5",
+    "mocha": "^5.2.0",
+    "sinon": "^6.2.0"
+  },
+  "dependencies": {
+    "tz-offset": "0.0.1"
   }
 }

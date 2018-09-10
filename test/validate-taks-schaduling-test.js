@@ -4,34 +4,34 @@ var expect = require('expect.js');
 var sinon = require('sinon');
 var cron = require('../src/node-cron');
 
-describe('validate cron on task schaduling', function(){
-  beforeEach(function(){
+describe('validate cron on task schaduling', () => {
+  beforeEach(() => {
     this.clock = sinon.useFakeTimers();
   });
 
-  afterEach(function(){
+  afterEach(() => {
     this.clock.restore();
   });
 
-  it('should fail with a invalid cron expression', function(){
-    expect(function(){
-      cron.schedule('65 * * * *', function(){});
+  it('should fail with a invalid cron expression', () => {
+    expect(() => {
+      cron.schedule('65 * * * *', () => {});
     }).to.throwException(function(e){
       expect(e).to.equal('65 is a invalid expression for minute');
     });
   });
 
-  it('validate some spaces in task string', function(){
+  it('validate some spaces in task string', () => {
     var result = cron.validate('5    * * * *');
     expect(result).to.equal(true);
   });
 
-  it('multiple spaces in task string', function(){
+  it('multiple spaces in task string', () => {
     var result = cron.validate('5    *    *  *   *');
     expect(result).to.equal(true);
   });
 
-  it('spaces in begin and end of string', function(){
+  it('spaces in begin and end of string', () => {
     var result = cron.validate('       5 * *    * *     ');
     expect(result).to.equal(true);
   });

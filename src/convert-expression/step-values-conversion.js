@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = (function() {
+module.exports = (() => {
   function convertSteps(expressions){
     var stepValuePattern = /^(.+)\/(\d+)$/;
     for(var i = 0; i < expressions.length; i++){
@@ -23,5 +23,5 @@ module.exports = (function() {
   }
 
   return convertSteps;
-}());
+})();
 
