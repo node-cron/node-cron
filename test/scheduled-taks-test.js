@@ -6,7 +6,7 @@ var ScheduledTask = require('../src/scheduled-task');
 var Task = require('../src/task');
 
 describe('ScheduledTask', () => {
-    beforeEach(() =>{
+    beforeEach(() => {
         this.clock = sinon.useFakeTimers();
     });
     
@@ -20,7 +20,7 @@ describe('ScheduledTask', () => {
         expect(scheduledTask.getStatus()).to.equal('scheduled');
     });
 
-    it('should return running status', function(done) {
+    it('should return running status', (done) => {
         var task = new Task('* * * * * *', () =>{});
         var scheduledTask = new ScheduledTask(task, {});
 

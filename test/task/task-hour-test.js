@@ -6,10 +6,10 @@ var Task = require('../../src/task');
 describe('Task', () => {
   describe('hour', () => {
     it('should run a task on hour', () => {
+      let executed = 0;
       var task = new Task('* * * * *', () => {
-        this.executed += 1;
+        executed += 1;
       });
-      task.executed = 0;
       var date = new Date(2016, 1, 1);
       date.setHours(0);
       task.update(date);
@@ -17,14 +17,14 @@ describe('Task', () => {
       task.update(date);
       date.setHours(50);
       task.update(date);
-      expect(3).to.equal(task.executed);
+      expect(3).to.equal(executed);
     });
 
     it('should run only on hour 12', () => {
+      let executed = 0;
       var task = new Task('0 12 * * *', () => {
-        this.executed += 1;
+        executed += 1;
       });
-      task.executed = 0;
       var date = new Date(2016, 1, 1);
       date.setHours(3);
       task.update(date);
@@ -32,14 +32,14 @@ describe('Task', () => {
       task.update(date);
       date.setHours(15);
       task.update(date);
-      expect(1).to.equal(task.executed);
+      expect(1).to.equal(executed);
     });
 
     it('should run only on hours 20, 30 and 40 ', () => {
+      let executed = 0;
       var task = new Task('0 5,10,20 * * *', () => {
-        this.executed += 1;
+        executed += 1;
       });
-      task.executed = 0;
       var date = new Date(2016, 1, 1);
       date.setHours(5);
       task.update(date);
@@ -51,14 +51,14 @@ describe('Task', () => {
       task.update(date);
       date.setHours(22);
       task.update(date);
-      expect(3).to.equal(task.executed);
+      expect(3).to.equal(executed);
     });
 
     it('should run in even hours', () => {
+      let executed = 0;
       var task = new Task('* */2 * * *', () => {
-        this.executed += 1;
+        executed += 1;
       });
-      task.executed = 0;
       var date = new Date(2016, 1, 1);
       date.setHours(0);
       task.update(date);
@@ -66,14 +66,14 @@ describe('Task', () => {
       task.update(date);
       date.setHours(50);
       task.update(date);
-      expect(2).to.equal(task.executed);
+      expect(2).to.equal(executed);
     });
 
     it('should run every hour on range', () => {
+      let executed = 0;
       var task = new Task('* 8-20 * * *', () => {
-        this.executed += 1;
+        executed += 1;
       });
-      task.executed = 0;
       var date = new Date(2016, 1, 1);
       date.setHours(0);
       task.update(date);
@@ -83,7 +83,7 @@ describe('Task', () => {
       task.update(date);
       date.setHours(21);
       task.update(date);
-      expect(2).to.equal(task.executed);
+      expect(2).to.equal(executed);
     });
   });
 });

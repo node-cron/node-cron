@@ -8,7 +8,7 @@ describe('pattern-validation.js', () => {
     it('should fail with invalid week day', () => {
       expect(() => {
         validate('* * * * 9');
-      }).to.throwException(() => {
+      }).to.throwException((e) => {
         expect('9 is a invalid expression for week day').to.equal(e);
       });
     });
@@ -16,7 +16,7 @@ describe('pattern-validation.js', () => {
     it('should fail with invalid week day name', () => {
       expect(() => {
         validate('* * * * foo');
-      }).to.throwException(() => {
+      }).to.throwException((e) => {
         expect('foo is a invalid expression for week day').to.equal(e);
       });
     });

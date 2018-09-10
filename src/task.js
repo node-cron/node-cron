@@ -5,7 +5,7 @@ var validatePattern = require('./pattern-validation');
 
 var events = require('events');
 
-module.exports = (() => {
+
   function matchPattern(pattern, value){
     if( pattern.indexOf(',') !== -1 ){
       var patterns = pattern.split(',');
@@ -44,32 +44,30 @@ module.exports = (() => {
     this.expressions = this.pattern.split(' ');
 
     events.EventEmitter.call(this);
-  }
   
-  Task.prototype = events.EventEmitter.prototype;
-  
-  Task.prototype.update = function(date){
-    if(mustRun(this, date)){
-      var self = this;
-      try {
-        var execution = new Promise(function(resolve, reject){
-          self.emit('started', self);
-          var ex = self.execution();
-          if( execution instanceof Promise){
-            ex.then(resolve).catch(reject);
-          }
-        }).then(() => {
-          self.emit('done', self);
-        }).catch(function(error){
+    this.update = (date) => {
+      if(mustRun(this, date)){
+        try {
+          var execution = new Promise((resolve, reject) => {
+            this.emit('started', this);
+            var ex = this.execution();
+            if( execution instanceof Promise){
+              ex.then(resolve).catch(reject);
+            }
+          }).then(() => {
+            this.emit('done', this);
+          }).catch(function(error){
+            console.error(error);
+            this.emit('failed', error);
+          });
+        } catch (error) {
           console.error(error);
-          self.emit('failed', error);
-        });
-      } catch (error) {
-        console.error(error);
-        self.emit('failed', error);
-      }  
-    }
-  };
+          this.emit('failed', error);
+        }  
+      }
+    };
+  }
+
+  Task.prototype = events.EventEmitter.prototype;
+  module.exports = Task;
   
-  return Task;
-})();
