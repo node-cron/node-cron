@@ -19,6 +19,18 @@ module.exports = (() => {
     return str.replace(/\s{2,}/g, ' ').trim();
   }
 
+  // Function that takes care of normalization.
+  function normalizeIntegers(expressions) {
+    for (var i=0; i < expressions.length; i++){
+      var numbers = expressions[i].split(',');
+      for (var j=0; j<numbers.length; j++){
+        numbers[j] = parseInt(numbers[j]);
+      }
+      expressions[i] = numbers;
+    }
+    return expressions;
+  }
+
   /*
    * The node-cron core allows only numbers (including multiple numbers e.g 1,2).
    * This module is going to translate the month names, week day names and ranges
@@ -44,6 +56,8 @@ module.exports = (() => {
     expressions = convertAsterisksToRanges(expressions);
     expressions = convertRanges(expressions);
     expressions = convertSteps(expressions);
+
+    expressions = normalizeIntegers(expressions);
 
     return expressions.join(' ');
   }
