@@ -76,7 +76,7 @@ module.exports = (function() {
 
   ScheduledTask.prototype.getStatus = function() {
     return this.status;
-  }
+  };
 
   /**
    * Destroys the scheduled task.
