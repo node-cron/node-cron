@@ -40,7 +40,6 @@ this.stop = () => {
   return this;
 };
 
-
 this.getStatus = () => {
   return this.status;
 };
