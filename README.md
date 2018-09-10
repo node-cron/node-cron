@@ -127,9 +127,9 @@ Schedules given task to be executed whenever the cron expression ticks.
 
 Arguments:
 
-- !string expression - Cron expression
-- !Function func - Task to be executed
-- boolean? options - Optional configuration for job scheduling.
+- **expression** `string`: Cron expression
+- **function** `Function`: Task to be executed
+- **options** `Object`: Optional configuration for job scheduling.
 
 #### Options
 
