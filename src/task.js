@@ -50,8 +50,8 @@ module.exports = (function(){
   
   Task.prototype.update = function(date){
     if(mustRun(this, date)){
+      var self = this;
       try {
-        var self = this;
         var execution = new Promise(function(resolve, reject){
           self.emit('started', self);
           var ex = self.execution();
