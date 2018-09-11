@@ -7,13 +7,12 @@
   "homepage": "https://github.com/merencia/node-cron",
   "main": "src/node-cron.js",
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha --recursive",
-    "coverage": "istanbul cover _mocha -- --recursive",
+    "test": "nyc --reporter=html --reporter=text mocha --recursive",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "check": "npm run coverage && npm run coveralls"
+    "check": "npm run test && npm run coveralls"
   },
-  "engines" : { 
-    "node" : ">=6.0.0" 
+  "engines": {
+    "node": ">=6.0.0"
   },
   "repository": {
     "type": "git",
@@ -32,8 +31,8 @@
   "devDependencies": {
     "coveralls": "^3.0.2",
     "expect.js": "^0.3.1",
-    "istanbul": "^0.4.5",
     "mocha": "^5.2.0",
+    "nyc": "^13.0.1",
     "sinon": "^6.2.0"
   },
   "dependencies": {

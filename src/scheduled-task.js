@@ -16,55 +16,55 @@ function ScheduledTask(task, options) {
   *
   * @returns {ScheduledTask} instance of this task.
   */
- this.start = () => {
-  this.status = 'scheduled';
-  if (this.task && !this.tick) {
-    this.tick = setTimeout(this.task.bind(this), 1000);
-  }
+  this.start = () => {
+    this.status = 'scheduled';
+    if (this.task && !this.tick) {
+      this.tick = setTimeout(this.task, 1000);
+    }
+    
+    return this;
+  };
   
-  return this;
-};
-
-/**
-* Stops updating the task.
-*
-* @returns {ScheduledTask} instance of this task.
-*/
-this.stop = () => {
-  this.status = 'stoped';
-  if (this.tick) {
-    clearTimeout(this.tick);
-    this.tick = null;
-  }
+  /**
+  * Stops updating the task.
+  *
+  * @returns {ScheduledTask} instance of this task.
+  */
+  this.stop = () => {
+    this.status = 'stoped';
+    if (this.tick) {
+      clearTimeout(this.tick);
+      this.tick = null;
+    }
+    
+    return this;
+  };
   
-  return this;
-};
-
-/**
-* Returns the current task status.
-*
-* @returns {string} current task status.
-* The return may be:
-* - scheduled: when a task is scheduled and waiting to be executed.
-* - running: the task status while the task is executing. 
-* - stoped: when the task is stoped.
-* - destroyed: whe the task is destroyed, in that status the task cannot be re-started.
-* - failed: a task is maker as failed when the previous execution fails.
-*/
-this.getStatus = () => {
-  return this.status;
-};
-
-/**
-* Destroys the scheduled task.
-*/
-this.destroy = () => {
-  this.stop();
-  this.status = 'destroyed';
+  /**
+  * Returns the current task status.
+  *
+  * @returns {string} current task status.
+  * The return may be:
+  * - scheduled: when a task is scheduled and waiting to be executed.
+  * - running: the task status while the task is executing. 
+  * - stoped: when the task is stoped.
+  * - destroyed: whe the task is destroyed, in that status the task cannot be re-started.
+  * - failed: a task is maker as failed when the previous execution fails.
+  */
+  this.getStatus = () => {
+    return this.status;
+  };
   
-  this.task = null;
-};
-
+  /**
+  * Destroys the scheduled task.
+  */
+  this.destroy = () => {
+    this.stop();
+    this.status = 'destroyed';
+    
+    this.task = null;
+  };
+  
   task.on('started', () => {
     this.status = 'running';
   });
@@ -77,13 +77,12 @@ this.destroy = () => {
     this.status = 'failed';
   });
   
-  this.task =  () => {
+  this.task = () => {
     var date = new Date();
     if(timezone){
       date = tzOffset.timeAt(date, timezone);
     }
-    this.tick = setTimeout(this.task.bind(this), 
-    1000 - date.getMilliseconds());
+    this.tick = setTimeout(this.task, 1000 - date.getMilliseconds());
     task.update(date);
   };
   

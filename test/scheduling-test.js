@@ -105,4 +105,16 @@ describe('scheduling on minutes', () => {
     this.clock.tick(6000);
     expect(executed).to.equal(3);
   });
+  
+  it('should schedule a task that returns a promise', () => {
+    let executed = 0;
+    cron.schedule('* * * * * *', () => {
+      return new Promise((resolve) => {
+        executed += 1;
+        resolve();
+      });
+    });
+    this.clock.tick(1000);
+    expect(executed).to.equal(1);
+  });
 });
