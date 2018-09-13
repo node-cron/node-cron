@@ -32,10 +32,8 @@
     "expect.js": "^0.3.1",
     "istanbul": "^0.4.2",
     "mocha": "^4.0.1",
-    "sinon": "^4.1.2"
-  },
-  "dependencies": {
-    "opencollective": "^1.0.3"
+    "sinon": "^4.1.2",
+    "opencollective-postinstall": "^2.0.0",
   },
   "collective": {
     "type": "opencollective",
