@@ -6,7 +6,7 @@ var convertAsterisksToRanges = require('./asterisk-to-range-conversion');
 var convertRanges = require('./range-conversion');
 var convertSteps = require('./step-values-conversion');
 
-module.exports = (function() {
+module.exports = (() => {
 
   function appendSeccondExpression(expressions){
     if(expressions.length === 5){
@@ -17,6 +17,18 @@ module.exports = (function() {
 
   function removeSpaces(str) {
     return str.replace(/\s{2,}/g, ' ').trim();
+  }
+
+  // Function that takes care of normalization.
+  function normalizeIntegers(expressions) {
+    for (var i=0; i < expressions.length; i++){
+      var numbers = expressions[i].split(',');
+      for (var j=0; j<numbers.length; j++){
+        numbers[j] = parseInt(numbers[j]);
+      }
+      expressions[i] = numbers;
+    }
+    return expressions;
   }
 
   /*
@@ -45,8 +57,10 @@ module.exports = (function() {
     expressions = convertRanges(expressions);
     expressions = convertSteps(expressions);
 
+    expressions = normalizeIntegers(expressions);
+
     return expressions.join(' ');
   }
 
   return interprete;
-}());
+})();

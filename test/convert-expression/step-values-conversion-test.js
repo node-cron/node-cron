@@ -3,8 +3,8 @@
 var expect = require('expect.js');
 var conversion = require('../../src/convert-expression/step-values-conversion');
 
-describe('step-values-conversion.js', function() {
-  it('shuld convert step values', function() {
+describe('step-values-conversion.js', () => {
+  it('shuld convert step values', () => {
     var expressions = '1,2,3,4,5,6,7,8,9,10/2 0,1,2,3,4,5,6,7,8,9/5 * * * *'.split(' ');
     expressions = conversion(expressions);
     console.log(expressions);

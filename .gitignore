@@ -35,3 +35,7 @@ node_modules
 
 # Optional REPL history
 .node_repl_history
+
+.sass-cache/
+_site/
+.nyc_output/
