@@ -9,7 +9,6 @@
   "scripts": {
     "test": "nyc --reporter=html --reporter=text mocha --recursive",
     "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
-    "check": "npm run coverage && npm run coveralls",
     "postinstall": "opencollective-postinstall"
   },
   "engines": {
