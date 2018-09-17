@@ -7,8 +7,8 @@
   "homepage": "https://github.com/merencia/node-cron",
   "main": "src/node-cron.js",
   "scripts": {
-    "test": "nyc --reporter=html --reporter=text mocha --recursive",
-    "coveralls": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
+    "test": "nyc --reporter=html --reporter=text --reporter=text-lcov mocha --recursive",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
     "postinstall": "opencollective-postinstall"
   },
   "engines": {
@@ -33,8 +33,8 @@
     "expect.js": "^0.3.1",
     "istanbul": "^0.4.2",
     "mocha": "^4.0.1",
-    "sinon": "^4.1.2",
-    "opencollective-postinstall": "^2.0.0"
+    "opencollective-postinstall": "^2.0.0",
+    "sinon": "^4.1.2"
   },
   "collective": {
     "type": "opencollective",

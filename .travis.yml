@@ -7,4 +7,4 @@ before_script:
   - sudo dpkg-reconfigure --frontend noninteractive tzdata
   - npm install
 script:
-  - npm run coveralls
+  - npm run coverage
