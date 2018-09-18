@@ -33,6 +33,7 @@
     "expect.js": "^0.3.1",
     "istanbul": "^0.4.2",
     "mocha": "^4.0.1",
+    "nyc": "^13.0.1",
     "opencollective-postinstall": "^2.0.0",
     "sinon": "^4.1.2"
   },
