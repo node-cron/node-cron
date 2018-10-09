@@ -19,7 +19,7 @@ describe('scheduling a task with exception', () =>{
       executed += 1;
       throw 'exception!';
     });
-    this.clock.tick(3000 * 60);
+    this.clock.tick(3000 * 60 + 1);
     expect(executed).to.equal(3);
   });
 });

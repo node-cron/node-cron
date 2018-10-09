@@ -18,7 +18,7 @@ describe('scheduling on minutes', () => {
     cron.schedule('* * * * *', () => {
       executed += 1;
     });
-    this.clock.tick(3000 * 60);
+    this.clock.tick(3000 * 60 + 1);
     expect(executed).to.equal(3);
   });
 
@@ -102,7 +102,7 @@ describe('scheduling on minutes', () => {
     cron.schedule('*/02 * * * * *', () => {
       executed += 1;
     });
-    this.clock.tick(6000);
+    this.clock.tick(6001);
     expect(executed).to.equal(3);
   });
   
@@ -114,7 +114,7 @@ describe('scheduling on minutes', () => {
         resolve();
       });
     });
-    this.clock.tick(1000);
+    this.clock.tick(1001);
     expect(executed).to.equal(1);
   });
 });

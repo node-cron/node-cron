@@ -7,7 +7,7 @@
   "homepage": "https://github.com/merencia/node-cron",
   "main": "src/node-cron.js",
   "scripts": {
-    "test": "nyc --reporter=html --reporter=text --reporter=text-lcov mocha --recursive",
+    "test": "nyc --reporter=html --reporter=text mocha --recursive",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "check": "npm test && npm run coverage",
     "postinstall": "opencollective-postinstall"

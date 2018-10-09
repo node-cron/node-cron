@@ -19,9 +19,9 @@ describe('stopping a task', () => {
         executed++;
       });
 
-    this.clock.tick(1000 * 60);
+    this.clock.tick(1000 * 60 + 1);
     task.stop();
-    this.clock.tick(1000 * 60);
+    this.clock.tick(1000 * 60 + 1);
     expect(executed).to.equal(1);
   });
 });
