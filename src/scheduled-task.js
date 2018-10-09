@@ -19,7 +19,7 @@ function ScheduledTask(task, options) {
   this.start = () => {
     this.status = 'scheduled';
     if (this.task && !this.tick) {
-      this.tick = setTimeout(this.task, 1000);
+      this.tick = setTimeout(this.task, 1000 - new Date().getMilliseconds() + 1);
     }
     
     return this;
@@ -82,7 +82,7 @@ function ScheduledTask(task, options) {
     if(timezone){
       date = tzOffset.timeAt(date, timezone);
     }
-    this.tick = setTimeout(this.task, 1000 - date.getMilliseconds());
+    this.tick = setTimeout(this.task, 1000 - date.getMilliseconds() + 1);
     task.update(date);
   };
   
