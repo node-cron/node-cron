@@ -21,7 +21,7 @@ describe('defer a task', () => {
 
     this.clock.tick(1000 * 60);
     task.start();
-    this.clock.tick(1000 * 60);
+    this.clock.tick(1001 * 60);
     expect(executed).to.equal(1);
   });
 });

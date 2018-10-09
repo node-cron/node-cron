@@ -19,11 +19,11 @@ describe('destroying a task', () => {
         executed++;
       });
 
-    this.clock.tick(1000 * 60);
+    this.clock.tick(1000 * 60 + 1);
     task.destroy();
-    this.clock.tick(1000 * 60);
+    this.clock.tick(1000 * 60 + 1);
     task.start();
-    this.clock.tick(1000 * 60);
+    this.clock.tick(1000 * 60 + 1);
 
     expect(executed).to.equal(1);
   });

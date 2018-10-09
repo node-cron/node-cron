@@ -31,7 +31,7 @@ describe('scheduling with timezone', () => {
             timezone: 'Etc/UTC'
         });
         
-        this.clock.tick(1000 * 60 * 60 * 24);
+        this.clock.tick(1000 * 60 * 60 * 24 + 1);
         expect(executedAt.getHours()).to.equal(21);
     });
 });

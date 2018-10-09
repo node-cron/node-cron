@@ -20,7 +20,7 @@ describe('scheduling with range values', () =>{
     cron.schedule('2-4 * * * *', () =>{
       executed += 1;
     });
-    this.clock.tick(7000 * 60);
+    this.clock.tick(7001 * 60);
     expect(executed).to.equal(3);
   });
 
@@ -31,7 +31,7 @@ describe('scheduling with range values', () =>{
     cron.schedule('0 2-4 * * *', () =>{
       executed += 1;
     });
-    this.clock.tick(7000 * 60 * 60);
+    this.clock.tick(7001 * 60 * 60);
     expect(executed).to.equal(3);
   });
 });
