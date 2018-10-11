@@ -1,7 +1,6 @@
 'use strict';
 
-var Task = require('./task'),
-  ScheduledTask = require('./scheduled-task'),
+var ScheduledTask = require('./scheduled-task'),
   validation = require('./pattern-validation');
 
 module.exports = (() => {
@@ -40,8 +39,7 @@ module.exports = (() => {
       };
     }
 
-    var task = new Task(expression, func);
-    return new ScheduledTask(task, options);
+    return new ScheduledTask(expression, func, options);
   }
 
   function validate(expression) {
