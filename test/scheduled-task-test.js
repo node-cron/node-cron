@@ -28,6 +28,7 @@ describe('ScheduledTask', () => {
         }, { scheduled: false });
         this.clock.tick(3001);
         assert.equal(0, executed);
+        scheduledTask.stop();
     });
 
     it('should start a task', () => {

@@ -1,21 +1,24 @@
 'use strict';
 
 const { expect } = require('chai');
-var cron = require('../../src/node-cron');
+var validate = require('../../src/pattern-validation');
 
-describe('public .validate() method', () => {
+describe('pattern-validation', () => {
   it('should succeed with a valid expression', () =>  {
-    var result = cron.validate('59 * * * *');
-    expect(result).to.equal(true);
+    expect(() => {
+      validate('59 * * * *')
+    }).to.not.throw();
   });
 
   it('should fail with an invalid expression', () =>  {
-    var result = cron.validate('60 * * * *');
-    expect(result).to.equal(false);
+    expect(() => {
+      validate('60 * * * *')
+    }).to.throw('60 is a invalid expression for minute');
   });
 
   it('should fail without a string', () =>  {
-    var result = cron.validate('60 * * * *');
-    expect(result).to.equal(false);
+    expect(() => {
+      validate(50)
+    }).to.throw('pattern must be a string!');
   });
 });
