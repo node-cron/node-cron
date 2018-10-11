@@ -13,4 +13,9 @@ describe('public .validate() method', () => {
     var result = cron.validate('60 * * * *');
     expect(result).to.equal(false);
   });
+
+  it('should fail without a string', () =>  {
+    var result = cron.validate('60 * * * *');
+    expect(result).to.equal(false);
+  });
 });

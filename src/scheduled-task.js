@@ -3,15 +3,32 @@
 const Task = require('./task');
 const Scheduler = require('./scheduler');
 
-function ScheduledTask(cronExpressin, func, options) {
-  var task = new Task(func);
-  var scheduler = new Scheduler(cronExpressin, options.timezone);
+class ScheduledTask {
+  constructor(cronExpression, func, options) {
+    if(!options){
+      options = {
+        scheduled: true
+      }
+    }
+    let task = new Task(func);
+    let scheduler = new Scheduler(cronExpression, options.timezone);
 
-  scheduler.on('scheduled-time-matched', (now) => {
-    task.execute(now);
-  });
+    scheduler.on('scheduled-time-matched', (now) => {
+      task.execute(now);
+    });
 
-  scheduler.start();
+    if(options.scheduled !== false){
+      scheduler.start();
+    }
+
+    this.start = () => {
+      scheduler.start();
+    }
+
+    this.stop = () => {
+      scheduler.stop();
+    }
+  }
 }
 
 module.exports = ScheduledTask;

@@ -1,7 +1,16 @@
 const { assert } = require('chai');
+const sinon = require('sinon');
 const Scheduler = require('../src/scheduler');
 
 describe('Scheduler', () => {
+    beforeEach(() => {
+        this.clock = sinon.useFakeTimers();
+    });
+
+    afterEach(() => {
+        this.clock.restore();
+    });
+
     it('should emit an event on matched time', (done) => {
         let scheduler = new Scheduler('* * * * * *');
 
@@ -11,7 +20,9 @@ describe('Scheduler', () => {
             scheduler.stop();
             done();
         });
+
         scheduler.start();
+        this.clock.tick(1001);
     });
 
     it('should emit an event every second', (done) => {
@@ -27,5 +38,6 @@ describe('Scheduler', () => {
             }
         });
         scheduler.start();
-    }).timeout(5100);
+        this.clock.tick(5001);
+    });
 });
