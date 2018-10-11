@@ -1,0 +1,94 @@
+const { assert } = require('chai');
+const sinon = require('sinon');
+const cron = require('../src/node-cron');
+
+describe('node-cron', () => {
+    beforeEach(() => {
+        this.clock = sinon.useFakeTimers();
+    });
+
+    afterEach(() => {
+        this.clock.restore();
+    });
+
+    describe('schedule', () => {
+        it('should schedule a task', () => {
+            let executed = 0;
+            cron.schedule('* * * * * *', () => {
+                executed += 1;
+            });
+
+            this.clock.tick(2001);
+
+            assert.equal(2, executed);
+        });
+
+        it('should schedule a task with America/Sao_Paulo timezone', (done) => {
+            let startDate = new Date('Thu, 20 Sep 2018 00:00:00Z');
+            this.clock = sinon.useFakeTimers(startDate);
+            cron.schedule('* * * * * *', (date) => {
+                assert.equal(19, date.getDate());
+                assert.equal(8, date.getMonth());
+                assert.equal(2018, date.getFullYear());
+                assert.equal(21, date.getHours());
+                assert.equal(0, date.getMinutes());
+                assert.equal(1, date.getSeconds());
+                done();
+            }, {
+                timezone: "Etc/UTC"
+            });
+            this.clock.tick(1001);
+        });
+
+        it('should schedule a task with Europe/Rome timezone', (done) => {
+            let startDate = new Date('Thu, 20 Sep 2018 00:00:00Z');
+            this.clock = sinon.useFakeTimers(startDate);
+            cron.schedule('* * * * * *', (date) => {
+                assert.equal(19, date.getDate());
+                assert.equal(8, date.getMonth());
+                assert.equal(2018, date.getFullYear());
+                assert.equal(21, date.getHours());
+                assert.equal(0, date.getMinutes());
+                assert.equal(1, date.getSeconds());
+                done();
+            }, {
+                timezone: "Europe/Rome"
+            });
+            this.clock.tick(1001);
+        });
+
+        it('should schedule a task stoped', () => {
+            let executed = 0;
+            cron.schedule('* * * * * *', () => {
+                executed += 1;
+            }, { scheduled: false });
+
+            this.clock.tick(2001);
+
+            assert.equal(0, executed);
+        });
+
+        it('should start a stoped task', () => {
+            let executed = 0;
+            let scheduledTask = cron.schedule('* * * * * *', () => {
+                executed += 1;
+            }, { scheduled: false });
+
+            this.clock.tick(2001);
+            assert.equal(0, executed);
+            scheduledTask.start();
+            this.clock.tick(2001);
+            assert.equal(2, executed);
+        });
+    });
+
+    describe('validate', () => {
+        it('should validate a pattern', () => {
+            assert.isTrue(cron.validate('* * * * * *')) 
+        });
+
+        it('should fail with a invalid pattern', () => {
+            assert.isFalse(cron.validate('62 * * * * *')) 
+        });
+    })
+});
