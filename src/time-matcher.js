@@ -18,16 +18,16 @@ class TimeMatcher{
         this.expressions = this.pattern.split(' ');
     }
 
-    match(){
+    match(date){
         if(this.timezone){
-            now = tzOffset.timeAt(now, this.timezone)
+            date = tzOffset.timeAt(date, this.timezone)
         }
-        var runOnSecond = matchPattern(this.expressions[0], now.getSeconds());
-        var runOnMinute = matchPattern(this.expressions[1], now.getMinutes());
-        var runOnHour = matchPattern(this.expressions[2], now.getHours());
-        var runOnDay = matchPattern(this.expressions[3], now.getDate());
-        var runOnMonth = matchPattern(this.expressions[4], now.getMonth() + 1);
-        var runOnWeekDay = matchPattern(this.expressions[5], now.getDay());
+        var runOnSecond = matchPattern(this.expressions[0], date.getSeconds());
+        var runOnMinute = matchPattern(this.expressions[1], date.getMinutes());
+        var runOnHour = matchPattern(this.expressions[2], date.getHours());
+        var runOnDay = matchPattern(this.expressions[3], date.getDate());
+        var runOnMonth = matchPattern(this.expressions[4], date.getMonth() + 1);
+        var runOnWeekDay = matchPattern(this.expressions[5], date.getDay());
 
         return runOnSecond && runOnMinute && runOnHour && runOnDay && runOnMonth && runOnWeekDay;
     }
