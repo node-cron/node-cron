@@ -1,6 +1,6 @@
 'use strict';
 
-var expect = require('expect.js');
+const { expect } = require('chai');
 var conversion = require('../../src/convert-expression');
 
 describe('month-names-conversion.js', () => {

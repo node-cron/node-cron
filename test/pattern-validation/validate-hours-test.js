@@ -1,6 +1,6 @@
 'use strict';
 
-var expect = require('expect.js');
+const { expect } = require('chai');
 var validate = require('../../src/pattern-validation');
 
 describe('pattern-validation.js', () => {
@@ -8,33 +8,31 @@ describe('pattern-validation.js', () => {
     it('should fail with invalid hour', () => {
       expect(() => {
         validate('* 25 * * *');
-      }).to.throwException((e) => {
-        expect('25 is a invalid expression for hour').to.equal(e);
-      });
+      }).to.throw('25 is a invalid expression for hour');
     });
 
     it('should not fail with valid hour', () => {
       expect(() => {
         validate('* 12 * * *');
-      }).to.not.throwException();
+      }).to.not.throw();
     });
 
     it('should not fail with * for hour', () => {
       expect(() => {
         validate('* * * * * *');
-      }).to.not.throwException();
+      }).to.not.throw();
     });
 
     it('should not fail with */2 for hour', () => {
       expect(() => {
         validate('* */2 * * *');
-      }).to.not.throwException();
+      }).to.not.throw();
     });
 
     it('should accept range for hours', () => {
       expect(() => {
         validate('* 3-20 * * *');
-      }).to.not.throwException();
+      }).to.not.throw();
     });
   });
 });

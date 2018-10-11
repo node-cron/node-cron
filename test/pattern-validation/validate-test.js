@@ -1,6 +1,6 @@
 'use strict';
 
-var expect = require('expect.js');
+const { expect } = require('chai');
 var cron = require('../../src/node-cron');
 
 describe('public .validate() method', () => {
