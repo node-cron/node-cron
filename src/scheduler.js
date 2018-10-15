@@ -12,18 +12,19 @@ class Scheduler extends EventEmitter{
     start(){
         // clear timeout if exsits
         this.stop();
+
         var matchTime = () => {
+            var currentTime = process.hrtime();
+
             var now = new Date();
             if(this.timeMatcher.match(now)){
                 this.emit('scheduled-time-matched', now);
             }
            
-            if(this.timeout){
-                this.timeout = setTimeout(matchTime, 1000 - now.getMilliseconds() + 1);
-            }
+            this.timeout = setTimeout(matchTime, 1000 - now.getMilliseconds() + 1);
         }
         
-        this.timeout = setTimeout(matchTime, 1000 - new Date().getMilliseconds() + 1);
+        matchTime();
     }
 
     stop(){

@@ -18,7 +18,7 @@ describe('node-cron', () => {
                 executed += 1;
             });
 
-            this.clock.tick(2001);
+            this.clock.tick(2000);
 
             assert.equal(2, executed);
         });
@@ -32,12 +32,12 @@ describe('node-cron', () => {
                 assert.equal(2018, date.getFullYear());
                 assert.equal(21, date.getHours());
                 assert.equal(0, date.getMinutes());
-                assert.equal(1, date.getSeconds());
+                assert.equal(0, date.getSeconds());
                 done();
             }, {
-                timezone: "Etc/UTC"
+                timezone: "America/Sao_Paulo"
             });
-            this.clock.tick(1001);
+            this.clock.tick(1000);
         });
 
         it('should schedule a task with Europe/Rome timezone', (done) => {
@@ -49,12 +49,12 @@ describe('node-cron', () => {
                 assert.equal(2018, date.getFullYear());
                 assert.equal(21, date.getHours());
                 assert.equal(0, date.getMinutes());
-                assert.equal(1, date.getSeconds());
+                assert.equal(0, date.getSeconds());
                 done();
             }, {
                 timezone: "Europe/Rome"
             });
-            this.clock.tick(1001);
+            this.clock.tick(1000);
         });
 
         it('should schedule a task stoped', () => {
@@ -63,7 +63,7 @@ describe('node-cron', () => {
                 executed += 1;
             }, { scheduled: false });
 
-            this.clock.tick(2001);
+            this.clock.tick(2000);
 
             assert.equal(0, executed);
         });
@@ -74,10 +74,10 @@ describe('node-cron', () => {
                 executed += 1;
             }, { scheduled: false });
 
-            this.clock.tick(2001);
+            this.clock.tick(2000);
             assert.equal(0, executed);
             scheduledTask.start();
-            this.clock.tick(2001);
+            this.clock.tick(2000);
             assert.equal(2, executed);
         });
     });
