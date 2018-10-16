@@ -9,7 +9,7 @@
   "scripts": {
     "test": "nyc --reporter=html --reporter=text mocha --recursive",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "lint": "./node_modules/.bin/eslint ./{src,test}",
+    "lint": "./node_modules/.bin/eslint ./src ./test",
     "check": "npm run lint && npm test && npm run coverage"
   },
   "engines": {
