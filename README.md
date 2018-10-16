@@ -212,7 +212,7 @@ var invalid = cron.validate('60 * * * *');
 
 Feel free to submit issues and enhancement requests [here](https://github.com/merencia/node-cron/issues).
 
-## Contributors
+## Contributing
 
 In general, we follow the "fork-and-pull" Git workflow.
 
