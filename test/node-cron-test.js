@@ -35,7 +35,7 @@ describe('node-cron', () => {
                 assert.equal(1, date.getSeconds());
                 done();
             }, {
-                timezone: "America/Sao_Paulo"
+                timezone: 'America/Sao_Paulo'
             });
             this.clock.tick(1000);
         });
@@ -52,7 +52,7 @@ describe('node-cron', () => {
                 assert.equal(1, date.getSeconds());
                 done();
             }, {
-                timezone: "Europe/Rome"
+                timezone: 'Europe/Rome'
             });
             this.clock.tick(1000);
         });
@@ -84,11 +84,11 @@ describe('node-cron', () => {
 
     describe('validate', () => {
         it('should validate a pattern', () => {
-            assert.isTrue(cron.validate('* * * * * *')) 
+            assert.isTrue(cron.validate('* * * * * *')); 
         });
 
         it('should fail with a invalid pattern', () => {
-            assert.isFalse(cron.validate('62 * * * * *')) 
+            assert.isFalse(cron.validate('62 * * * * *')); 
         });
-    })
+    });
 });
