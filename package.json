@@ -9,8 +9,7 @@
   "scripts": {
     "test": "nyc --reporter=html --reporter=text mocha --recursive",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "check": "npm test && npm run coverage",
-    "postinstall": "opencollective-postinstall"
+    "check": "npm test && npm run coverage"
   },
   "engines": {
     "node": ">=6.0.0"
@@ -38,15 +37,7 @@
     "nyc": "^13.0.1",
     "sinon": "^6.3.5"
   },
-  "collective": {
-    "type": "opencollective",
-    "url": "https://opencollective.com/node-cron",
-    "mocha": "^5.2.0",
-    "nyc": "^13.0.1",
-    "sinon": "^6.3.5"
-  },
   "dependencies": {
-    "opencollective-postinstall": "^2.0.0",
     "tz-offset": "0.0.1"
   }
 }
