@@ -7,11 +7,12 @@ class ScheduledTask {
   constructor(cronExpression, func, options) {
     if(!options){
       options = {
-        scheduled: true
+        scheduled: true,
+        recoverMissedExecutions: false
       }
     }
     let task = new Task(func);
-    let scheduler = new Scheduler(cronExpression, options.timezone);
+    let scheduler = new Scheduler(cronExpression, options.timezone, options.recoverMissedExecutions);
 
     scheduler.on('scheduled-time-matched', (now) => {
       task.execute(now);

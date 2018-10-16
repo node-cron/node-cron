@@ -25,12 +25,6 @@ module.exports = (() => {
    * @returns {ScheduledTask} update function.
    */
   function createTask(expression, func, options) {
-    if(!options){
-      options = {
-        scheduled: true
-      };
-    }
-
     return new ScheduledTask(expression, func, options);
   }
 
