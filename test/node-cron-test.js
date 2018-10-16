@@ -4,7 +4,7 @@ const cron = require('../src/node-cron');
 
 describe('node-cron', () => {
     beforeEach(() => {
-        this.clock = sinon.useFakeTimers();
+        this.clock = sinon.useFakeTimers(new Date(2018, 0, 1, 0, 0, 0, 0));
     });
 
     afterEach(() => {
@@ -24,7 +24,7 @@ describe('node-cron', () => {
         });
 
         it('should schedule a task with America/Sao_Paulo timezone', (done) => {
-            let startDate = new Date('Thu, 20 Sep 2018 00:00:00Z');
+            let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
             this.clock = sinon.useFakeTimers(startDate);
             cron.schedule('* * * * * *', (date) => {
                 assert.equal(19, date.getDate());
@@ -32,7 +32,7 @@ describe('node-cron', () => {
                 assert.equal(2018, date.getFullYear());
                 assert.equal(21, date.getHours());
                 assert.equal(0, date.getMinutes());
-                assert.equal(0, date.getSeconds());
+                assert.equal(1, date.getSeconds());
                 done();
             }, {
                 timezone: "America/Sao_Paulo"
@@ -41,7 +41,7 @@ describe('node-cron', () => {
         });
 
         it('should schedule a task with Europe/Rome timezone', (done) => {
-            let startDate = new Date('Thu, 20 Sep 2018 00:00:00Z');
+            let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
             this.clock = sinon.useFakeTimers(startDate);
             cron.schedule('* * * * * *', (date) => {
                 assert.equal(19, date.getDate());
@@ -49,7 +49,7 @@ describe('node-cron', () => {
                 assert.equal(2018, date.getFullYear());
                 assert.equal(21, date.getHours());
                 assert.equal(0, date.getMinutes());
-                assert.equal(0, date.getSeconds());
+                assert.equal(1, date.getSeconds());
                 done();
             }, {
                 timezone: "Europe/Rome"

@@ -4,7 +4,7 @@ const ScheduledTask = require('../src/scheduled-task');
 
 describe('ScheduledTask', () => {
     beforeEach(() => {
-        this.clock = sinon.useFakeTimers();
+        this.clock = sinon.useFakeTimers(new Date(2018, 0, 1, 0, 0, 0, 0));
     });
 
     afterEach(() => {
