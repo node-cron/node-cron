@@ -45,7 +45,7 @@ describe('Scheduler', () => {
         this.clock.restore();
         let scheduler = new Scheduler('* * * * * *', null, true);
         let emited = 0;
-        scheduler.on('scheduled-time-matched', (date) => {
+        scheduler.on('scheduled-time-matched', () => {
             emited += 1;
         });
         scheduler.start();
@@ -69,7 +69,7 @@ describe('Scheduler', () => {
         this.clock.restore();
         let scheduler = new Scheduler('* * * * * *', null, false);
         let emited = 0;
-        scheduler.on('scheduled-time-matched', (date) => {
+        scheduler.on('scheduled-time-matched', () => {
             emited += 1;
         });
         scheduler.start();
