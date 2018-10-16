@@ -226,6 +226,6 @@ describe('TimeMatcher', () => {
             let matcher = new TimeMatcher('0 0 0 * * *', 'Europe/Rome');
             let utcTime = new Date('Thu Oct 11 2018 23:00:00Z');
             assert.isTrue(matcher.match(utcTime));
-        })
-    })
-})
+        });
+    });
+});

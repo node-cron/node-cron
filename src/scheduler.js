@@ -4,26 +4,36 @@ const EventEmitter = require('events');
 const TimeMatcher = require('./time-matcher');
 
 class Scheduler extends EventEmitter{
-    constructor(pattern, timezone){
+    constructor(pattern, timezone, autorecover){
         super();
         this.timeMatcher = new TimeMatcher(pattern, timezone);
+        this.autorecover = autorecover;
     }
 
     start(){
         // clear timeout if exsits
         this.stop();
+
+        let lastCheck = process.hrtime();
+        let lastExecution = new Date();
+
         var matchTime = () => {
-            var now = new Date();
-            if(this.timeMatcher.match(now)){
-                this.emit('scheduled-time-matched', now);
+            const delay = 1000;
+            const elapsedTime = process.hrtime(lastCheck);
+            const elapsedMs = (elapsedTime[0] * 1e9 + elapsedTime[1]) / 1e6;
+            const missedExecutions = Math.floor(elapsedMs / 1000);
+            for(let i = missedExecutions; i >= 0; i--){
+                var date = new Date(new Date().getTime() - i * 1000);
+                if(lastExecution.getTime() < date.getTime() && (i === 0 || this.autorecover) && this.timeMatcher.match(date)){
+                    this.emit('scheduled-time-matched', date);
+                    date.setMilliseconds(0);
+                    lastCheck = process.hrtime();
+                    lastExecution = date;
+                }
             }
-           
-            if(this.timeout){
-                this.timeout = setTimeout(matchTime, 1000 - now.getMilliseconds() + 1);
-            }
-        }
-        
-        this.timeout = setTimeout(matchTime, 1000 - new Date().getMilliseconds() + 1);
+            this.timeout = setTimeout(matchTime, delay);
+        };
+        matchTime();
     }
 
     stop(){

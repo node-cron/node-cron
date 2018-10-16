@@ -1,11 +1,11 @@
 'use strict';
 
 var ScheduledTask = require('./scheduled-task'),
-  validation = require('./pattern-validation');
+    validation = require('./pattern-validation');
 
 module.exports = (() => {
 
-  /**
+    /**
    * Creates a new task to execute given function when the cron
    *  expression ticks.
    *
@@ -24,28 +24,22 @@ module.exports = (() => {
    * 
    * @returns {ScheduledTask} update function.
    */
-  function createTask(expression, func, options) {
-    if(!options){
-      options = {
-        scheduled: true
-      };
+    function createTask(expression, func, options) {
+        return new ScheduledTask(expression, func, options);
     }
 
-    return new ScheduledTask(expression, func, options);
-  }
+    function validate(expression) {
+        try {
+            validation(expression);
+        } catch(e) {
+            return false;
+        }
 
-  function validate(expression) {
-    try {
-      validation(expression);
-    } catch(e) {
-      return false;
+        return true;
     }
 
-    return true;
-  }
-
-  return {
-    schedule: createTask,
-    validate: validate
-  };
+    return {
+        schedule: createTask,
+        validate: validate
+    };
 })();

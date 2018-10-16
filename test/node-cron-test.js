@@ -4,7 +4,7 @@ const cron = require('../src/node-cron');
 
 describe('node-cron', () => {
     beforeEach(() => {
-        this.clock = sinon.useFakeTimers();
+        this.clock = sinon.useFakeTimers(new Date(2018, 0, 1, 0, 0, 0, 0));
     });
 
     afterEach(() => {
@@ -18,13 +18,13 @@ describe('node-cron', () => {
                 executed += 1;
             });
 
-            this.clock.tick(2001);
+            this.clock.tick(2000);
 
             assert.equal(2, executed);
         });
 
         it('should schedule a task with America/Sao_Paulo timezone', (done) => {
-            let startDate = new Date('Thu, 20 Sep 2018 00:00:00Z');
+            let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
             this.clock = sinon.useFakeTimers(startDate);
             cron.schedule('* * * * * *', (date) => {
                 assert.equal(19, date.getDate());
@@ -35,13 +35,13 @@ describe('node-cron', () => {
                 assert.equal(1, date.getSeconds());
                 done();
             }, {
-                timezone: "Etc/UTC"
+                timezone: 'America/Sao_Paulo'
             });
-            this.clock.tick(1001);
+            this.clock.tick(1000);
         });
 
         it('should schedule a task with Europe/Rome timezone', (done) => {
-            let startDate = new Date('Thu, 20 Sep 2018 00:00:00Z');
+            let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
             this.clock = sinon.useFakeTimers(startDate);
             cron.schedule('* * * * * *', (date) => {
                 assert.equal(19, date.getDate());
@@ -52,9 +52,9 @@ describe('node-cron', () => {
                 assert.equal(1, date.getSeconds());
                 done();
             }, {
-                timezone: "Europe/Rome"
+                timezone: 'Europe/Rome'
             });
-            this.clock.tick(1001);
+            this.clock.tick(1000);
         });
 
         it('should schedule a task stoped', () => {
@@ -63,7 +63,7 @@ describe('node-cron', () => {
                 executed += 1;
             }, { scheduled: false });
 
-            this.clock.tick(2001);
+            this.clock.tick(2000);
 
             assert.equal(0, executed);
         });
@@ -74,21 +74,21 @@ describe('node-cron', () => {
                 executed += 1;
             }, { scheduled: false });
 
-            this.clock.tick(2001);
+            this.clock.tick(2000);
             assert.equal(0, executed);
             scheduledTask.start();
-            this.clock.tick(2001);
+            this.clock.tick(2000);
             assert.equal(2, executed);
         });
     });
 
     describe('validate', () => {
         it('should validate a pattern', () => {
-            assert.isTrue(cron.validate('* * * * * *')) 
+            assert.isTrue(cron.validate('* * * * * *')); 
         });
 
         it('should fail with a invalid pattern', () => {
-            assert.isFalse(cron.validate('62 * * * * *')) 
+            assert.isFalse(cron.validate('62 * * * * *')); 
         });
-    })
+    });
 });

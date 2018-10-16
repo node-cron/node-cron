@@ -22,7 +22,7 @@ describe('Scheduler', () => {
         });
 
         scheduler.start();
-        this.clock.tick(1001);
+        this.clock.tick(1000);
     });
 
     it('should emit an event every second', (done) => {
@@ -38,6 +38,6 @@ describe('Scheduler', () => {
             }
         });
         scheduler.start();
-        this.clock.tick(5001);
+        this.clock.tick(5000);
     });
 });
