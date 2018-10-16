@@ -32,7 +32,7 @@ class Scheduler extends EventEmitter{
                 }
             }
             this.timeout = setTimeout(matchTime, delay);
-        }
+        };
         matchTime();
     }
 

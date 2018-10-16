@@ -4,32 +4,32 @@ const Task = require('./task');
 const Scheduler = require('./scheduler');
 
 class ScheduledTask {
-  constructor(cronExpression, func, options) {
-    if(!options){
-      options = {
-        scheduled: true,
-        recoverMissedExecutions: false
-      }
-    }
-    let task = new Task(func);
-    let scheduler = new Scheduler(cronExpression, options.timezone, options.recoverMissedExecutions);
+    constructor(cronExpression, func, options) {
+        if(!options){
+            options = {
+                scheduled: true,
+                recoverMissedExecutions: false
+            };
+        }
+        let task = new Task(func);
+        let scheduler = new Scheduler(cronExpression, options.timezone, options.recoverMissedExecutions);
 
-    scheduler.on('scheduled-time-matched', (now) => {
-      task.execute(now);
-    });
+        scheduler.on('scheduled-time-matched', (now) => {
+            task.execute(now);
+        });
 
-    if(options.scheduled !== false){
-      scheduler.start();
-    }
+        if(options.scheduled !== false){
+            scheduler.start();
+        }
 
-    this.start = () => {
-      scheduler.start();
-    }
+        this.start = () => {
+            scheduler.start();
+        };
 
-    this.stop = () => {
-      scheduler.stop();
+        this.stop = () => {
+            scheduler.stop();
+        };
     }
-  }
 }
 
 module.exports = ScheduledTask;
