@@ -25,6 +25,7 @@ describe('node-cron', () => {
 
         it('should schedule a task with America/Sao_Paulo timezone', (done) => {
             let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
+            this.clock.restore();
             this.clock = sinon.useFakeTimers(startDate);
             cron.schedule('* * * * * *', (date) => {
                 assert.equal(19, date.getDate());
@@ -42,6 +43,7 @@ describe('node-cron', () => {
 
         it('should schedule a task with Europe/Rome timezone', (done) => {
             let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
+            this.clock.restore();
             this.clock = sinon.useFakeTimers(startDate);
             cron.schedule('* * * * * *', (date) => {
                 assert.equal(19, date.getDate());
