@@ -13,9 +13,7 @@ describe('ScheduledTask', () => {
 
     it('should start a task by default', () => {
         let executed = 0;
-        let scheduledTask = new ScheduledTask('* * * * * *', () => {
-            executed += 1;
-        });
+        let scheduledTask = new ScheduledTask('* * * * * *', () => executed++);
         this.clock.tick(3000);
         assert.equal(3, executed);
         scheduledTask.stop();
@@ -23,9 +21,7 @@ describe('ScheduledTask', () => {
 
     it('should create a task stoped', () => {
         let executed = 0;
-        let scheduledTask = new ScheduledTask('* * * * * *', () => {
-            executed += 1;
-        }, { scheduled: false });
+        let scheduledTask = new ScheduledTask('* * * * * *', () => executed++, { scheduled: false });
         this.clock.tick(3000);
         assert.equal(0, executed);
         scheduledTask.stop();
@@ -33,9 +29,7 @@ describe('ScheduledTask', () => {
 
     it('should start a task', () => {
         let executed = 0;
-        let scheduledTask = new ScheduledTask('* * * * * *', () => {
-            executed += 1;
-        }, { scheduled: false });
+        let scheduledTask = new ScheduledTask('* * * * * *', () => executed++, { scheduled: false });
         this.clock.tick(3000);
         assert.equal(0, executed);
         scheduledTask.start();
@@ -46,9 +40,7 @@ describe('ScheduledTask', () => {
 
     it('should stop a task', () => {
         let executed = 0;
-        let scheduledTask = new ScheduledTask('* * * * * *', () => {
-            executed += 1;
-        }, { scheduled: true });
+        let scheduledTask = new ScheduledTask('* * * * * *', () => executed++, { scheduled: true });
         this.clock.tick(3000);
         assert.equal(3, executed);
         scheduledTask.stop();
@@ -58,11 +50,29 @@ describe('ScheduledTask', () => {
 
     it('should emit event every minute', () => {
         let executed = 0;
-        let scheduledTask = new ScheduledTask('0 * * * * *', () => {
-            executed += 1;
-        }, { scheduled: true });
+        let scheduledTask = new ScheduledTask('0 * * * * *', () => executed++, { scheduled: true });
         this.clock.tick(60000 * 3);
         assert.equal(3, executed);
+        scheduledTask.stop();
+    });
+
+    it('should emit event on start a task', async () => {
+        let executed = 0;
+        const scheduledTask = new ScheduledTask('* * * * * *', () => 10, { scheduled: false });
+        scheduledTask.on('task-started', () => executed++);
+        scheduledTask.start();
+        await this.clock.tick(3000);
+        assert.equal(3, executed);
+        scheduledTask.stop();
+    });
+
+    it('should emit event on end a task', async () => {
+        let executed = 0;
+        const scheduledTask = new ScheduledTask('* * * * * *', () => 10, { scheduled: false });
+        scheduledTask.on('task-finished', (value) => executed += value);
+        scheduledTask.start();
+        await this.clock.tick(3000);
+        assert.equal(30, executed);
         scheduledTask.stop();
     });
 });
