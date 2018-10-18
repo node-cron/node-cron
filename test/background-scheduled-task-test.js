@@ -15,7 +15,7 @@ describe('BackgroundScheduledTask', () => {
             scheduled: false
         });
 
-        assert.isUndefined(task.pid())
+        assert.isUndefined(task.pid());
     });
 
     it('should start a task', (done) => {
@@ -39,9 +39,9 @@ describe('BackgroundScheduledTask', () => {
         let task = new BackgroundScheduledTask('* * * * * *', './test/assets/dummy-task.js', {
             scheduled: true
         });
-        assert.isNotNull(task.pid())
-        assert.isTrue(task.isRunning())
+        assert.isNotNull(task.pid());
+        assert.isTrue(task.isRunning());
         task.stop();
-        assert.isFalse(task.isRunning())
+        assert.isFalse(task.isRunning());
     });
 });

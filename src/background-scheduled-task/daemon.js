@@ -12,8 +12,8 @@ function register(message){
 }
 
 process.on('message', (message) => {
-   switch(message.type){
-        case 'register':
-            return register(message);
-   }
+    switch(message.type){
+    case 'register':
+        return register(message);
+    }
 });
