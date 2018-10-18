@@ -1,10 +1,12 @@
 'use strict';
 
+const EventEmitter = require('events');
 const Task = require('./task');
 const Scheduler = require('./scheduler');
 
-class ScheduledTask {
+class ScheduledTask extends EventEmitter {
     constructor(cronExpression, func, options) {
+        super();
         if(!options){
             options = {
                 scheduled: true,
@@ -15,7 +17,8 @@ class ScheduledTask {
         let scheduler = new Scheduler(cronExpression, options.timezone, options.recoverMissedExecutions);
 
         scheduler.on('scheduled-time-matched', (now) => {
-            task.execute(now);
+            let result = task.execute(now);
+            this.emit('task-done', result);
         });
 
         if(options.scheduled !== false){
