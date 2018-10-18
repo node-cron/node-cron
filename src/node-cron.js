@@ -1,6 +1,7 @@
 'use strict';
 
 var ScheduledTask = require('./scheduled-task'),
+    BackgroundScheduledTask = require('./background-scheduled-task'),
     validation = require('./pattern-validation');
 
 module.exports = (() => {
@@ -25,7 +26,11 @@ module.exports = (() => {
    * @returns {ScheduledTask} update function.
    */
     function createTask(expression, func, options) {
-        return new ScheduledTask(expression, func, options);
+        if(typeof func === 'string'){
+            return new BackgroundScheduledTask(expression, func, options);
+        } else {
+            return new ScheduledTask(expression, func, options);
+        }
     }
 
     function validate(expression) {

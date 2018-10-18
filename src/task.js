@@ -16,7 +16,7 @@ class Task{
             // check if execution returns a promise
             // emit events on start and on finished
             // force execution return a promise
-            execution(now);
+            return execution(now);
         };
     }
 }

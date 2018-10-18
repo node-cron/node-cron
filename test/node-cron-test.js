@@ -105,6 +105,14 @@ describe('node-cron', () => {
                 done();
             }, 1000);
         }).timeout(4000);
+
+        it('should schedule a background task', () => {
+            let task = cron.schedule('* * * * * *', './test/assets/dummy-task.js');
+            assert.isNotNull(task);
+            assert.isDefined(task);
+            assert.isTrue(task.isRunning());
+            task.stop();
+        });
     });
     
     describe('validate', () => {
