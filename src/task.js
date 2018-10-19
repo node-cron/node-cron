@@ -1,15 +1,13 @@
 'use strict';
 
-const events = require('events');
-const util = require('util');
+const EventEmitter = require('events');
 
-class Task{
+class Task extends EventEmitter{
     constructor(execution){
+        super();
         if(typeof execution !== 'function'){
             throw 'execution must be a function';
         }
-
-        events.EventEmitter.call(this);
 
         this.execute = (now) => {
             // TODO: Handle execution
@@ -20,8 +18,6 @@ class Task{
         };
     }
 }
-
-util.inherits(Task, events.EventEmitter);
 
 module.exports = Task;
 
