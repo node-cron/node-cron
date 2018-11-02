@@ -135,7 +135,7 @@ Arguments:
 
 #### Options
 
- - **scheduled**: A `boolean` to set if the created task is schaduled. Default `true`;
+ - **scheduled**: A `boolean` to set if the created task is scheduled. Default `true`;
  - **timezone**: The timezone that is used for job scheduling;
 
  **Example**:
