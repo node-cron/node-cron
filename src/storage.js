@@ -10,5 +10,5 @@ module.exports = (() => {
         getTasks: () => {
             return global.scheduledTasks;
         }
-    }
+    };
 })();
