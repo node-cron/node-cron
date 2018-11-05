@@ -6,7 +6,7 @@ var ScheduledTask = require('./scheduled-task'),
 
 module.exports = (() => {
 
-    /**
+   /**
    * Creates a new task to execute given function when the cron
    *  expression ticks.
    *
@@ -33,6 +33,12 @@ module.exports = (() => {
         }
     }
 
+    /**
+     * Check if a cron expression is valid
+     * @param {string} expression - cron expression.
+     * 
+     * @returns {boolean} - returns true if expression is valid
+     */
     function validate(expression) {
         try {
             validation(expression);
