@@ -6,7 +6,7 @@ var ScheduledTask = require('./scheduled-task'),
 
 module.exports = (() => {
 
-   /**
+    /**
    * Creates a new task to execute given function when the cron
    *  expression ticks.
    *
