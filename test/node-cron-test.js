@@ -124,4 +124,15 @@ describe('node-cron', () => {
             assert.isFalse(cron.validate('62 * * * * *')); 
         });
     });
+
+    describe('getTasks', () => {
+        beforeEach(() => {
+            global.scheduledTasks = [];
+        });
+
+        it('should store a task', () => {
+            cron.schedule('* * * * *', () => {});
+            assert.lengthOf(cron.getTasks(), 1);
+        });
+    });
 });
