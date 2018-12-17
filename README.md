@@ -63,9 +63,9 @@ This is a quick reference to cron syntax and also shows the options supported by
 |  day of week |     0-7 (or names, 0 or 7 are sunday)  |
 
 
-#### Using multiples values
+#### Using multiple values
 
-You may use multiples values separated by comma:
+You may use multiple values separated by comma:
 
 ```javascript
 var cron = require('node-cron');
@@ -101,7 +101,7 @@ cron.schedule('*/2 * * * *', () => {
 
 #### Using names
 
-For month and week day you also may use names or short names. e.g:
+For month and weekday you also may use names or short names. e.g:
 
 ```javascript
 var cron = require('node-cron');
@@ -144,7 +144,7 @@ Arguments:
   var cron = require('node-cron');
 
   cron.schedule('0 1 * * *', () => {
-    console.log('Runing a job at 01:00 at America/Sao_Paulo timezone');
+    console.log('Running a job at 01:00 at America/Sao_Paulo timezone');
   }, {
     scheduled: true,
     timezone: "America/Sao_Paulo"
@@ -161,7 +161,7 @@ Starts the scheduled task.
 var cron = require('node-cron');
 
 var task = cron.schedule('* * * * *', () =>  {
-  console.log('stoped task');
+  console.log('stopped task');
 }, {
   scheduled: false
 });
