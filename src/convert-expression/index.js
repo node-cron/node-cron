@@ -1,34 +1,23 @@
-'use strict';
+"use strict";
 
-var monthNamesConversion = require('./month-names-conversion');
-var weekDayNamesConversion = require('./week-day-names-conversion');
-var convertAsterisksToRanges = require('./asterisk-to-range-conversion');
-var convertRanges = require('./range-conversion');
-var convertSteps = require('./step-values-conversion');
+var monthNamesConversion = require("./month-names-conversion");
+var weekDayNamesConversion = require("./week-day-names-conversion");
+var convertAsterisksToRanges = require("./asterisk-to-range-conversion");
+var convertRanges = require("./range-conversion");
+var convertSteps = require("./step-values-conversion");
 
 module.exports = (() => {
-
-  function appendSeccondExpression(expressions){
-    if(expressions.length === 5){
-      return ['0'].concat(expressions);
-    }
-    return expressions;
+  function appendSeccondExpression(expressions) {
+    return expressions.length === 5 ? ["0"].concat(expressions) : expressions;
   }
 
   function removeSpaces(str) {
-    return str.replace(/\s{2,}/g, ' ').trim();
+    return str.replace(/\s{2,}/g, " ").trim();
   }
 
   // Function that takes care of normalization.
   function normalizeIntegers(expressions) {
-    for (var i=0; i < expressions.length; i++){
-      var numbers = expressions[i].split(',');
-      for (var j=0; j<numbers.length; j++){
-        numbers[j] = parseInt(numbers[j]);
-      }
-      expressions[i] = numbers;
-    }
-    return expressions;
+    return expressions.map(expr => expr.split(",").map(e => parseInt(e)));
   }
 
   /*
@@ -48,8 +37,8 @@ module.exports = (() => {
    *  - expression 1-5 * * * *
    *  - Will be translated to 1,2,3,4,5 * * * *
    */
-  function interprete(expression){
-    var expressions = removeSpaces(expression).split(' ');
+  function interprete(expression) {
+    var expressions = removeSpaces(expression).split(" ");
     expressions = appendSeccondExpression(expressions);
     expressions[4] = monthNamesConversion(expressions[4]);
     expressions[5] = weekDayNamesConversion(expressions[5]);
@@ -59,7 +48,7 @@ module.exports = (() => {
 
     expressions = normalizeIntegers(expressions);
 
-    return expressions.join(' ');
+    return expressions.join(" ");
   }
 
   return interprete;
