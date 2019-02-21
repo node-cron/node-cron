@@ -161,7 +161,7 @@ Starts the scheduled task.
 var cron = require('node-cron');
 
 var task = cron.schedule('* * * * *', () =>  {
-  console.log('stoped task');
+  console.log('stopped task');
 }, {
   scheduled: false
 });
