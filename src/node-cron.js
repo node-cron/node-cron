@@ -1,12 +1,13 @@
 'use strict';
 
-var Task = require('./task'),
-  ScheduledTask = require('./scheduled-task'),
-  validation = require('./pattern-validation');
+const ScheduledTask = require('./scheduled-task');
+const BackgroundScheduledTask = require('./background-scheduled-task');
+const validation = require('./pattern-validation');
+const storage = require('./storage');
 
 module.exports = (() => {
 
-  /**
+    /**
    * Creates a new task to execute given function when the cron
    *  expression ticks.
    *
@@ -25,37 +26,43 @@ module.exports = (() => {
    * 
    * @returns {ScheduledTask} update function.
    */
-  function createTask(expression, func, options) {
-    // Added for immediateStart depreciation
-    if(typeof options === 'boolean'){
-      console.warn('DEPRECIATION: imediateStart is deprecated and will be removed soon in favor of the options param.');
-      options = {
-        scheduled: options
-      };
-    }
-    
-    if(!options){
-      options = {
-        scheduled: true
-      };
+    function schedule(expression, func, options) {
+        let task = createTask(expression, func, options);
+        storage.save(task);
+        return task;
     }
 
-    var task = new Task(expression, func);
-    return new ScheduledTask(task, options);
-  }
-
-  function validate(expression) {
-    try {
-      validation(expression);
-    } catch(e) {
-      return false;
+    function createTask(expression, func, options){
+        if(typeof func === 'string'){
+            return new BackgroundScheduledTask(expression, func, options);
+        } else {
+            return new ScheduledTask(expression, func, options);
+        }
     }
 
-    return true;
-  }
+    /**
+     * Check if a cron expression is valid
+     * @param {string} expression - cron expression.
+     * 
+     * @returns {boolean} - returns true if expression is valid
+     */
+    function validate(expression) {
+        try {
+            validation(expression);
+        } catch(e) {
+            return false;
+        }
 
-  return {
-    schedule: createTask,
-    validate: validate
-  };
+        return true;
+    }
+
+    function getTasks() {
+        return storage.getTasks();
+    }
+
+    return {
+        schedule: schedule,
+        validate: validate,
+        getTasks: getTasks
+    };
 })();
