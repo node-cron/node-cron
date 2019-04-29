@@ -135,7 +135,7 @@ Arguments:
 
 #### Options
 
- - **scheduled**: A `boolean` to set if the created task is schaduled. Default `true`;
+ - **scheduled**: A `boolean` to set if the created task is scheduled. Default `true`;
  - **timezone**: The timezone that is used for job scheduling;
 
  **Example**:
@@ -144,7 +144,7 @@ Arguments:
   var cron = require('node-cron');
 
   cron.schedule('0 1 * * *', () => {
-    console.log('Runing a job at 01:00 at America/Sao_Paulo timezone');
+    console.log('Running a job at 01:00 at America/Sao_Paulo timezone');
   }, {
     scheduled: true,
     timezone: "America/Sao_Paulo"
@@ -227,7 +227,7 @@ Please do not contribute code you did not write yourself, unless you are certain
 ## Contributors
 
 This project exists thanks to all the people who contribute. 
-<a href="graphs/contributors"><img src="https://opencollective.com/node-cron/contributors.svg?width=890&button=false" /></a>
+<a href="https://github.com/node-cron/node-cron/graphs/contributors"><img src="https://opencollective.com/node-cron/contributors.svg?width=890&button=false" /></a>
 
 
 ## Backers

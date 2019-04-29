@@ -1,21 +1,19 @@
 'use strict';
 
-var expect = require('expect.js');
+const { expect } = require('chai');
 var Task = require('../../src/task');
 
 describe('Task', () => {
-  it('should accept string for pattern', () => {
-     expect(() => {
-        new Task('* * * * *');
-      }).to.not.throwException();
-  });
+    it('should accept a function', () => {
+        expect(() => {
+            new Task(() => {});
+        }).to.not.throw();
+    });
 
-   it('should fail with a non string value for pattern', () => {
-     expect(() => {
-      new Task([]);
-      }).to.throwException((e) => {
-        expect('pattern must be a string!').to.equal(e);
-      });
-  });
+    it('should fail without a function', () => {
+        expect(() => {
+            new Task([]);
+        }).to.throw('execution must be a function');
+    });
 
 });
