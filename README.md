@@ -227,7 +227,7 @@ Please do not contribute code you did not write yourself, unless you are certain
 ## Contributors
 
 This project exists thanks to all the people who contribute. 
-<a href="graphs/contributors"><img src="https://opencollective.com/node-cron/contributors.svg?width=890&button=false" /></a>
+<a href="https://github.com/node-cron/node-cron/graphs/contributors"><img src="https://opencollective.com/node-cron/contributors.svg?width=890&button=false" /></a>
 
 
 ## Backers
