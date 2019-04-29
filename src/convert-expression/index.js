@@ -8,30 +8,30 @@ var convertSteps = require('./step-values-conversion');
 
 module.exports = (() => {
 
-  function appendSeccondExpression(expressions){
-    if(expressions.length === 5){
-      return ['0'].concat(expressions);
+    function appendSeccondExpression(expressions){
+        if(expressions.length === 5){
+            return ['0'].concat(expressions);
+        }
+        return expressions;
     }
-    return expressions;
-  }
 
-  function removeSpaces(str) {
-    return str.replace(/\s{2,}/g, ' ').trim();
-  }
-
-  // Function that takes care of normalization.
-  function normalizeIntegers(expressions) {
-    for (var i=0; i < expressions.length; i++){
-      var numbers = expressions[i].split(',');
-      for (var j=0; j<numbers.length; j++){
-        numbers[j] = parseInt(numbers[j]);
-      }
-      expressions[i] = numbers;
+    function removeSpaces(str) {
+        return str.replace(/\s{2,}/g, ' ').trim();
     }
-    return expressions;
-  }
 
-  /*
+    // Function that takes care of normalization.
+    function normalizeIntegers(expressions) {
+        for (var i=0; i < expressions.length; i++){
+            var numbers = expressions[i].split(',');
+            for (var j=0; j<numbers.length; j++){
+                numbers[j] = parseInt(numbers[j]);
+            }
+            expressions[i] = numbers;
+        }
+        return expressions;
+    }
+
+    /*
    * The node-cron core allows only numbers (including multiple numbers e.g 1,2).
    * This module is going to translate the month names, week day names and ranges
    * to integers relatives.
@@ -48,19 +48,19 @@ module.exports = (() => {
    *  - expression 1-5 * * * *
    *  - Will be translated to 1,2,3,4,5 * * * *
    */
-  function interprete(expression){
-    var expressions = removeSpaces(expression).split(' ');
-    expressions = appendSeccondExpression(expressions);
-    expressions[4] = monthNamesConversion(expressions[4]);
-    expressions[5] = weekDayNamesConversion(expressions[5]);
-    expressions = convertAsterisksToRanges(expressions);
-    expressions = convertRanges(expressions);
-    expressions = convertSteps(expressions);
+    function interprete(expression){
+        var expressions = removeSpaces(expression).split(' ');
+        expressions = appendSeccondExpression(expressions);
+        expressions[4] = monthNamesConversion(expressions[4]);
+        expressions[5] = weekDayNamesConversion(expressions[5]);
+        expressions = convertAsterisksToRanges(expressions);
+        expressions = convertRanges(expressions);
+        expressions = convertSteps(expressions);
 
-    expressions = normalizeIntegers(expressions);
+        expressions = normalizeIntegers(expressions);
 
-    return expressions.join(' ');
-  }
+        return expressions.join(' ');
+    }
 
-  return interprete;
+    return interprete;
 })();
