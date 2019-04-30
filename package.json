@@ -34,9 +34,9 @@
     "coveralls": "^3.0.2",
     "eslint": "^5.7.0",
     "istanbul": "^0.4.2",
-    "mocha": "^5.2.0",
-    "nyc": "^13.0.1",
-    "sinon": "^6.3.5"
+    "mocha": "^6.1.4",
+    "nyc": "^14.0.0",
+    "sinon": "^7.3.2"
   },
   "dependencies": {
     "tz-offset": "0.0.1"
