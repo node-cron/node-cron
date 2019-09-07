@@ -10,7 +10,7 @@ class Scheduler extends EventEmitter{
         this.autorecover = autorecover;
     }
 
-    start(){
+    start(...args){
         // clear timeout if exsits
         this.stop();
 
@@ -26,7 +26,7 @@ class Scheduler extends EventEmitter{
             for(let i = missedExecutions; i >= 0; i--){
                 var date = new Date(new Date().getTime() - i * 1000);
                 if(lastExecution.getTime() < date.getTime() && (i === 0 || this.autorecover) && this.timeMatcher.match(date)){
-                    this.emit('scheduled-time-matched', date);
+                    this.emit('scheduled-time-matched', date, ...args);
                     date.setMilliseconds(0);
                     lastExecution = date;
                 }
