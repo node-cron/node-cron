@@ -11,13 +11,14 @@ describe('ScheduledTask', () => {
         this.clock.restore();
     });
 
-    it('should start a task by default', () => {
+    it('should start a task by default', (done) => {
         let executed = 0;
         let scheduledTask = new ScheduledTask('* * * * * *', () => {
             executed += 1;
+            assert.equal(3, executed);
+            done();
         });
         this.clock.tick(3000);
-        assert.equal(3, executed);
         scheduledTask.stop();
     });
 
