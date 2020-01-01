@@ -138,6 +138,10 @@ Arguments:
  - **scheduled**: A `boolean` to set if the created task is scheduled. Default `true`;
  - **timezone**: The timezone that is used for job scheduling;
 
+    ※timezone list url : https://momentjs.com/timezone/
+    
+    ![Imgur](https://i.imgur.com/a7BfMjm.png)
+
  **Example**:
 
  ```js
