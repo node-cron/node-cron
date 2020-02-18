@@ -135,7 +135,7 @@ Arguments:
 
 #### Options
 
- - **scheduled**: A `boolean` to set if the created task is scheduled. Default `true`;
+ - **scheduled**: A `boolean` to set if the created task is schaduled. Default `true`;
  - **timezone**: The timezone that is used for job scheduling;
 
  **Example**:
@@ -144,7 +144,7 @@ Arguments:
   var cron = require('node-cron');
 
   cron.schedule('0 1 * * *', () => {
-    console.log('Running a job at 01:00 at America/Sao_Paulo timezone');
+    console.log('Runing a job at 01:00 at America/Sao_Paulo timezone');
   }, {
     scheduled: true,
     timezone: "America/Sao_Paulo"
@@ -161,7 +161,7 @@ Starts the scheduled task.
 var cron = require('node-cron');
 
 var task = cron.schedule('* * * * *', () =>  {
-  console.log('stopped task');
+  console.log('stoped task');
 }, {
   scheduled: false
 });
@@ -212,7 +212,7 @@ var invalid = cron.validate('60 * * * *');
 
 Feel free to submit issues and enhancement requests [here](https://github.com/merencia/node-cron/issues).
 
-## Contributing
+## Contributors
 
 In general, we follow the "fork-and-pull" Git workflow.
 
@@ -227,7 +227,7 @@ Please do not contribute code you did not write yourself, unless you are certain
 ## Contributors
 
 This project exists thanks to all the people who contribute. 
-<a href="https://github.com/node-cron/node-cron/graphs/contributors"><img src="https://opencollective.com/node-cron/contributors.svg?width=890&button=false" /></a>
+<a href="graphs/contributors"><img src="https://opencollective.com/node-cron/contributors.svg?width=890&button=false" /></a>
 
 
 ## Backers
