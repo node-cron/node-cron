@@ -150,6 +150,8 @@ Arguments:
     timezone: "America/Sao_Paulo"
   });
  ```
+ 
+ [Full list of timezones can be found here](https://raw.githubusercontent.com/node-cron/tz-offset/master/generated/offsets.json)
 
 ## ScheduledTask methods
 
