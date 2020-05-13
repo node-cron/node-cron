@@ -151,7 +151,7 @@ Arguments:
   });
  ```
  
- [Full list of timezones can be found here](https://raw.githubusercontent.com/node-cron/tz-offset/master/generated/offsets.json)
+ [Full list of timezones can be found here (part of the tz-offset@0.0.1 package)](https://raw.githubusercontent.com/node-cron/tz-offset/a67968ab5b0efa6dee296dac32d3205b41f158e0/generated/offsets.json)
 
 ## ScheduledTask methods
 
