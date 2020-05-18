@@ -2,14 +2,18 @@
 
 module.exports = (() => {
     function convertSteps(expressions){
-        var stepValuePattern = /^(.+)\/(\d+)$/;
+        var stepValuePattern = /^(.+)\/(\w+)$/;
         for(var i = 0; i < expressions.length; i++){
             var match = stepValuePattern.exec(expressions[i]);
             var isStepValue = match !== null && match.length > 0;
             if(isStepValue){
+                var baseDivider = match[2];
+                if(isNaN(baseDivider)){
+                    throw baseDivider + 'is not a valid step value';
+                }
                 var values = match[1].split(',');
                 var setpValues = [];
-                var divider = parseInt(match[2], 10);
+                var divider = parseInt(baseDivider, 10);
                 for(var j = 0; j <= values.length; j++){
                     var value = parseInt(values[j], 10);
                     if(value % divider === 0){
