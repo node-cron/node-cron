@@ -9,7 +9,7 @@ module.exports = (() => {
             if(isStepValue){
                 var baseDivider = match[2];
                 if(isNaN(baseDivider)){
-                    throw baseDivider + 'is not a valid step value';
+                    throw baseDivider + ' is not a valid step value';
                 }
                 var values = match[1].split(',');
                 var setpValues = [];
