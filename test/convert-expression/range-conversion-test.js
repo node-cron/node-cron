@@ -15,4 +15,10 @@ describe('range-conversion.js', () => {
         var expression = conversion(expressions).join(' ');
         expect(expression).to.equal('0,1,2,3 0,1,2,3 8,9,10 1,2,3 1,2 0,1,2,3');
     });
+
+    it('should convert comma delimited ranges to numbers', () => {
+        var expressions = '0-2,10-23'.split(' ');
+        var expression = conversion(expressions).join(' ');
+        expect(expression).to.equal('0,1,2,10,11,12,13,14,15,16,17,18,19,20,21,22,23');
+    })
 });
