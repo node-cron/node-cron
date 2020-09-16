@@ -1,15 +1,15 @@
 'use strict';
 
-var convertExpression = require('./convert-expression');
+const convertExpression = require('./convert-expression');
 
 
 module.exports = ( () => {
     function isValidExpression(expression, min, max){
-        var options = expression.split(',');
-        var regexValidation = /^\d+$|^\*$|^\*\/\d+$/;
-        for(var i = 0; i < options.length; i++){
-            var option = options[i];
-            var optionAsInt = parseInt(options[i], 10);
+        const options = expression.split(',');
+        const regexValidation = /^\d+$|^\*$|^\*\/\d+$/;
+        for(let i = 0; i < options.length; i++){
+            const option = options[i];
+            const optionAsInt = parseInt(options[i], 10);
             if(optionAsInt < min || optionAsInt > max || !regexValidation.test(option)) {
                 return false;
             }
@@ -72,9 +72,9 @@ module.exports = ( () => {
             throw 'pattern must be a string!';
         }
 
-        var patterns = pattern.split(' ');
-        var executablePattern = convertExpression(pattern);
-        var executablePatterns = executablePattern.split(' ');
+        let patterns = pattern.split(' ');
+        const executablePattern = convertExpression(pattern);
+        const executablePatterns = executablePattern.split(' ');
 
         if(patterns.length === 5){
             patterns = ['0'].concat(patterns);
