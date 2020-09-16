@@ -136,7 +136,7 @@ Arguments:
 #### Options
 
  - **scheduled**: A `boolean` to set if the created task is scheduled. Default `true`;
- - **timezone**: The timezone that is used for job scheduling. See [tz-offset](https://github.com/node-cron/tz-offset/blob/master/generated/offsets.json) for valid values.
+ - **timezone**: The timezone that is used for job scheduling. See [moment-timezone](https://momentsjs.com/timezone) for valid values.
 
  **Example**:
 
