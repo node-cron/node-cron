@@ -46,10 +46,10 @@ describe('node-cron', () => {
             this.clock.restore();
             this.clock = sinon.useFakeTimers(startDate);
             cron.schedule('* * * * * *', (date) => {
-                assert.equal(19, date.getDate());
+                assert.equal(20, date.getDate());
                 assert.equal(8, date.getMonth());
                 assert.equal(2018, date.getFullYear());
-                assert.equal(21, date.getHours());
+                assert.equal(2, date.getHours());
                 assert.equal(0, date.getMinutes());
                 assert.equal(1, date.getSeconds());
                 done();
