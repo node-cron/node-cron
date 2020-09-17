@@ -33,7 +33,7 @@ class TimeMatcher{
 
     apply(date){
         if(this.timezone){
-            const tmp = moment.tz(date, this.timezone)
+            const tmp = moment.tz(date, this.timezone);
             return new Date(tmp.year(), tmp.month(), tmp.date(), tmp.hour(), tmp.minute(), tmp.second(), tmp.millisecond());
         }
         return date;
