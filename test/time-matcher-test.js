@@ -232,7 +232,7 @@ describe('TimeMatcher', () => {
         it('should match with all available timezone of moment-timezone', () => {
             const allTimeZone = moment.tz.names();
             for (let zone in allTimeZone) {
-                const tmp = moment().utc();
+                const tmp = moment();
                 const expected = moment.tz(tmp,allTimeZone[zone]);
                 const pattern = expected.second() + ' ' + expected.minute() + ' ' + expected.hour() + ' ' + expected.date() + ' ' + (expected.month()+1) + ' ' + expected.day();
                 const matcher = new TimeMatcher(pattern, allTimeZone[zone]);
