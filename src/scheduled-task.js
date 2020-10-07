@@ -5,28 +5,22 @@ const Task = require('./task');
 const Scheduler = require('./scheduler');
 
 class ScheduledTask extends EventEmitter {
-    constructor(cronExpression, func, options) {
+    constructor(cronExpression, func, { timezone, scheduled = true, recoverMissedExecutions = false, args = [] } = {}) {
         super();
-        if(!options){
-            options = {
-                scheduled: true,
-                recoverMissedExecutions: false
-            };
-        }
         let task = new Task(func);
-        let scheduler = new Scheduler(cronExpression, options.timezone, options.recoverMissedExecutions);
+        let scheduler = new Scheduler(cronExpression, timezone, recoverMissedExecutions);
 
-        scheduler.on('scheduled-time-matched', (now) => {
-            let result = task.execute(now);
+        scheduler.on('scheduled-time-matched', (now, ...args) => {
+            let result = task.execute(now, ...args);
             this.emit('task-done', result);
         });
 
-        if(options.scheduled !== false){
-            scheduler.start();
+        if(scheduled !== false){
+            scheduler.start(...args);
         }
 
-        this.start = () => {
-            scheduler.start();
+        this.start = (...args) => {
+            scheduler.start(...args);
         };
 
         this.stop = () => {
