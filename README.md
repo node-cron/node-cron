@@ -12,6 +12,8 @@
 
 The node-cron module is tiny task scheduler in pure JavaScript for node.js based on [GNU crontab](https://www.gnu.org/software/mcron/manual/html_node/Crontab-file.html). This module allows you to schedule task in node.js using full crontab syntax.
 
+**Need a job scheduler with support for worker threads and cron syntax?** Try out the [Bree](https://github.com/breejs/bree) job scheduler!
+
 [![NPM](https://nodei.co/npm/node-cron.png?downloads=true&downloadRank=true&stars=false)](https://nodei.co/npm/node-cron/)
 
 
@@ -136,7 +138,7 @@ Arguments:
 #### Options
 
  - **scheduled**: A `boolean` to set if the created task is scheduled. Default `true`;
- - **timezone**: The timezone that is used for job scheduling;
+ - **timezone**: The timezone that is used for job scheduling. See [tz-offset](https://github.com/node-cron/tz-offset/blob/master/generated/offsets.json) for valid values.
 
  **Example**:
 
