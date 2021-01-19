@@ -61,7 +61,7 @@ This is a quick reference to cron syntax and also shows the options supported by
 |    minute    |         0-59        |
 |     hour     |         0-23        |
 | day of month |         1-31        |
-|     month    |     1-12 (or names) |
+|     month    |     0-11 (or names) |
 |  day of week |     0-7 (or names, 0 or 7 are sunday)  |
 
 
