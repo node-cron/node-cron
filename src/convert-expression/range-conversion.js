@@ -2,16 +2,16 @@
 module.exports = ( () => {
     function replaceWithRange(expression, text, init, end) {
 
-        var numbers = [];
-        var last = parseInt(end);
-        var first = parseInt(init);
+        const numbers = [];
+        let last = parseInt(end);
+        let first = parseInt(init);
 
         if(first > last){
             last = parseInt(init);
             first = parseInt(end);
         }
 
-        for(var i = first; i <= last; i++) {
+        for(let i = first; i <= last; i++) {
             numbers.push(i);
         }
 
@@ -19,8 +19,8 @@ module.exports = ( () => {
     }
 
     function convertRange(expression){
-        var rangeRegEx = /(\d+)-(\d+)/;
-        var match = rangeRegEx.exec(expression);
+        const rangeRegEx = /(\d+)-(\d+)/;
+        let match = rangeRegEx.exec(expression);
         while(match !== null && match.length > 0){
             expression = replaceWithRange(expression, match[0], match[1], match[2]);
             match = rangeRegEx.exec(expression);
@@ -29,7 +29,7 @@ module.exports = ( () => {
     }
 
     function convertAllRanges(expressions){
-        for(var i = 0; i < expressions.length; i++){
+        for(let i = 0; i < expressions.length; i++){
             expressions[i] = convertRange(expressions[i]);
         }
         return expressions;
@@ -37,6 +37,3 @@ module.exports = ( () => {
 
     return convertAllRanges;
 })();
-
-
-

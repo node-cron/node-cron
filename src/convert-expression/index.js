@@ -1,10 +1,10 @@
 'use strict';
 
-var monthNamesConversion = require('./month-names-conversion');
-var weekDayNamesConversion = require('./week-day-names-conversion');
-var convertAsterisksToRanges = require('./asterisk-to-range-conversion');
-var convertRanges = require('./range-conversion');
-var convertSteps = require('./step-values-conversion');
+const monthNamesConversion = require('./month-names-conversion');
+const weekDayNamesConversion = require('./week-day-names-conversion');
+const convertAsterisksToRanges = require('./asterisk-to-range-conversion');
+const convertRanges = require('./range-conversion');
+const convertSteps = require('./step-values-conversion');
 
 module.exports = (() => {
 
@@ -21,9 +21,9 @@ module.exports = (() => {
 
     // Function that takes care of normalization.
     function normalizeIntegers(expressions) {
-        for (var i=0; i < expressions.length; i++){
-            var numbers = expressions[i].split(',');
-            for (var j=0; j<numbers.length; j++){
+        for (let i=0; i < expressions.length; i++){
+            const numbers = expressions[i].split(',');
+            for (let j=0; j<numbers.length; j++){
                 numbers[j] = parseInt(numbers[j]);
             }
             expressions[i] = numbers;
@@ -49,7 +49,7 @@ module.exports = (() => {
    *  - Will be translated to 1,2,3,4,5 * * * *
    */
     function interprete(expression){
-        var expressions = removeSpaces(expression).split(' ');
+        let expressions = removeSpaces(expression).split(' ');
         expressions = appendSeccondExpression(expressions);
         expressions[4] = monthNamesConversion(expressions[4]);
         expressions[5] = weekDayNamesConversion(expressions[5]);

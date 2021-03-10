@@ -1,7 +1,7 @@
 'use strict';
 
 const { expect } = require('chai');
-var validate = require('../../src/pattern-validation');
+const validate = require('../../src/pattern-validation');
 
 describe('pattern-validation.js', () => {
     describe('validate week day', () => {
