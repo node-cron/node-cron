@@ -1,10 +1,10 @@
 const validatePattern = require('./pattern-validation');
 const convertExpression = require('./convert-expression');
-const tzOffset = require('tz-offset');
+const moment = require('moment-timezone');
 
 function matchPattern(pattern, value){
     if( pattern.indexOf(',') !== -1 ){
-        var patterns = pattern.split(',');
+        const patterns = pattern.split(',');
         return patterns.indexOf(value.toString()) !== -1;
     }
     return pattern === value.toString();
@@ -19,17 +19,24 @@ class TimeMatcher{
     }
 
     match(date){
-        if(this.timezone){
-            date = tzOffset.timeAt(date, this.timezone);
-        }
-        var runOnSecond = matchPattern(this.expressions[0], date.getSeconds());
-        var runOnMinute = matchPattern(this.expressions[1], date.getMinutes());
-        var runOnHour = matchPattern(this.expressions[2], date.getHours());
-        var runOnDay = matchPattern(this.expressions[3], date.getDate());
-        var runOnMonth = matchPattern(this.expressions[4], date.getMonth() + 1);
-        var runOnWeekDay = matchPattern(this.expressions[5], date.getDay());
+        date = this.apply(date);
+
+        const runOnSecond = matchPattern(this.expressions[0], date.getSeconds());
+        const runOnMinute = matchPattern(this.expressions[1], date.getMinutes());
+        const runOnHour = matchPattern(this.expressions[2], date.getHours());
+        const runOnDay = matchPattern(this.expressions[3], date.getDate());
+        const runOnMonth = matchPattern(this.expressions[4], date.getMonth() + 1);
+        const runOnWeekDay = matchPattern(this.expressions[5], date.getDay());
 
         return runOnSecond && runOnMinute && runOnHour && runOnDay && runOnMonth && runOnWeekDay;
+    }
+
+    apply(date){
+        if(this.timezone){
+            const tmp = moment.tz(date, this.timezone);
+            return new Date(tmp.year(), tmp.month(), tmp.date(), tmp.hour(), tmp.minute(), tmp.second(), tmp.millisecond());
+        }
+        return date;
     }
 }
 
