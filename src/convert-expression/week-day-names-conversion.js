@@ -1,11 +1,11 @@
 'use strict';
 module.exports = (() => {
-    var weekDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday',
+    const weekDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday',
         'friday', 'saturday'];
-    var shortWeekDays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    const shortWeekDays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 
     function convertWeekDayName(expression, items){
-        for(var i = 0; i < items.length; i++){
+        for(let i = 0; i < items.length; i++){
             expression = expression.replace(new RegExp(items[i], 'gi'), parseInt(i, 10));
         }
         return expression;

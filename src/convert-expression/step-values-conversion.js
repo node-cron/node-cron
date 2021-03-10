@@ -17,10 +17,10 @@ module.exports = (() => {
                 for(var j = 0; j <= values.length; j++){
                     var value = parseInt(values[j], 10);
                     if(value % divider === 0){
-                        setpValues.push(value);
+                        stepValues.push(value);
                     }
                 }
-                expressions[i] = setpValues.join(',');
+                expressions[i] = stepValues.join(',');
             }
         }
         return expressions;
@@ -28,4 +28,3 @@ module.exports = (() => {
 
     return convertSteps;
 })();
-

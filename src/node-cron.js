@@ -35,9 +35,8 @@ module.exports = (() => {
     function createTask(expression, func, options){
         if(typeof func === 'string'){
             return new BackgroundScheduledTask(expression, func, options);
-        } else {
-            return new ScheduledTask(expression, func, options);
         }
+        return new ScheduledTask(expression, func, options);
     }
 
     /**

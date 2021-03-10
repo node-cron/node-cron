@@ -1,7 +1,7 @@
 'use strict';
 
 const { expect } = require('chai');
-var Task = require('../../src/task');
+const Task = require('../../src/task');
 
 describe('Task', () => {
     it('should accept a function', () => {
