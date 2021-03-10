@@ -15,7 +15,7 @@ module.exports = ( () => {
             numbers.push(i);
         }
 
-        return expression.replace(new RegExp(text, 'gi'), numbers.join());
+        return expression.replace(new RegExp(text, 'i'), numbers.join());
     }
 
     function convertRange(expression){
