@@ -12,7 +12,7 @@ module.exports = (() => {
                     throw baseDivider + ' is not a valid step value';
                 }
                 var values = match[1].split(',');
-                var setpValues = [];
+                var stepValues = [];
                 var divider = parseInt(baseDivider, 10);
                 for(var j = 0; j <= values.length; j++){
                     var value = parseInt(values[j], 10);
