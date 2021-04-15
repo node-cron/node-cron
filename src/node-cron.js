@@ -14,9 +14,9 @@ module.exports = (() => {
    * @param {string} expression - cron expression.
    * @param {Function} func - task to be executed.
    * @param {Object} options - a set of options for the scheduled task:
-   *    - scheduled <boolean>: if a schaduled task is ready and running to be 
-   *      performed when the time mach with the cron excpression.
-   *    - timezone <string>: the tiemzone to execute the tasks.
+   *    - scheduled <boolean>: if a scheduled task is ready and running to be 
+   *      performed when the time mach with the cron expression.
+   *    - timezone <string>: the timezone to execute the tasks.
    * 
    *    Example: 
    *    {
