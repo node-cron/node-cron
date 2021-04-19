@@ -10,6 +10,7 @@ class ScheduledTask extends EventEmitter {
         if(!options){
             options = {
                 scheduled: true,
+                runOnInit: false,
                 recoverMissedExecutions: false
             };
         }
@@ -17,16 +18,24 @@ class ScheduledTask extends EventEmitter {
         let scheduler = new Scheduler(cronExpression, options.timezone, options.recoverMissedExecutions);
 
         scheduler.on('scheduled-time-matched', (now) => {
-            let result = task.execute(now);
-            this.emit('task-done', result);
+            this.now(now);
         });
 
         if(options.scheduled !== false){
             scheduler.start();
         }
+        
+        if(options.runOnInit === true){
+            this.now('init');
+        }
 
         this.start = () => {
             scheduler.start();
+        };
+        
+        this.now = (now = 'manual') => {
+            let result = task.execute(now);
+            this.emit('task-done', result);
         };
 
         this.stop = () => {
