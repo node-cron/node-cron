@@ -55,6 +55,32 @@ describe('ScheduledTask', () => {
         this.clock.tick(3000);
         assert.equal(3, executed);
     });
+    
+    it('should create a task stopped and run it once created', () => {
+        let executed = 0;
+        let scheduledTask = new ScheduledTask('* * * * * *', () => {
+            executed += 1;
+        }, { scheduled: false, runOnInit: true });
+        this.clock.tick(3000);
+        assert.equal(0, executed);
+        scheduledTask.start();
+        this.clock.tick(3000);
+        assert.equal(1, executed);
+        scheduledTask.stop();
+    });
+    
+    it('should create a task stopped and run it once manually', () => {
+        let executed = 0;
+        let scheduledTask = new ScheduledTask('* * * * * *', () => {
+            executed += 1;
+        }, { scheduled: false });
+        this.clock.tick(3000);
+        assert.equal(0, executed);
+        scheduledTask.now();
+        this.clock.tick(3000);
+        assert.equal(1, executed);
+        scheduledTask.stop();
+    });
 
     it('should emit event every minute', () => {
         let executed = 0;
