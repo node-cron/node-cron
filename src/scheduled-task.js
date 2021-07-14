@@ -29,6 +29,10 @@ class ScheduledTask extends EventEmitter {
             scheduler.start();
         };
 
+        this.setSchedule = (cronExpression) => {
+            scheduler.setSchedule(cronExpression);
+        }
+
         this.stop = () => {
             scheduler.stop();
         };

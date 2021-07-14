@@ -2,6 +2,7 @@
 
 const EventEmitter = require('events');
 const TimeMatcher = require('./time-matcher');
+const validatePattern = require('./pattern-validation');
 
 class Scheduler extends EventEmitter{
     constructor(pattern, timezone, autorecover){
@@ -43,6 +44,13 @@ class Scheduler extends EventEmitter{
             clearTimeout(this.timeout);
         }
         this.timeout = null;
+    }
+
+    setSchedule(cronExpression) {
+        validatePattern(cronExpression);
+        this.stop();
+        this.timeMatcher.pattern = cronExpression;
+        this.start();
     }
 }
 

@@ -185,6 +185,19 @@ var task = cron.schedule('* * * * *', () =>  {
 task.stop();
 ```
 
+### Set Schedule
+This will stoped and re-started the task for set the new trick on run time.
+
+```javascript
+var cron = require('node-cron');
+
+var task = cron.schedule('* * * * *', () =>  {
+  console.log('will execute every minute until stopped');
+});
+
+task.setSchedule('*/5 * * * *');
+```
+
 ### Destroy
 
 The task will be stopped and completely destroyed.

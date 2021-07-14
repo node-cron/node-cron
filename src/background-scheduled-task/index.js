@@ -44,7 +44,13 @@ class BackgroundScheduledTask extends EventEmitter {
             options: options
         });
     }
-    
+
+    setSchedule(cronExpression) {
+        this.stop();
+        this.cronExpression = cronExpression;
+        this.start();
+    }
+
     stop(){
         if(this.forkProcess){
             this.forkProcess.kill();
