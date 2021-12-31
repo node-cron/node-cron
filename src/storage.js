@@ -5,7 +5,12 @@ module.exports = (() => {
     
     return {
         save: (task) => {
-            global.scheduledTasks.set(task.name, task);
+            if(!task.options){
+                const uuid = require('uuid');
+                task.options = {};
+                task.options.name = uuid.v4();
+            }
+            global.scheduledTasks.set(task.options.name, task);
         },
         getTasks: () => {
             return global.scheduledTasks;
