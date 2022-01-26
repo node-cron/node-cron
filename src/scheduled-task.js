@@ -14,28 +14,37 @@ class ScheduledTask extends EventEmitter {
                 recoverMissedExecutions: false
             };
         }
+      
         this.options = options;
         this.options.name = this.options.name || uuid.v4();
 
-        let task = new Task(func);
-        let scheduler = new Scheduler(cronExpression, options.timezone, options.recoverMissedExecutions);
+        this._task = new Task(func);
+        this._scheduler = new Scheduler(cronExpression, options.timezone, options.recoverMissedExecutions);
 
-        scheduler.on('scheduled-time-matched', (now) => {
-            let result = task.execute(now);
-            this.emit('task-done', result);
+        this._scheduler.on('scheduled-time-matched', (now) => {
+            this.now(now);
         });
 
         if(options.scheduled !== false){
-            scheduler.start();
+            this._scheduler.start();
         }
-
-        this.start = () => {
-            scheduler.start();
-        };
-
-        this.stop = () => {
-            scheduler.stop();
-        };
+        
+        if(options.runOnInit === true){
+            this.now('init');
+        }
+    }
+    
+    now(now = 'manual') {
+        let result = this._task.execute(now);
+        this.emit('task-done', result);
+    }
+    
+    start() {
+        this._scheduler.start();  
+    }
+    
+    stop() {
+        this._scheduler.stop();
     }
 }
 
