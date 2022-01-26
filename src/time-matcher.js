@@ -1,6 +1,5 @@
 const validatePattern = require('./pattern-validation');
 const convertExpression = require('./convert-expression');
-const moment = require('moment-timezone');
 
 function matchPattern(pattern, value){
     if( pattern.indexOf(',') !== -1 ){
@@ -33,9 +32,21 @@ class TimeMatcher{
 
     apply(date){
         if(this.timezone){
-            const tmp = moment.tz(date, this.timezone);
-            return new Date(tmp.year(), tmp.month(), tmp.date(), tmp.hour(), tmp.minute(), tmp.second(), tmp.millisecond());
+            const dtf = new Intl.DateTimeFormat('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hourCycle: 'h23',
+                fractionalSecondDigits: 3,
+                timeZone: this.timezone
+            });
+            
+            return new Date(dtf.format(date));
         }
+        
         return date;
     }
 }
