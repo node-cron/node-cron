@@ -2,86 +2,123 @@
 
 const convertExpression = require('./convert-expression');
 
+const validationRegex = /^(?:\d+|\*|\*\/\d+)$/;
 
-module.exports = ( () => {
-    function isValidExpression(expression, min, max){
-        const options = expression.split(',');
-        const regexValidation = /^\d+$|^\*$|^\*\/\d+$/;
-        for(let i = 0; i < options.length; i++){
-            const option = options[i];
-            const optionAsInt = parseInt(options[i], 10);
-            if(optionAsInt < min || optionAsInt > max || !regexValidation.test(option)) {
-                return false;
-            }
-        }
-        return true;
+/**
+ * @param {string} expression The Cron-Job expression.
+ * @param {number} min The minimum value.
+ * @param {number} max The maximum value.
+ * @returns {boolean}
+ */
+function isValidExpression(expression, min, max) {
+    const options = expression.split(',');
+
+    for (const option of options) {
+        const optionAsInt = parseInt(option, 10);
+
+        if (
+            (!Number.isNaN(optionAsInt) &&
+                (optionAsInt < min || optionAsInt > max)) ||
+            !validationRegex.test(option)
+        )
+            return false;
     }
 
-    function isInvalidSecond(expression){
-        return !isValidExpression(expression, 0, 59);
-    }
+    return true;
+}
 
-    function isInvalidMinute(expression){
-        return !isValidExpression(expression, 0, 59);
-    }
+/**
+ * @param {string} expression The Cron-Job expression.
+ * @returns {boolean}
+ */
+function isInvalidSecond(expression) {
+    return !isValidExpression(expression, 0, 59);
+}
 
-    function isInvalidHour(expression){
-        return !isValidExpression(expression, 0, 23);
-    }
+/**
+ * @param {string} expression The Cron-Job expression.
+ * @returns {boolean}
+ */
+function isInvalidMinute(expression) {
+    return !isValidExpression(expression, 0, 59);
+}
 
-    function isInvalidDayOfMonth(expression){
-        return !isValidExpression(expression, 1, 31);
-    }
+/**
+ * @param {string} expression The Cron-Job expression.
+ * @returns {boolean}
+ */
+function isInvalidHour(expression) {
+    return !isValidExpression(expression, 0, 23);
+}
 
-    function isInvalidMonth(expression){
-        return !isValidExpression(expression, 1, 12);
-    }
+/**
+ * @param {string} expression The Cron-Job expression.
+ * @returns {boolean}
+ */
+function isInvalidDayOfMonth(expression) {
+    return !isValidExpression(expression, 1, 31);
+}
 
-    function isInvalidWeekDay(expression){
-        return !isValidExpression(expression, 0, 7);
-    }
+/**
+ * @param {string} expression The Cron-Job expression.
+ * @returns {boolean}
+ */
+function isInvalidMonth(expression) {
+    return !isValidExpression(expression, 1, 12);
+}
 
-    function validateFields(patterns, executablePatterns){
-        if (isInvalidSecond(executablePatterns[0])) {
-            throw patterns[0] + ' is a invalid expression for second';
-        }
+/**
+ * @param {string} expression The Cron-Job expression.
+ * @returns {boolean}
+ */
+function isInvalidWeekDay(expression) {
+    return !isValidExpression(expression, 0, 7);
+}
 
-        if (isInvalidMinute(executablePatterns[1])) {
-            throw patterns[1] + ' is a invalid expression for minute';
-        }
+/**
+ * @param {string[]} patterns The Cron-Job expression patterns.
+ * @param {string[]} executablePatterns The executable Cron-Job expression
+ * patterns.
+ * @returns {void}
+ */
+function validateFields(patterns, executablePatterns) {
+    if (isInvalidSecond(executablePatterns[0]))
+        throw new Error(`${patterns[0]} is a invalid expression for second`);
 
-        if (isInvalidHour(executablePatterns[2])) {
-            throw patterns[2] + ' is a invalid expression for hour';
-        }
+    if (isInvalidMinute(executablePatterns[1]))
+        throw new Error(`${patterns[1]} is a invalid expression for minute`);
 
-        if (isInvalidDayOfMonth(executablePatterns[3])) {
-            throw patterns[3] + ' is a invalid expression for day of month';
-        }
+    if (isInvalidHour(executablePatterns[2]))
+        throw new Error(`${patterns[2]} is a invalid expression for hour`);
 
-        if (isInvalidMonth(executablePatterns[4])) {
-            throw patterns[4] + ' is a invalid expression for month';
-        }
+    if (isInvalidDayOfMonth(executablePatterns[3]))
+        throw new Error(
+            `${patterns[3]} is a invalid expression for day of month`
+        );
 
-        if (isInvalidWeekDay(executablePatterns[5])) {
-            throw patterns[5] + ' is a invalid expression for week day';
-        }
-    }
+    if (isInvalidMonth(executablePatterns[4]))
+        throw new Error(`${patterns[4]} is a invalid expression for month`);
 
-    function validate(pattern){
-        if (typeof pattern !== 'string'){
-            throw 'pattern must be a string!';
-        }
+    if (isInvalidWeekDay(executablePatterns[5]))
+        throw new Error(`${patterns[5]} is a invalid expression for week day`);
+}
 
-        let patterns = pattern.split(' ');
-        const executablePattern = convertExpression(pattern);
-        const executablePatterns = executablePattern.split(' ');
+/**
+ * Validates a Cron-Job expression pattern.
+ *
+ * @param {string} pattern The Cron-Job expression pattern.
+ * @returns {void}
+ */
+function validate(pattern) {
+    if (typeof pattern !== 'string')
+        throw new TypeError('pattern must be a string!');
 
-        if(patterns.length === 5){
-            patterns = ['0'].concat(patterns);
-        }
+    const patterns = pattern.split(' ');
+    const executablePatterns = convertExpression(pattern).split(' ');
 
-        validateFields(patterns, executablePatterns);
-    }
+    if (patterns.length === 5) patterns.unshift('0');
 
-    return validate;
-})();
+    validateFields(patterns, executablePatterns);
+}
+
+module.exports = validate;
