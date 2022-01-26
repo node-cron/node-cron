@@ -185,20 +185,6 @@ var task = cron.schedule('* * * * *', () =>  {
 task.stop();
 ```
 
-### Destroy
-
-The task will be stopped and completely destroyed.
-
-```javascript
-var cron = require('node-cron');
-
-var task = cron.schedule('* * * * *', () =>  {
-  console.log('will not execute anymore, nor be able to restart');
-});
-
-task.destroy();
-```
-
 ### Validate
 
 Validate that the given string is a valid cron expression.
