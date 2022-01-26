@@ -22,7 +22,7 @@ The node-cron module is tiny task scheduler in pure JavaScript for node.js based
 Install node-cron using npm:
 
 ```console
-$ npm install --save node-cron
+npm install --save node-cron
 ```
 
 Import node-cron and schedule a task:
