@@ -3,6 +3,7 @@
 const EventEmitter = require('events');
 const Task = require('./task');
 const Scheduler = require('./scheduler');
+const uuid = require('uuid');
 
 class ScheduledTask extends EventEmitter {
     constructor(cronExpression, func, options) {
@@ -13,6 +14,10 @@ class ScheduledTask extends EventEmitter {
                 recoverMissedExecutions: false
             };
         }
+      
+        this.options = options;
+        this.options.name = this.options.name || uuid.v4();
+
         this._task = new Task(func);
         this._scheduler = new Scheduler(cronExpression, options.timezone, options.recoverMissedExecutions);
 
