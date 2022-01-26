@@ -127,7 +127,7 @@ describe('node-cron', () => {
 
     describe('getTasks', () => {
         beforeEach(() => {
-            global.scheduledTasks = [];
+            global.scheduledTasks = new Map();
         });
 
         it('should store a task', () => {

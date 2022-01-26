@@ -10,8 +10,8 @@ class Scheduler extends EventEmitter {
         this.autorecover = autorecover;
     }
 
-    start() {
-    // clear timeout if exsits
+    start(){
+        // clear timeout if exists
         this.stop();
 
         let lastCheck = process.hrtime();

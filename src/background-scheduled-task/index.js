@@ -1,6 +1,7 @@
 const EventEmitter = require('events');
 const path = require('path');
 const { fork } = require('child_process');
+const uuid = require('uuid');
 
 const daemonPath = `${__dirname}/daemon.js`;
 
@@ -10,12 +11,13 @@ class BackgroundScheduledTask extends EventEmitter {
         if(!options){
             options = {
                 scheduled: true,
-                recoverMissedExecutions: false
+                recoverMissedExecutions: false,
             };
         }
         this.cronExpression = cronExpression;
         this.taskPath = taskPath;
         this.options = options;
+        this.options.name = this.options.name || uuid.v4();
 
         if(options.scheduled){
             this.start();
