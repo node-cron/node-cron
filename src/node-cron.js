@@ -7,7 +7,7 @@ const storage = require('./storage');
 
 /**
  * @typedef {Object} CronScheduleOptions
- * @prop {boolean} [scheduled] if a scheduled task is ready and running to be 
+ * @prop {boolean} [scheduled] if a scheduled task is ready and running to be
  *  performed when the time matches the cron excpression.
  * @prop {string} [timezone] the timezone to execute the task in.
  */
@@ -47,7 +47,7 @@ function validate(expression) {
         validation(expression);
 
         return true;
-    } catch {
+    } catch (_){
         return false;
     }
 }
