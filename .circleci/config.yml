@@ -5,12 +5,14 @@ orbs:
 
 jobs:
   setup:
+    executor: node/default
     steps:
       - checkout
       - node/install:
           node-version: '16.13'
       - run: node --version
   test:
+    executor: node/default
     steps:
       - run: npm run check
 
