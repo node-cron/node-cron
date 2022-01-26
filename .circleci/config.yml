@@ -4,18 +4,14 @@ orbs:
   node: circleci/node@4.7
 
 jobs:
-  setup:
+  test:
     executor: node/default
     steps:
       - checkout
       - run: npm install
-  test:
-    executor: node/default
-    steps:
       - run: npm run check
 
 workflows:
   build:
     jobs:
-      - setup
       - test
