@@ -8,7 +8,7 @@
   "main": "src/node-cron.js",
   "scripts": {
     "test": "nyc --reporter=html --reporter=text mocha --recursive",
-    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "coverage": "nyc report --reporter=text-lcov | ./node_modules/coveralls/bin/coveralls.js",
     "lint": "./node_modules/.bin/eslint ./src ./test",
     "check": "npm run lint && npm test && npm run coverage"
   },
@@ -35,6 +35,7 @@
     "eslint": "^5.7.0",
     "istanbul": "^0.4.2",
     "mocha": "^6.1.4",
+    "mocha-lcov-reporter": "^1.3.0",
     "nyc": "^14.0.0",
     "sinon": "^7.3.2"
   },
