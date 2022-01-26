@@ -11,7 +11,7 @@ describe('ScheduledTask', () => {
         this.clock.restore();
     });
 
-    it('should start a task by default', () => {
+    it('should start a task by default', (done) => {
         let executed = 0;
         let scheduledTask = new ScheduledTask('* * * * * *', () => {
             executed += 1;
@@ -19,9 +19,10 @@ describe('ScheduledTask', () => {
         this.clock.tick(3000);
         assert.equal(3, executed);
         scheduledTask.stop();
+        done();
     });
 
-    it('should create a task stoped', () => {
+    it('should create a task stoped', (done) => {
         let executed = 0;
         let scheduledTask = new ScheduledTask('* * * * * *', () => {
             executed += 1;
@@ -29,9 +30,10 @@ describe('ScheduledTask', () => {
         this.clock.tick(3000);
         assert.equal(0, executed);
         scheduledTask.stop();
+        done();
     });
 
-    it('should start a task', () => {
+    it('should start a task', (done) => {
         let executed = 0;
         let scheduledTask = new ScheduledTask('* * * * * *', () => {
             executed += 1;
@@ -42,6 +44,7 @@ describe('ScheduledTask', () => {
         this.clock.tick(3000);
         assert.equal(3, executed);
         scheduledTask.stop();
+        done();
     });
 
     it('should stop a task', () => {
@@ -54,6 +57,26 @@ describe('ScheduledTask', () => {
         scheduledTask.stop();
         this.clock.tick(3000);
         assert.equal(3, executed);
+    });
+    
+    it('should create a task stopped and run it once created', () => {
+        let executed = 0;
+        new ScheduledTask('* * * * * *', () => {
+            executed += 1;
+        }, { scheduled: false, runOnInit: true });
+        this.clock.tick(3000);
+        assert.equal(1, executed);
+    });
+    
+    it('should create a task stopped and run it once manually', () => {
+        let executed = 0;
+        let scheduledTask = new ScheduledTask('* * * * * *', () => {
+            executed += 1;
+        }, { scheduled: false });
+        this.clock.tick(3000);
+        assert.equal(0, executed);
+        scheduledTask.now();
+        assert.equal(1, executed);
     });
 
     it('should emit event every minute', () => {
