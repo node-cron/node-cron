@@ -8,9 +8,7 @@ jobs:
     executor: node/default
     steps:
       - checkout
-      - node/install:
-          node-version: '16.13'
-      - run: node --version
+      - run: npm install
   test:
     executor: node/default
     steps:
@@ -20,3 +18,4 @@ workflows:
   build:
     jobs:
       - setup
+      - test
