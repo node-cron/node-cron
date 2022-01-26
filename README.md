@@ -22,7 +22,7 @@ The node-cron module is tiny task scheduler in pure JavaScript for node.js based
 Install node-cron using npm:
 
 ```console
-$ npm install --save node-cron
+npm install --save node-cron
 ```
 
 Import node-cron and schedule a task:
@@ -138,7 +138,7 @@ Arguments:
 #### Options
 
  - **scheduled**: A `boolean` to set if the created task is scheduled. Default `true`;
- - **timezone**: The timezone that is used for job scheduling. See [moment-timezone](https://momentjs.com/timezone) for valid values.
+ - **timezone**: The timezone that is used for job scheduling. See [IANA time zone database](https://www.iana.org/time-zones) for valid values, such as `Asia/Shanghai`, `Asia/Kolkata`, `America/Sao_Paulo`.
 
  **Example**:
 
@@ -183,20 +183,6 @@ var task = cron.schedule('* * * * *', () =>  {
 });
 
 task.stop();
-```
-
-### Destroy
-
-The task will be stopped and completely destroyed.
-
-```javascript
-var cron = require('node-cron');
-
-var task = cron.schedule('* * * * *', () =>  {
-  console.log('will not execute anymore, nor be able to restart');
-});
-
-task.destroy();
 ```
 
 ### Validate

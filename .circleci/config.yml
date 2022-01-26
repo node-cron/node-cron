@@ -1,11 +1,11 @@
 version: 2.1
 
-orbs:
-  node: circleci/node@4.7
-
 jobs:
   test:
-    executor: node/default
+    docker:
+      - image: cimg/node:17.4
+        environment:
+          TZ: "America/Sao_Paulo"
     steps:
       - checkout
       - run: npm install
