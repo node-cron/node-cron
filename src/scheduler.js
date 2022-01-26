@@ -11,7 +11,7 @@ class Scheduler extends EventEmitter{
     }
 
     start(){
-        // clear timeout if exsits
+        // clear timeout if exists
         this.stop();
 
         let lastCheck = process.hrtime();
