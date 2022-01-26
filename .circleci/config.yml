@@ -9,7 +9,7 @@ jobs:
     steps:
       - checkout
       - run: npm install
-      - run: npm run check
+      - run: COVERALLS_GIT_BRANCH=$CIRCLE_BRANCH npm run check
 
 workflows:
   build:
