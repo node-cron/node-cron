@@ -5,8 +5,8 @@
 [![Coverage Status](https://coveralls.io/repos/github/node-cron/node-cron/badge.svg?branch=master)](https://coveralls.io/github/node-cron/node-cron?branch=master)
 [![Code Climate](https://codeclimate.com/github/node-cron/node-cron/badges/gpa.svg)](https://codeclimate.com/github/merencia/node-cron)
 [![Build Status](https://travis-ci.org/node-cron/node-cron.svg?branch=master)](https://travis-ci.org/merencia/node-cron)
-[![Dependency Status](https://david-dm.org/node-cron/node-cron.svg)](https://david-dm.org/merencia/node-cron)
-[![devDependency Status](https://david-dm.org/node-cron/node-cron/dev-status.svg)](https://david-dm.org/merencia/node-cron#info=devDependencies)
+[![Dependency Status](https://img.shields.io/david/merencia/node-cron.svg)](https://david-dm.org/merencia/node-cron)
+[![devDependency Status](https://img.shields.io/david/dev/merencia/node-cron.svg)](https://david-dm.org/merencia/node-cron#info=devDependencies)
 [![Backers on Open Collective](https://opencollective.com/node-cron/backers/badge.svg)](#backers) 
 [![Sponsors on Open Collective](https://opencollective.com/node-cron/sponsors/badge.svg)](#sponsors) 
 
