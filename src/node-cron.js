@@ -29,6 +29,22 @@ function schedule(expression, func, options) {
     return task;
 }
 
+/**
+ * Removes the passed task from current schedule
+ *
+ * @param {ScheduledTask} task The scheduled task to be removed.
+ * @returns {boolean} Whether the operation was successful or not.
+ */
+function removeTask(task) {
+    try {
+        storage.remove(task);
+
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
 function createTask(expression, func, options) {
     if (typeof func === 'string')
         return new BackgroundScheduledTask(expression, func, options);
@@ -61,4 +77,5 @@ function getTasks() {
     return storage.getTasks();
 }
 
-module.exports = { schedule, validate, getTasks };
+
+module.exports = { schedule, validate, getTasks, removeTask };

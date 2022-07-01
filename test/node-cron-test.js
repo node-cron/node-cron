@@ -12,6 +12,16 @@ describe('node-cron', () => {
     });
     
     describe('schedule', () => {
+        it('should schedule a task and then remove it', () => {
+            let task = cron.schedule('* * * * * *', './test/assets/dummy-task.js');
+            assert.isNotNull(task);
+            assert.isDefined(task);
+            assert.isTrue(task.isRunning());
+            assert.equal(1, cron.getTasks().size);
+            cron.removeTask(task);
+            assert.equal(0, cron.getTasks().size);
+        })
+        
         it('should schedule a task', () => {
             let executed = 0;
             cron.schedule('* * * * * *', () => {
@@ -70,7 +80,7 @@ describe('node-cron', () => {
             assert.equal(0, executed);
         });
         
-        it('should start a stoped task', () => {
+        it('should start a stopped task', () => {
             let executed = 0;
             let scheduledTask = cron.schedule('* * * * * *', () => {
                 executed += 1;
