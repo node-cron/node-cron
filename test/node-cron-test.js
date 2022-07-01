@@ -20,7 +20,7 @@ describe('node-cron', () => {
             assert.equal(1, cron.getTasks().size);
             cron.removeTask(task);
             assert.equal(0, cron.getTasks().size);
-        })
+        });
         
         it('should schedule a task', () => {
             let executed = 0;
