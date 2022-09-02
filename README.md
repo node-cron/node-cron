@@ -152,6 +152,37 @@ Arguments:
     timezone: "America/Sao_Paulo"
   });
  ```
+### GetTasks
+
+Gets the currently scheduled tasks.
+
+**Example**:
+
+ ```js
+  var cron = require('node-cron');
+
+  cron.schedule('* * * * *', () => {
+    console.log('Job 1');
+  });
+  
+    cron.schedule('* * * * *', () => {
+    console.log('Job 2');
+  });
+  
+  var tasks = cron.getTasks() // returns an array of tasks (type ScheduledTask)
+  tasks.foreach((job) => job.stop()) // stops all the scheduled jobs
+ ```
+ 
+### Validate
+
+Validate that the given string is a valid cron expression.
+
+```javascript
+var cron = require('node-cron');
+
+var valid = cron.validate('59 * * * *');
+var invalid = cron.validate('60 * * * *');
+```
 
 ## ScheduledTask methods
 
@@ -183,17 +214,6 @@ var task = cron.schedule('* * * * *', () =>  {
 });
 
 task.stop();
-```
-
-### Validate
-
-Validate that the given string is a valid cron expression.
-
-```javascript
-var cron = require('node-cron');
-
-var valid = cron.validate('59 * * * *');
-var invalid = cron.validate('60 * * * *');
 ```
 
 ## Issues
