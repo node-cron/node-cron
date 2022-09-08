@@ -1,6 +1,6 @@
 {
   "name": "node-cron",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "A simple cron-like task scheduler for Node.js",
   "author": "Lucas Merencia",
   "license": "ISC",
@@ -27,6 +27,9 @@
   ],
   "bugs": {
     "url": "https://github.com/merencia/node-cron/issues"
+  },
+  "dependencies": {
+    "uuid": "8.3.2"
   },
   "devDependencies": {
     "chai": "^4.2.0",
