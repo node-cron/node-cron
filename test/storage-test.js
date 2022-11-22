@@ -16,12 +16,10 @@ describe('storage', () => {
 
     it('should delete a task', () => {
         global.scheduledTasks = new Map();
-        global.scheduledTasks.set('id1', {});
-        global.scheduledTasks.set('id2', {});
-        assert.lengthOf(storage.getTasks(), 2);
+        global.scheduledTasks.set('id1', 'test');
+        global.scheduledTasks.set('id2', 'test2');
         storage.delete('id2');
-        assert.lengthOf(storage.getTasks(), 1);
-        assert.equal(storage.getTasks().get('id1'), {});
+        assert.equal(storage.getTasks().get('id1'), 'test');
         assert.equal(storage.getTasks().get('id2'), undefined);
     });
 
