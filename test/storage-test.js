@@ -14,6 +14,18 @@ describe('storage', () => {
         assert.lengthOf(storage.getTasks(), 1);
     });
 
+    it('should delete a tasks', () => {
+        global.scheduledTasks = new Map();
+        global.scheduledTasks.set('id1', {});
+        global.scheduledTasks.set('id2', {});
+        assert.lengthOf(storage.getTasks(), 2);
+        storage.delete('id2');
+        assert.lengthOf(storage.getTasks(), 1);
+        assert.equal(storage.getTasks());
+        assert.equal(storage.getTasks().get('id1'), {});
+        assert.equal(storage.getTasks().get('id2'), undefined);
+    });
+
     describe('on import', () => {
         it('should keep stored items across imports', () => {
             delete require.cache[require.resolve('../src/storage')];
