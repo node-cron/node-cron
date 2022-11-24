@@ -18,6 +18,7 @@ module.exports = (() => {
         delete: (task) => {
             if (typeof task === 'string') {
                 const taskInstance = global.scheduledTasks.get(task).stop();
+                // eslint-disable-next-line class-methods-use-this
                 delete taskInstance;
                 global.scheduledTasks.delete(task);
             } else {
