@@ -23,7 +23,6 @@ module.exports = (() => {
                 global.scheduledTasks.delete(task);
             } else {
                 task.stop();
-                delete task;
                 global.scheduledTasks.delete(task.options.name);
             }
         }
