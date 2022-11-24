@@ -21,6 +21,8 @@ module.exports = (() => {
                 delete taskInstance;
                 global.scheduledTasks.delete(task);
             } else {
+                task.stop();
+                delete task;
                 global.scheduledTasks.delete(task.options.name);
             }
         }
