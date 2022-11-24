@@ -23,6 +23,7 @@ module.exports = (() => {
                 global.scheduledTasks.delete(task);
             } else {
                 task.stop();
+                // eslint-disable-next-line class-methods-use-this
                 delete task;
                 global.scheduledTasks.delete(task.options.name);
             }
