@@ -18,7 +18,6 @@ module.exports = (() => {
         delete: (task) => {
             if (typeof task === 'string') {
                 const taskInstance = global.scheduledTasks.get(task).stop();
-                delete taskInstance;
                 global.scheduledTasks.delete(task);
             } else {
                 task.stop();
