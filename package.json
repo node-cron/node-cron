@@ -35,7 +35,7 @@
     "chai": "^4.2.0",
     "eslint": "^5.7.0",
     "istanbul": "^0.4.2",
-    "mocha": "^6.1.4",
+    "mocha": "^10.2.0",
     "moment-timezone": "^0.5.33",
     "nyc": "^14.0.0",
     "sinon": "^7.3.2"
