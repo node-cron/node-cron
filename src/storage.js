@@ -1,4 +1,4 @@
-const { randomUUID } = require('crypto')
+const { randomUUID } = require('crypto');
 
 module.exports = (() => {
     if(!global.scheduledTasks){
