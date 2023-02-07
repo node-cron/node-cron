@@ -56,7 +56,7 @@ function isInvalidHour(expression) {
  * @returns {boolean}
  */
 function isInvalidDayOfMonth(expression) {
-    return !isValidExpression(expression, 1, 31);
+    return expression !== 'L' && expression !== 'l' && !isValidExpression(expression, 1, 31);
 }
 
 /**
