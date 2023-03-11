@@ -3,18 +3,18 @@
 //                 Richard Honor <https://github.com/RMHonor>
 //                 Ata Berk YILMAZ <https://github.com/ataberkylmz>
 //                 Alex Seidmann <https://github.com/aseidma>
+import { EventEmitter } from 'events';
 
-import EventEmitter from 'events';
-
-export function schedule(cronExpression: string, func: (now: Date) => void, options?: ScheduleOptions): ScheduledTask;
+export function schedule(cronExpression: string, func: ((now: Date | "manual" | "init") => void) | string, options?: ScheduleOptions): ScheduledTask;
 
 export function validate(cronExpression: string): boolean;
 
 export function getTasks(): Map<string, ScheduledTask>;
 
 export interface ScheduledTask extends EventEmitter {
-    start: () => this;
-    stop: () => this;
+    now: (now?: Date) => void;
+    start: () => void;
+    stop: () => void;
 }
 
 export interface ScheduleOptions {
@@ -34,4 +34,12 @@ export interface ScheduleOptions {
      * Defaults to `false`
      */
     recoverMissedExecutions?: boolean;
+    /**
+     * The schedule name
+     */
+    name?: string;
+    /**
+     * Execute task immediately after creation
+     */
+    runOnInit?: boolean;
 }
