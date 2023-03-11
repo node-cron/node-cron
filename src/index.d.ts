@@ -3,6 +3,7 @@
 //                 Richard Honor <https://github.com/RMHonor>
 //                 Ata Berk YILMAZ <https://github.com/ataberkylmz>
 //                 Alex Seidmann <https://github.com/aseidma>
+//                 Pedro Américo <https://github.com/ghostebony>
 import { EventEmitter } from 'events';
 
 export function schedule(cronExpression: string, func: ((now: Date | "manual" | "init") => void) | string, options?: ScheduleOptions): ScheduledTask;
