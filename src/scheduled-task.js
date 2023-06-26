@@ -18,12 +18,12 @@ class ScheduledTask extends EventEmitter {
       
         this.options = options;
         this.options.name = this.options.name || uuid.v4();
-        this._lastExecutions = new Map()
+        this._lastExecutions = new Map();
 
         this._task = new Task(func);
         this._scheduler = new Scheduler(cronExpression, options.timezone);
 
-        const timeMatcher = new TimeMatcher(cronExpression, options.timezone)
+        const timeMatcher = new TimeMatcher(cronExpression, options.timezone);
         this._firstExecution = timeMatcher.apply(new Date());
 
         this._scheduler.on('scheduled-time-matched', (now) => {
@@ -31,13 +31,13 @@ class ScheduledTask extends EventEmitter {
         });
 
         this._task.on('task-finished', ({now}) => { 
-            if (this._lastExecutions.size > 9999999) this._lastExecutions = new Map()
-            this._lastExecutions.set(now.getTime(), true)
+            if (this._lastExecutions.size > 9999999) this._lastExecutions = new Map();
+            this._lastExecutions.set(now.getTime(), true);
         });
 
         this._task.on('task-failed', ({now}) => { 
-            options.recoverMissedExecutions && setTimeout(() =>this.now(now), 1000)
-        })
+            options.recoverMissedExecutions && setTimeout(() =>this.now(now), 1000);
+        });
 
         if(options.scheduled !== false){
             this._scheduler.start();
@@ -49,7 +49,7 @@ class ScheduledTask extends EventEmitter {
     }
     
     now(now = 'manual') {
-        if (now) this._lastExecutions.set(now.getTime(), false)
+        if (now) this._lastExecutions.set(now.getTime(), false);
         else this._lastExecutions.set(new Date(this._firstExecution).getTime(), true);
         let result = this._task.execute(now);
         this.emit('task-done', result);
