@@ -49,7 +49,7 @@ class ScheduledTask extends EventEmitter {
     }
     
     now(now = 'manual') {
-        if (now) this._lastExecutions.set(now?.getTime(), false);
+        if (now) this._lastExecutions.set(now.getTime(), false);
         else this._lastExecutions.set(new Date(this._firstExecution).getTime(), true);
         let result = this._task.execute(now);
         this.emit('task-done', result);
