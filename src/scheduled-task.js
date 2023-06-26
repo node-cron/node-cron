@@ -32,7 +32,7 @@ class ScheduledTask extends EventEmitter {
 
         this._task.on('task-finished', ({now}) => { 
             if (this._lastExecutions.size > 9999999) this._lastExecutions = new Map();
-            now && this._lastExecutions.set(now?.getTime(), true);
+            now && this._lastExecutions.set(now.getTime(), true);
         });
 
         this._task.on('task-failed', ({now}) => { 
