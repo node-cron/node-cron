@@ -16,15 +16,15 @@ class Task extends EventEmitter{
         try {
             exec = this._execution(now);
         } catch (error) {
-            return this.emit('task-failed', error);
+            return this.emit('task-failed', {error, now});
         }
         
         if (exec instanceof Promise) {
             return exec
-                .then(() => this.emit('task-finished'))
-                .catch((error) => this.emit('task-failed', error));
+                .then(() => this.emit('task-finished', {now}))
+                .catch((error) => this.emit('task-failed', {error, now}));
         } else {
-            this.emit('task-finished');
+            this.emit('task-finished', {now});
             return exec;
         }
     }
