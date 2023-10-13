@@ -32,7 +32,7 @@ class ScheduledTask extends EventEmitter {
 
         this._task.on('task-finished', ({now}) => { 
             if (this._lastExecutions.size > 9999999) this._lastExecutions = new Map();
-            now && this._lastExecutions.set(now.getTime(), true);
+            now && this._lastExecutions.set(new Date(now).getTime(), true);
         });
 
         this._task.on('task-failed', ({now}) => { 
@@ -49,7 +49,7 @@ class ScheduledTask extends EventEmitter {
     }
     
     now(now = 'manual') {
-        if (now) this._lastExecutions.set(now.getTime(), false);
+        if (now) this._lastExecutions.set(new Date(now).getTime(), false);
         else this._lastExecutions.set(new Date(this._firstExecution).getTime(), true);
         let result = this._task.execute(now);
         this.emit('task-done', result);
