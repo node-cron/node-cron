@@ -1,6 +1,6 @@
 {
   "name": "node-cron",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "A simple cron-like task scheduler for Node.js",
   "author": "Lucas Merencia",
   "license": "ISC",
