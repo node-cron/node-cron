@@ -14,6 +14,14 @@ module.exports = (() => {
         },
         getTasks: () => {
             return global.scheduledTasks;
+        },
+        remove: (task) => {
+            if(!task.options){
+                const uuid = require('uuid');
+                task.options = {};
+                task.options.name = uuid.v4();
+            }
+            global.scheduledTasks.delete(task.options.name, task);
         }
     };
 })();
