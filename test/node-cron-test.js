@@ -69,6 +69,36 @@ describe('node-cron', () => {
             
             assert.equal(0, executed);
         });
+
+        it('should delete a scheduled task', () => {
+            const name = 'testId';
+            let executed = 0;
+            const task = cron.schedule('* * * * * *', () => {
+                executed += 1;
+            }, { scheduled: true, name });
+        
+            this.clock.tick(2000);
+          
+            assert.equal(2, executed);
+            assert.equal(cron.getTasks().get(name), task);
+            cron.deleteTask(task);
+            assert.equal(cron.getTasks().get(name), undefined);
+        });
+
+        it('should delete a scheduled task by name', () => {
+            const name = 'testId';
+            let executed = 0;
+            const task = cron.schedule('* * * * * *', () => {
+                executed += 1;
+            }, { scheduled: true, name });
+
+            this.clock.tick(2000);
+      
+            assert.equal(2, executed);
+            assert.equal(cron.getTasks().get(name), task);
+            cron.deleteTask(name);
+            assert.equal(cron.getTasks().get(name), undefined);
+        });
         
         it('should start a stoped task', () => {
             let executed = 0;

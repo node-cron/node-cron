@@ -14,6 +14,15 @@ module.exports = (() => {
         },
         getTasks: () => {
             return global.scheduledTasks;
+        },
+        delete: (task) => {
+            if (typeof task === 'string') {
+                global.scheduledTasks.get(task).stop();
+                global.scheduledTasks.delete(task);
+            } else {
+                task.stop();
+                global.scheduledTasks.delete(task.options.name);
+            }
         }
     };
 })();
