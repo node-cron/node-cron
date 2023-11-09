@@ -82,29 +82,6 @@ describe('node-cron', () => {
             this.clock.tick(2000);
             assert.equal(2, executed);
         });
-        
-        it('should recover missed executions', (done) => {
-            let executed = 0;
-            this.clock.restore();
-            let scheduledTask = cron.schedule('* * * * * *', () => {
-                executed += 1;
-            }, { recoverMissedExecutions: true });
-            
-            let wait = true;
-            let startedAt = new Date();
-            
-            while(wait){
-                if((new Date().getTime() - startedAt.getTime()) > 1000){
-                    wait = false;
-                }
-            }
-            
-            setTimeout(() => {
-                scheduledTask.stop();
-                assert.equal(2, executed);
-                done();
-            }, 1000);
-        }).timeout(4000);
 
         it('should schedule a background task', () => {
             let task = cron.schedule('* * * * * *', './test/assets/dummy-task.js');
