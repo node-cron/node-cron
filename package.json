@@ -6,6 +6,7 @@
   "license": "ISC",
   "homepage": "https://github.com/merencia/node-cron",
   "main": "src/node-cron.js",
+  "types": "src/index.d.ts",
   "scripts": {
     "test": "nyc --reporter=html --reporter=text mocha --recursive",
     "lint": "./node_modules/.bin/eslint ./src ./test",
