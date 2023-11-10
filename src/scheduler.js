@@ -3,8 +3,8 @@
 const EventEmitter = require('events');
 const TimeMatcher = require('./time-matcher');
 
-class Scheduler extends EventEmitter{
-    constructor(pattern, timezone, autorecover){
+class Scheduler extends EventEmitter {
+    constructor(pattern, timezone, autorecover) {
         super();
         this.timeMatcher = new TimeMatcher(pattern, timezone);
         this.autorecover = autorecover;
@@ -22,11 +22,11 @@ class Scheduler extends EventEmitter{
             const elapsedTime = process.hrtime(lastCheck);
             const elapsedMs = (elapsedTime[0] * 1e9 + elapsedTime[1]) / 1e6;
             const missedExecutions = Math.floor(elapsedMs / 1000);
-            
-            for(let i = missedExecutions; i >= 0; i--){
+
+            for (let i = missedExecutions; i >= 0; i--) {
                 const date = new Date(new Date().getTime() - i * 1000);
                 let date_tmp = this.timeMatcher.apply(date);
-                if(lastExecution.getTime() < date_tmp.getTime() && (i === 0 || this.autorecover) && this.timeMatcher.match(date)){
+                if (lastExecution.getTime() < date_tmp.getTime() && (i === 0 || this.autorecover) && this.timeMatcher.match(date)) {
                     this.emit('scheduled-time-matched', date_tmp);
                     date_tmp.setMilliseconds(0);
                     lastExecution = date_tmp;
@@ -38,11 +38,25 @@ class Scheduler extends EventEmitter{
         matchTime();
     }
 
-    stop(){
-        if(this.timeout){
+    stop() {
+        if (this.timeout) {
             clearTimeout(this.timeout);
         }
         this.timeout = null;
+    }
+
+    destroy() {
+        return new Promise((res, rej) => {
+            this.stop();
+            setTimeout(() => {
+                if (!this.getStatus()) return res(true);
+                return rej(false);
+            }, 15);
+        });
+    }
+
+    getStatus() {
+        return this.timeout && !this.timeout._destroyed;
     }
 }
 
