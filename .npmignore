@@ -1,0 +1,5 @@
+.circleci
+.github
+test
+.covignore
+.eslintrc.yml
