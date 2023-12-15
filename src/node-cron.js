@@ -9,7 +9,11 @@ const storage = require('./storage');
  * @typedef {Object} CronScheduleOptions
  * @prop {boolean} [scheduled] if a scheduled task is ready and running to be
  *  performed when the time matches the cron expression.
+ * @prop {string} [name] tasks name to make it easier to identify them in the logs.
  * @prop {string} [timezone] the timezone to execute the task in.
+ * @prop {boolean} [runOnInit] run task once after creation.
+ * @prop {boolean} [recoverMissedExecutions] if the created task should be able
+ *  to recover missed executions. Default false;
  */
 
 /**
