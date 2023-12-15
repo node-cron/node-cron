@@ -147,6 +147,7 @@ Arguments:
 
 #### Options
 
+ - **runOnInit**: run task once after creation;
  - **scheduled**: A `boolean` to set if the created task is scheduled. Default `true`;
  - **recoverMissedExecutions**: A `boolean` to set if the created task should be able to recover missed executions. Default `false`;
  - **timezone**: The timezone that is used for job scheduling. See [IANA time zone database](https://www.iana.org/time-zones) for valid values, such as `Asia/Shanghai`, `Asia/Kolkata`, `America/Sao_Paulo`.
