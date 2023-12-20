@@ -93,13 +93,14 @@ describe('node-cron', () => {
 
             let startedAt = new Date();
             let nextSec = new Date(startedAt.getTime() + 1000);
+            nextSec.setMilliseconds(0); // reset to the beginning of the next second
             let waitingTime = nextSec.getTime() - (new Date().getTime());
             let wait = true;
             // waiting time until next second + 1 second
             // So it will pass the ignored current second and miss exactly one execution of the next second
 
             while(wait){
-                if((new Date().getTime() - startedAt.getTime()) > waitingTime + 1001){
+                if((new Date().getTime() - startedAt.getTime()) > waitingTime + 1000){
                     wait = false;
                 }
             }
@@ -108,7 +109,7 @@ describe('node-cron', () => {
                 scheduledTask.stop();
                 assert.equal(2, executed);
                 done();
-            }, 1000);
+            }, 10);
         }).timeout(4000);
 
         it('should schedule a background task', () => {
