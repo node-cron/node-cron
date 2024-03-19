@@ -112,6 +112,9 @@ function validateFields(patterns, executablePatterns) {
 function validate(pattern) {
     if (typeof pattern !== 'string')
         throw new TypeError('pattern must be a string!');
+    const charRegex = new RegExp('^[a-zA-Z0-9-*/, ]+$');
+    if (!charRegex.test(pattern))
+        throw new TypeError('pattern includes illegal characters!');
 
     const patterns = pattern.split(' ');
     const executablePatterns = convertExpression(pattern).split(' ');
