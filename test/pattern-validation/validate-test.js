@@ -16,6 +16,18 @@ describe('pattern-validation', () => {
         }).to.throw('60 is a invalid expression for minute');
     });
 
+    it('should fail with invalid separator character', () =>  {
+        expect(() => {
+            validate('1;2;3 * * * *');
+        }).to.throw('pattern includes illegal characters!');
+    });
+
+    it('should not fail with valid separator character', () =>  {
+        expect(() => {
+            validate('1,2,3 * * * *');
+        }).to.not.throw();
+    });
+
     it('should fail without a string', () =>  {
         expect(() => {
             validate(50);
