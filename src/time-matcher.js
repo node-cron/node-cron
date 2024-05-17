@@ -29,6 +29,18 @@ class TimeMatcher{
         this.pattern = convertExpression(pattern);
         this.timezone = timezone;
         this.expressions = this.pattern.split(' ');
+        this.dtf = this.timezone
+            ? new Intl.DateTimeFormat('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hourCycle: 'h23',
+                fractionalSecondDigits: 3,
+                timeZone: this.timezone
+            }) : null;
     }
 
     match(date){
@@ -45,22 +57,10 @@ class TimeMatcher{
     }
 
     apply(date){
-        if(this.timezone){
-            const dtf = new Intl.DateTimeFormat('en-US', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hourCycle: 'h23',
-                fractionalSecondDigits: 3,
-                timeZone: this.timezone
-            });
-            
-            return new Date(dtf.format(date));
+        if(this.dtf){
+            return new Date(this.dtf.format(date));
         }
-        
+
         return date;
     }
 }
