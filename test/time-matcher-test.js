@@ -65,6 +65,36 @@ describe('TimeMatcher', () => {
             assert.isFalse(matcher.match(new Date(2018, 0, 6, 0, 0, 0)));
         });
 
+        it('should accept single value for last day of month', () => {
+            let matcher = new TimeMatcher('0 0 0 l * *');
+            assert.isTrue(matcher.match(new Date(2018, 0, 31, 0, 0, 0)));
+            assert.isFalse(matcher.match(new Date(2018, 0, 30, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2018, 1, 28, 0, 0, 0)));
+            assert.isFalse(matcher.match(new Date(2018, 1, 29, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2018, 2, 31, 0, 0, 0)));
+            assert.isFalse(matcher.match(new Date(2018, 2, 30, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2018, 3, 30, 0, 0, 0)));
+            assert.isFalse(matcher.match(new Date(2018, 3, 31, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2018, 4, 31, 0, 0, 0)));
+            assert.isFalse(matcher.match(new Date(2018, 4, 30, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2018, 5, 30, 0, 0, 0)));
+            assert.isFalse(matcher.match(new Date(2018, 5, 31, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2018, 6, 31, 0, 0, 0)));
+            assert.isFalse(matcher.match(new Date(2018, 6, 30, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2018, 7, 31, 0, 0, 0)));
+            assert.isFalse(matcher.match(new Date(2018, 7, 30, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2018, 8, 30, 0, 0, 0)));
+            assert.isFalse(matcher.match(new Date(2018, 8, 31, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2018, 9, 31, 0, 0, 0)));
+            assert.isFalse(matcher.match(new Date(2018, 9, 30, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2018, 10, 30, 0, 0, 0)));
+            assert.isFalse(matcher.match(new Date(2018, 10, 31, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2018, 11, 31, 0, 0, 0)));
+            assert.isFalse(matcher.match(new Date(2018, 11, 30, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2020, 1, 29, 0, 0, 0)));
+            assert.isFalse(matcher.match(new Date(2020, 1, 28, 0, 0, 0)));
+        });
+
         it('should accept single value for month', () => {
             let matcher = new TimeMatcher('0 0 0 1 5 *');
             assert.isTrue(matcher.match(new Date(2018, 4, 1, 0, 0, 0)));
