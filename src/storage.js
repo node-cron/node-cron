@@ -1,14 +1,14 @@
 module.exports = (() => {
-    if(!global.scheduledTasks){
+    if (!global.scheduledTasks) {
         global.scheduledTasks = new Map();
     }
-    
+
     return {
         save: (task) => {
-            if(!task.options){
-                const uuid = require('uuid');
+            if (!task.options) {
+                const generateUUID = require('./uuid');
                 task.options = {};
-                task.options.name = uuid.v4();
+                task.options.name = generateUUID();
             }
             global.scheduledTasks.set(task.options.name, task);
         },

@@ -1,14 +1,14 @@
 const EventEmitter = require('events');
 const path = require('path');
 const { fork } = require('child_process');
-const uuid = require('uuid');
+const generateUUID = require('../uuid');
 
 const daemonPath = `${__dirname}/daemon.js`;
 
 class BackgroundScheduledTask extends EventEmitter {
-    constructor(cronExpression, taskPath, options){
+    constructor(cronExpression, taskPath, options) {
         super();
-        if(!options){
+        if (!options) {
             options = {
                 scheduled: true,
                 recoverMissedExecutions: false,
@@ -17,9 +17,9 @@ class BackgroundScheduledTask extends EventEmitter {
         this.cronExpression = cronExpression;
         this.taskPath = taskPath;
         this.options = options;
-        this.options.name = this.options.name || uuid.v4();
+        this.options.name = this.options.name || generateUUID();
 
-        if(options.scheduled){
+        if (options.scheduled) {
             this.start();
         }
     }
@@ -29,16 +29,16 @@ class BackgroundScheduledTask extends EventEmitter {
         this.forkProcess = fork(daemonPath);
 
         this.forkProcess.on('message', (message) => {
-            switch(message.type){
-            case 'task-done':
-                this.emit('task-done', message.result);
-                break;
+            switch (message.type) {
+                case 'task-done':
+                    this.emit('task-done', message.result);
+                    break;
             }
         });
 
         let options = this.options;
         options.scheduled = true;
-        
+
         this.forkProcess.send({
             type: 'register',
             path: path.resolve(this.taskPath),
@@ -46,20 +46,20 @@ class BackgroundScheduledTask extends EventEmitter {
             options: options
         });
     }
-    
-    stop(){
-        if(this.forkProcess){
+
+    stop() {
+        if (this.forkProcess) {
             this.forkProcess.kill();
         }
     }
 
     pid() {
-        if(this.forkProcess){
+        if (this.forkProcess) {
             return this.forkProcess.pid;
         }
     }
 
-    isRunning(){
+    isRunning() {
         return !this.forkProcess.killed;
     }
 }

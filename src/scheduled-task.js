@@ -3,20 +3,20 @@
 const EventEmitter = require('events');
 const Task = require('./task');
 const Scheduler = require('./scheduler');
-const uuid = require('uuid');
+const generateUUID = require('./uuid');
 
 class ScheduledTask extends EventEmitter {
     constructor(cronExpression, func, options) {
         super();
-        if(!options){
+        if (!options) {
             options = {
                 scheduled: true,
                 recoverMissedExecutions: false
             };
         }
-      
+
         this.options = options;
-        this.options.name = this.options.name || uuid.v4();
+        this.options.name = this.options.name || generateUUID();
 
         this._task = new Task(func);
         this._scheduler = new Scheduler(cronExpression, options.timezone, options.recoverMissedExecutions);
@@ -25,24 +25,24 @@ class ScheduledTask extends EventEmitter {
             this.now(now);
         });
 
-        if(options.scheduled !== false){
+        if (options.scheduled !== false) {
             this._scheduler.start();
         }
-        
-        if(options.runOnInit === true){
+
+        if (options.runOnInit === true) {
             this.now('init');
         }
     }
-    
+
     now(now = 'manual') {
         let result = this._task.execute(now);
         this.emit('task-done', result);
     }
-    
+
     start() {
-        this._scheduler.start();  
+        this._scheduler.start();
     }
-    
+
     stop() {
         this._scheduler.stop();
     }
