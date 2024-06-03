@@ -30,9 +30,9 @@ class BackgroundScheduledTask extends EventEmitter {
 
         this.forkProcess.on('message', (message) => {
             switch (message.type) {
-                case 'task-done':
-                    this.emit('task-done', message.result);
-                    break;
+            case 'task-done':
+                this.emit('task-done', message.result);
+                break;
             }
         });
 
