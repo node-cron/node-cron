@@ -1,26 +1,12 @@
+const crypto = require('crypto');
+
 function generateUUID() {
-    let uuid = '';
 
-    // Generate a random 32-bit value
-    function getRandomValue() {
-        return Math.floor((1 + Math.random()) * 0x10000)
-            .toString(16)
-            .substring(1);
-    }
+    const buffer = crypto.randomBytes(16);
 
-    // Generate a random 16-bit value
-    function getRandomShortValue() {
-        return Math.floor((1 + Math.random()) * 0x4000)
-            .toString(16)
-            .substring(1);
-    }
+    const hex = buffer.toString('hex');
 
-    // Generate the UUID components
-    uuid += getRandomValue() + getRandomValue() + '-';
-    uuid += getRandomValue() + '-';
-    uuid += getRandomShortValue() + '-';
-    uuid += getRandomShortValue() + '-';
-    uuid += getRandomValue() + getRandomValue() + getRandomValue();
+    const uuid = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 
     return uuid;
 }
