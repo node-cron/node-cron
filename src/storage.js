@@ -1,3 +1,5 @@
+const { randomUUID } = require('crypto');
+
 module.exports = (() => {
     if (!global.scheduledTasks) {
         global.scheduledTasks = new Map();
@@ -6,9 +8,8 @@ module.exports = (() => {
     return {
         save: (task) => {
             if (!task.options) {
-                const generateUUID = require('./uuid');
                 task.options = {};
-                task.options.name = generateUUID();
+                task.options.name = randomUUID();
             }
             global.scheduledTasks.set(task.options.name, task);
         },
