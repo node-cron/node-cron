@@ -36,7 +36,15 @@ class ScheduledTask extends EventEmitter {
     
     now(now = 'manual') {
         let result = this._task.execute(now);
-        this.emit('task-done', result);
+
+        if (result instanceof Promise) {
+            // `emit` serializes `Promise` to `{}`
+            result
+                .then((value) => this.emit('task-done', value))
+                .catch(() => this.emit('task-done'));
+        } else {
+            this.emit('task-done', result);
+        }
     }
     
     start() {

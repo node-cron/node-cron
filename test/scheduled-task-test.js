@@ -88,4 +88,21 @@ describe('ScheduledTask', () => {
         assert.equal(3, executed);
         scheduledTask.stop();
     });
+
+    it('should emit event on task done', () => {
+        let result;
+        let scheduledTask = new ScheduledTask('* * * * * *', () => 'ok');
+        scheduledTask.once('task-done', (value) => result = value);
+        this.clock.tick(3000);
+        assert.equal('ok', result);
+    });
+
+    it('should emit event on promise task done', async () => {
+        let result;
+        let scheduledTask = new ScheduledTask('* * * * * *', () => Promise.resolve('ok'));
+        scheduledTask.once('task-done', (value) => result = value);
+        this.clock.tick(3000);
+        await Promise.resolve();
+        assert.equal('ok', result);
+    });
 });
