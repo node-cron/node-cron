@@ -12,11 +12,11 @@ describe('Task', () => {
     });
 
     it('should emit event on finish a task', async () => {
-        let finished = false;
+        let finished;
         let task = new Task(() => 'ok');
-        task.on('task-finished', () => finished = true);
+        task.on('task-finished', (val) => finished = val);
         await task.execute();
-        assert.equal(true, finished);
+        assert.equal('ok', finished);
     });
 
     it('should emit event on error a task', async () => {
@@ -30,12 +30,12 @@ describe('Task', () => {
     });
 
     it('should emit event on finish a promise task', async () => {
-        let finished = false;
+        let finished;
         const promise = () => new Promise((resolve) => resolve('ok'));
         let task = new Task(promise);
-        task.on('task-finished', () => finished = true);
+        task.on('task-finished', (result) => finished = result);
         await task.execute();
-        assert.equal(true, finished);
+        assert.equal('ok', finished);
     });
 
     it('should emit event on error a promise task', async () => {

@@ -21,10 +21,10 @@ class Task extends EventEmitter{
         
         if (exec instanceof Promise) {
             return exec
-                .then(() => this.emit('task-finished'))
+                .then((result) => this.emit('task-finished', result))
                 .catch((error) => this.emit('task-failed', error));
         } else {
-            this.emit('task-finished');
+            this.emit('task-finished', exec);
             return exec;
         }
     }
