@@ -94,16 +94,16 @@ describe('node-cron', () => {
             let startedAt = new Date();
             
             while(wait){
-                if((new Date().getTime() - startedAt.getTime()) > 1000){
+                if((new Date().getTime() - startedAt.getTime()) > 2000){
                     wait = false;
                 }
             }
             
             setTimeout(() => {
                 scheduledTask.stop();
-                assert.equal(2, executed);
+                assert.equal(3, executed);
                 done();
-            }, 1000);
+            }, 1200); // give a 200ms buffer so we're not at the mercy of the event loop's particular scheduling
         }).timeout(4000);
 
         it('should schedule a background task', () => {

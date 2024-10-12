@@ -62,7 +62,7 @@ describe('Scheduler', () => {
             scheduler.stop();
             assert.equal(2, emited);
             done();
-        }, 1000);
+        }, 1200); // give a 200ms buffer so we're not at the mercy of the event loop's particular scheduling
     }).timeout(3000);
 
     it('should ignore missed executions', (done) => {

@@ -1,6 +1,9 @@
 const { assert } = require('chai');
 const TimeMatcher = require('../src/time-matcher');
 const moment = require('moment-timezone');
+const { DateTime, Settings } = require('luxon');
+
+Settings.throwOnInvalid = true;
 
 describe('TimeMatcher', () => {
     describe('wildcard', () => {
@@ -231,14 +234,15 @@ describe('TimeMatcher', () => {
 
         it('should match with all available timezone of moment-timezone', () => {
             const allTimeZone = moment.tz.names();
-            for (let zone in allTimeZone) {
-                const tmp = moment();
-                const expected = moment.tz(tmp,allTimeZone[zone]);
-                const pattern = expected.second() + ' ' + expected.minute() + ' ' + expected.hour() + ' ' + expected.date() + ' ' + (expected.month()+1) + ' ' + expected.day();
-                const matcher = new TimeMatcher(pattern, allTimeZone[zone]);
-                const utcTime = new Date(tmp.year(), tmp.month(), tmp.date(), tmp.hour(), tmp.minute(), tmp.second(), tmp.millisecond());
+            for (const zone of allTimeZone) {
+                const tmp = DateTime.now();
+                const expected = tmp.setZone(zone);
+                const pattern = expected.second + ' ' + expected.minute + ' ' + expected.hour + ' ' + expected.day + ' ' + expected.month + ' ' + (expected.weekday % 7);
+                const matcher = new TimeMatcher(pattern, zone);
+                const utcTime = tmp.toUTC().toJSDate();
                 assert.isTrue(matcher.match(utcTime));
             }
         });
     });
 });
+
