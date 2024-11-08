@@ -291,3 +291,6 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
 ## License
 
 node-cron is under [ISC License](https://github.com/merencia/node-cron/blob/master/LICENSE.md).
+
+
+##Cometario de la clase del 5 de noviembre de 2024
