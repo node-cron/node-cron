@@ -35,7 +35,7 @@ class ScheduledTask extends EventEmitter {
     }
     
     now(now = 'manual') {
-        let result = this._task.execute(now);
+        let result = this._task.execute(now, this);
         this.emit('task-done', result);
     }
     
