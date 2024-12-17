@@ -11,10 +11,10 @@ class Task extends EventEmitter{
         this._execution = execution;
     }
 
-    execute(now) {
+    execute(now, scheduledTask) {
         let exec;
         try {
-            exec = this._execution(now);
+            exec = this._execution(now, scheduledTask);
         } catch (error) {
             return this.emit('task-failed', error);
         }
