@@ -77,7 +77,7 @@ describe('ScheduledTask', () => {
         }, { scheduled: false });
         clock.tick(3000);
         assert.equal(0, executed);
-        scheduledTask.now();
+        scheduledTask.execute();
         assert.equal(1, executed);
     });
 

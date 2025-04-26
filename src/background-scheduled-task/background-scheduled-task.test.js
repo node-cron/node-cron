@@ -41,8 +41,8 @@ describe('BackgroundScheduledTask', () => {
             scheduled: true
         });
         assert.isNotNull(task.pid());
-        assert.isTrue(task.isRunning());
+        assert.isTrue(task.isChildProcessAlive());
         task.stop();
-        assert.isFalse(task.isRunning());
+        assert.isFalse(task.isChildProcessAlive());
     });
 });

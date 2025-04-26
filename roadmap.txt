@@ -1,0 +1,7 @@
+
+fix timezones
+destroy job
+fix step like 1-59/2
+exception inside task must be thrown 
+singe time jobs
+preventOverrun

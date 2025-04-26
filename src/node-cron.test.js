@@ -113,7 +113,7 @@ describe('node-cron', () => {
             let task = cron.schedule('* * * * * *', './test-assets/dummy-task.js');
             assert.isNotNull(task);
             assert.isDefined(task);
-            assert.isTrue(task.isRunning());
+            assert.isTrue(task.isChildProcessAlive());
             task.stop();
         });
     });

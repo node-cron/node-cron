@@ -32,11 +32,11 @@ class ScheduledTask extends EventEmitter {
         }
         
         if(options.runOnInit === true){
-            this.execute(new Date());
+            this.execute();
         }
     }
     
-    async execute(now) {
+    async execute(now = new Date()) {
       this.status = 'running';
       this.emit('task-starded', now);    
       const result = await this.task.execute(now);
@@ -50,6 +50,10 @@ class ScheduledTask extends EventEmitter {
     
     stop() {
         this.scheduler.stop();
+    }
+
+    getStatus() {
+        return this.status;
     }
 }
 

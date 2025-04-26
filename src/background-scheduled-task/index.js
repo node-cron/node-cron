@@ -70,9 +70,13 @@ class BackgroundScheduledTask extends EventEmitter {
         }
     }
 
-    isRunning(){
+    isChildProcessAlive(){
         return !this.forkProcess.killed;
     }
+
+    getStatus() {
+      return this.status;
+  }
 }
 
 export default BackgroundScheduledTask;
