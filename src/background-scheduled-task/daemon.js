@@ -8,6 +8,11 @@ async function register(message){
     scheduledTask.on('task-done', (result) => {
         process.send({ type: 'task-done', result});
     });
+
+    scheduledTask.on('task-started', (time) => {
+      process.send({ type: 'task-started', time});
+    });
+    
     process.send({ type: 'registred' });
 }
 

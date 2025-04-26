@@ -39,3 +39,5 @@ node_modules
 .sass-cache/
 _site/
 .nyc_output/
+
+testing.js

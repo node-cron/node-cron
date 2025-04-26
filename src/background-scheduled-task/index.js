@@ -23,6 +23,7 @@ class BackgroundScheduledTask extends EventEmitter {
         this.taskPath = taskPath;
         this.options = options;
         this.options.name = this.options.name || v4();
+        this.status = 'idle';
 
         if(options.scheduled){
             this.start();
@@ -35,7 +36,12 @@ class BackgroundScheduledTask extends EventEmitter {
 
         this.forkProcess.on('message', (message) => {
             switch(message.type){
+            case 'task-started':
+                this.status = 'running';
+                this.emit('task-started', message.time);
+                break;
             case 'task-done':
+              this.status = 'idle';
                 this.emit('task-done', message.result);
                 break;
             }

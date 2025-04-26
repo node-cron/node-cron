@@ -23,9 +23,7 @@ import { save, getTasks as _getTasks } from './storage.js';
  */
 function schedule(expression, func, options) {
     const task = createTask(expression, func, options);
-
     save(task);
-
     return task;
 }
 
