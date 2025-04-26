@@ -5,17 +5,17 @@ import cron from './node-cron.js';
 
 let clock;
 
-describe('node-cron', () => {
-    beforeEach(() => {
+describe('node-cron', function() {
+    beforeEach(function() {
         clock = useFakeTimers(new Date(2018, 0, 1, 0, 0, 0, 0));
     });
     
-    afterEach(() => {
+    afterEach(function() {
         clock.restore();
     });
     
-    describe('schedule', () => {
-        it('should schedule a task', () => {
+    describe('schedule', function() {
+        it('should schedule a task', function() {
             let executed = 0;
             cron.schedule('* * * * * *', () => {
                 executed += 1;
@@ -26,7 +26,7 @@ describe('node-cron', () => {
             assert.equal(2, executed);
         });
         
-        it('should schedule a task with America/Sao_Paulo timezone', (done) => {
+        it('should schedule a task with America/Sao_Paulo timezone', function(done) {
             let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
             clock.restore();
             clock = useFakeTimers(startDate);
@@ -44,7 +44,7 @@ describe('node-cron', () => {
             clock.tick(1000);
         });
         
-        it('should schedule a task with Europe/Rome timezone', (done) => {
+        it('should schedule a task with Europe/Rome timezone', function(done) {
             let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
             clock.restore();
             clock = useFakeTimers(startDate);
@@ -62,7 +62,7 @@ describe('node-cron', () => {
             clock.tick(1000);
         });
         
-        it('should schedule a task stoped', () => {
+        it('should schedule a task stoped', function() {
             let executed = 0;
             cron.schedule('* * * * * *', () => {
                 executed += 1;
@@ -73,7 +73,7 @@ describe('node-cron', () => {
             assert.equal(0, executed);
         });
         
-        it('should start a stoped task', () => {
+        it('should start a stoped task', function() {
             let executed = 0;
             let scheduledTask = cron.schedule('* * * * * *', () => {
                 executed += 1;
@@ -86,7 +86,7 @@ describe('node-cron', () => {
             assert.equal(2, executed);
         });
         
-        it('should recover missed executions', (done) => {
+        it('should recover missed executions', function(done) {
             let executed = 0;
             clock.restore();
             let scheduledTask = cron.schedule('* * * * * *', () => {
@@ -109,7 +109,7 @@ describe('node-cron', () => {
             }, 1000);
         }).timeout(4000);
 
-        it('should schedule a background task', () => {
+        it('should schedule a background task', function() {
             let task = cron.schedule('* * * * * *', './test-assets/dummy-task.js');
             assert.isNotNull(task);
             assert.isDefined(task);
@@ -118,18 +118,18 @@ describe('node-cron', () => {
         });
     });
     
-    describe('validate', () => {
-        it('should validate a pattern', () => {
+    describe('validate', function() {
+        it('should validate a pattern', function() {
             assert.isTrue(cron.validate('* * * * * *')); 
         });
         
-        it('should fail with a invalid pattern', () => {
+        it('should fail with a invalid pattern', function() {
             assert.isFalse(cron.validate('62 * * * * *')); 
         });
     });
 
-    describe('getTasks', () => {
-        it('should store a task', () => {
+    describe('getTasks', function() {
+        it('should store a task', function() {
             cron.schedule('* * * * *', () => {});
             assert.isTrue(cron.getTasks().length > 0);
         });

@@ -2,33 +2,33 @@ import chai from 'chai';
 const { expect } = chai;
 import validate from '../pattern-validation/pattern-validation.js';
 
-describe('pattern-validation.js', () => {
-    describe('validate hour', () => {
-        it('should fail with invalid hour', () => {
+describe('pattern-validation.js', function() {
+    describe('validate hour', function() {
+        it('should fail with invalid hour', function() {
             expect(() => {
                 validate('* 25 * * *');
             }).to.throw('25 is a invalid expression for hour');
         });
 
-        it('should not fail with valid hour', () => {
+        it('should not fail with valid hour', function() {
             expect(() => {
                 validate('* 12 * * *');
             }).to.not.throw();
         });
 
-        it('should not fail with * for hour', () => {
+        it('should not fail with * for hour', function() {
             expect(() => {
                 validate('* * * * * *');
             }).to.not.throw();
         });
 
-        it('should not fail with */2 for hour', () => {
+        it('should not fail with */2 for hour', function() {
             expect(() => {
                 validate('* */2 * * *');
             }).to.not.throw();
         });
 
-        it('should accept range for hours', () => {
+        it('should accept range for hours', function() {
             expect(() => {
                 validate('* 3-20 * * *');
             }).to.not.throw();

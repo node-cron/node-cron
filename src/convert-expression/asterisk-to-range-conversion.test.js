@@ -2,8 +2,8 @@ import chai from 'chai';
 const { expect } = chai;
 import conversion from './asterisk-to-range-conversion.js';
 
-describe('asterisk-to-range-conversion.js', () => {
-    it('shuld convert * to ranges', () => {
+describe('asterisk-to-range-conversion.js', function() {
+    it('shuld convert * to ranges', function() {
         const expressions = '* * * * * *'.split(' ');
         const expression = conversion(expressions).join(' ');
         expect(expression).to.equal('0-59 0-59 0-23 1-31 1-12 0-6');

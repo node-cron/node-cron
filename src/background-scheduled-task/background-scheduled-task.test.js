@@ -2,8 +2,8 @@ import chai from 'chai';
 const { assert } = chai;
 import BackgroundScheduledTask from './index.js';
 
-describe('BackgroundScheduledTask', () => {
-    it('should start a task by default', (done) => {
+describe('BackgroundScheduledTask', function() {
+    it('should start a task by default', function(done) {
         let task = new BackgroundScheduledTask('* * * * * *', './src/test-assets/dummy-task.js');
         task.on('task-done', (result) => {
             assert.equal('dummy task', result);
@@ -11,7 +11,8 @@ describe('BackgroundScheduledTask', () => {
             done();
         });
     });
-    it('should create a task stoped', () => {
+
+    it('should create a task stoped', function() {
         let task = new BackgroundScheduledTask('* * * * * *', './src/test-assets/dummy-task.js', {
             scheduled: false
         });
@@ -19,7 +20,7 @@ describe('BackgroundScheduledTask', () => {
         assert.isUndefined(task.pid());
     });
 
-    it('should start a task', (done) => {
+    it('should start a task', function(done) {
         let task = new BackgroundScheduledTask('* * * * * *', './src/test-assets/dummy-task.js', {
             scheduled: false
         });
@@ -36,7 +37,7 @@ describe('BackgroundScheduledTask', () => {
         assert.isNotNull(task.pid());
     });
     
-    it('should stop a task', () => {
+    it('should stop a task', function() {
         let task = new BackgroundScheduledTask('* * * * * *', './src/test-assets/dummy-task.js', {
             scheduled: true
         });

@@ -45,7 +45,8 @@ function validate(expression) {
         validation(expression);
 
         return true;
-    } catch (_) {
+    // eslint-disable-next-line
+    } catch (e) {
         return false;
     }
 }

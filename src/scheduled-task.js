@@ -37,11 +37,11 @@ class ScheduledTask extends EventEmitter {
     }
     
     async execute(now = new Date()) {
-      this.status = 'running';
-      this.emit('task-starded', now);    
-      const result = await this.task.execute(now);
-      this.status = 'idle';
-      this.emit('task-done', result);
+        this.status = 'running';
+        this.emit('task-starded', now);    
+        const result = await this.task.execute(now);
+        this.status = 'idle';
+        this.emit('task-done', result);
     }
     
     start() {

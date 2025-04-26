@@ -4,16 +4,16 @@ import { useFakeTimers } from 'sinon/pkg/sinon-esm.js';
 import Scheduler from './scheduler.js';
 
 let clock;
-describe('Scheduler', () => {
-    beforeEach(() => {
+describe('Scheduler', function() {
+    beforeEach(function() {
         clock = useFakeTimers();
     });
 
-    afterEach(() => {
+    afterEach(function() {
         clock.restore();
     });
 
-    it('should emit an event on matched time', (done) => {
+    it('should emit an event on matched time', function(done) {
         let scheduler = new Scheduler('* * * * * *');
 
         scheduler.on('scheduled-time-matched', (date) => {
@@ -27,7 +27,7 @@ describe('Scheduler', () => {
         clock.tick(1000);
     });
 
-    it('should emit an event every second', (done) => {
+    it('should emit an event every second', function(done) {
         let scheduler = new Scheduler('* * * * * *');
         let emited = 0;
         scheduler.on('scheduled-time-matched', (date) => {
@@ -43,7 +43,7 @@ describe('Scheduler', () => {
         clock.tick(5000);
     });
 
-    it('should recover missed executions', (done) => {
+    it('should recover missed executions', function(done) {
         clock.restore();
         let scheduler = new Scheduler('* * * * * *', null, true);
         let emited = 0;
@@ -67,7 +67,7 @@ describe('Scheduler', () => {
         }, 1000);
     }).timeout(3000);
 
-    it('should ignore missed executions', (done) => {
+    it('should ignore missed executions', function(done) {
         clock.restore();
         let scheduler = new Scheduler('* * * * * *', null, false);
         let emited = 0;

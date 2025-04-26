@@ -4,16 +4,16 @@ import { useFakeTimers } from 'sinon/pkg/sinon-esm.js';
 import ScheduledTask from './scheduled-task.js';
 
 let clock;
-describe('ScheduledTask', () => {
-    beforeEach(() => {
+describe('ScheduledTask', function() {
+    beforeEach(function() {
         clock = useFakeTimers(new Date(2018, 0, 1, 0, 0, 0, 0));
     });
 
-    afterEach(() => {
+    afterEach(function() {
         clock.restore();
     });
 
-    it('should start a task by default', (done) => {
+    it('should start a task by default', function(done) {
         let executed = 0;
         let scheduledTask = new ScheduledTask('* * * * * *', () => {
             executed += 1;
@@ -24,7 +24,7 @@ describe('ScheduledTask', () => {
         done();
     });
 
-    it('should create a task stoped', (done) => {
+    it('should create a task stoped', function(done) {
         let executed = 0;
         let scheduledTask = new ScheduledTask('* * * * * *', () => {
             executed += 1;
@@ -35,7 +35,7 @@ describe('ScheduledTask', () => {
         done();
     });
 
-    it('should start a task', (done) => {
+    it('should start a task', function(done) {
         let executed = 0;
         let scheduledTask = new ScheduledTask('* * * * * *', () => {
             executed += 1;
@@ -49,7 +49,7 @@ describe('ScheduledTask', () => {
         done();
     });
 
-    it('should stop a task', () => {
+    it('should stop a task', function() {
         let executed = 0;
         let scheduledTask = new ScheduledTask('* * * * * *', () => {
             executed += 1;
@@ -61,7 +61,7 @@ describe('ScheduledTask', () => {
         assert.equal(3, executed);
     });
     
-    it('should create a task stopped and run it once created', () => {
+    it('should create a task stopped and run it once created', function() {
         let executed = 0;
         new ScheduledTask('* * * * * *', () => {
             executed += 1;
@@ -70,7 +70,7 @@ describe('ScheduledTask', () => {
         assert.equal(1, executed);
     });
     
-    it('should create a task stopped and run it once manually', () => {
+    it('should create a task stopped and run it once manually', function() {
         let executed = 0;
         let scheduledTask = new ScheduledTask('* * * * * *', () => {
             executed += 1;
@@ -81,7 +81,7 @@ describe('ScheduledTask', () => {
         assert.equal(1, executed);
     });
 
-    it('should emit event every minute', () => {
+    it('should emit event every minute', function() {
         let executed = 0;
         let scheduledTask = new ScheduledTask('0 * * * * *', () => {
             executed += 1;
