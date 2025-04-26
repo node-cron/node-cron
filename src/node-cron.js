@@ -2,7 +2,7 @@
 
 const ScheduledTask = require('./scheduled-task');
 const BackgroundScheduledTask = require('./background-scheduled-task');
-const validation = require('./pattern-validation');
+const validation = require('./pattern-validation/pattern-validation');
 const storage = require('./storage');
 
 /**

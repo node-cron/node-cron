@@ -1,6 +1,6 @@
 const { assert } = require('chai');
 const sinon = require('sinon');
-const Task = require('../src/task');
+const Task = require('./task');
 
 describe('Task', () => {
     beforeEach(() => {

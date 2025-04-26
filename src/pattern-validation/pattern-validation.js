@@ -1,6 +1,6 @@
 'use strict';
 
-const convertExpression = require('./convert-expression');
+const convertExpression = require('../convert-expression');
 
 const validationRegex = /^(?:\d+|\*|\*\/\d+)$/;
 

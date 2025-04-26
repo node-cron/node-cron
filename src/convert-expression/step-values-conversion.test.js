@@ -1,7 +1,7 @@
 'use strict';
 
 const { expect } = require('chai');
-const conversion = require('../../src/convert-expression/step-values-conversion');
+const conversion = require('./step-values-conversion');
 
 describe('step-values-conversion.js', () => {
     it('should convert step values', () => {

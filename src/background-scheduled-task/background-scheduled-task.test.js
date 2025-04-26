@@ -1,9 +1,9 @@
 const { assert } = require('chai');
-const BackgroundScheduledTask = require('../src/background-scheduled-task');
+const BackgroundScheduledTask = require('.');
 
 describe('BackgroundScheduledTask', () => {
     it('should start a task by default', (done) => {
-        let task = new BackgroundScheduledTask('* * * * * *', './test/assets/dummy-task.js');
+        let task = new BackgroundScheduledTask('* * * * * *', './src/test-assets/dummy-task.js');
         task.on('task-done', (result) => {
             assert.equal('dummy task', result);
             task.stop();
@@ -11,7 +11,7 @@ describe('BackgroundScheduledTask', () => {
         });
     });
     it('should create a task stoped', () => {
-        let task = new BackgroundScheduledTask('* * * * * *', './test/assets/dummy-task.js', {
+        let task = new BackgroundScheduledTask('* * * * * *', './src/test-assets/dummy-task.js', {
             scheduled: false
         });
 
@@ -19,7 +19,7 @@ describe('BackgroundScheduledTask', () => {
     });
 
     it('should start a task', (done) => {
-        let task = new BackgroundScheduledTask('* * * * * *', './test/assets/dummy-task.js', {
+        let task = new BackgroundScheduledTask('* * * * * *', './src/test-assets/dummy-task.js', {
             scheduled: false
         });
 
@@ -36,7 +36,7 @@ describe('BackgroundScheduledTask', () => {
     });
     
     it('should stop a task', () => {
-        let task = new BackgroundScheduledTask('* * * * * *', './test/assets/dummy-task.js', {
+        let task = new BackgroundScheduledTask('* * * * * *', './src/test-assets/dummy-task.js', {
             scheduled: true
         });
         assert.isNotNull(task.pid());

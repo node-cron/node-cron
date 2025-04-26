@@ -1,6 +1,6 @@
 const { assert } = require('chai');
 const sinon = require('sinon');
-const Scheduler = require('../src/scheduler');
+const Scheduler = require('./scheduler');
 
 describe('Scheduler', () => {
     beforeEach(() => {

@@ -1,4 +1,4 @@
-const validatePattern = require('./pattern-validation');
+const validatePattern = require('./pattern-validation/pattern-validation');
 const convertExpression = require('./convert-expression');
 
 function matchPattern(pattern, value){

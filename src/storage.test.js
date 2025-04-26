@@ -1,5 +1,5 @@
 const { assert } = require('chai');
-const storage = require('../src/storage');
+const storage = require('./storage');
 
 describe('storage', () => {
     it('should store a task', () => {
@@ -16,10 +16,10 @@ describe('storage', () => {
 
     describe('on import', () => {
         it('should keep stored items across imports', () => {
-            delete require.cache[require.resolve('../src/storage')];
+            delete require.cache[require.resolve('./storage')];
             global.scheduledTasks = new Map();
             storage.save({});
-            let storage2 = require('../src/storage');
+            let storage2 = require('./storage');
             assert.lengthOf(storage2.getTasks(), 1);
         });
     });

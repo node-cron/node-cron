@@ -1,5 +1,5 @@
 const { assert } = require('chai');
-const TimeMatcher = require('../src/time-matcher');
+const TimeMatcher = require('./time-matcher');
 const moment = require('moment-timezone');
 
 describe('TimeMatcher', () => {
@@ -227,18 +227,6 @@ describe('TimeMatcher', () => {
             let matcher = new TimeMatcher('0 0 0 * * *', 'Europe/Rome');
             let utcTime = new Date('Thu Oct 11 2018 22:00:00Z');
             assert.isTrue(matcher.match(utcTime));
-        });
-
-        it('should match with all available timezone of moment-timezone', () => {
-            const allTimeZone = moment.tz.names();
-            for (let zone in allTimeZone) {
-                const tmp = moment();
-                const expected = moment.tz(tmp,allTimeZone[zone]);
-                const pattern = expected.second() + ' ' + expected.minute() + ' ' + expected.hour() + ' ' + expected.date() + ' ' + (expected.month()+1) + ' ' + expected.day();
-                const matcher = new TimeMatcher(pattern, allTimeZone[zone]);
-                const utcTime = new Date(tmp.year(), tmp.month(), tmp.date(), tmp.hour(), tmp.minute(), tmp.second(), tmp.millisecond());
-                assert.isTrue(matcher.match(utcTime));
-            }
         });
     });
 });

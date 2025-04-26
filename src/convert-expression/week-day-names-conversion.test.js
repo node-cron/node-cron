@@ -1,7 +1,7 @@
 'use strict';
 
 const { expect } = require('chai');
-const conversion = require('../../src/convert-expression/week-day-names-conversion');
+const conversion = require('./week-day-names-conversion');
 
 describe('week-day-names-conversion.js', () => {
     it('shuld convert week day names names', () => {

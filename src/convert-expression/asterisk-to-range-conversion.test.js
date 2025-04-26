@@ -1,7 +1,7 @@
 'use strict';
 
 const { expect } = require('chai');
-const conversion = require('../../src/convert-expression/asterisk-to-range-conversion');
+const conversion = require('./asterisk-to-range-conversion');
 
 describe('asterisk-to-range-conversion.js', () => {
     it('shuld convert * to ranges', () => {

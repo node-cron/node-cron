@@ -1,7 +1,7 @@
 'use strict';
 
 const { expect } = require('chai');
-const validate = require('../../src/pattern-validation');
+const validate = require('./pattern-validation');
 
 describe('pattern-validation', () => {
     it('should succeed with a valid expression', () =>  {

@@ -1,7 +1,7 @@
 'use strict';
 
 const { expect } = require('chai');
-const conversion = require('../../src/convert-expression/range-conversion');
+const conversion = require('./range-conversion');
 
 describe('range-conversion.js', () => {
     it('shuld convert ranges to numbers', () => {

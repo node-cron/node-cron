@@ -1,6 +1,6 @@
 const { assert } = require('chai');
 const sinon = require('sinon');
-const cron = require('../src/node-cron');
+const cron = require('./node-cron');
 
 describe('node-cron', () => {
     beforeEach(() => {
@@ -107,7 +107,7 @@ describe('node-cron', () => {
         }).timeout(4000);
 
         it('should schedule a background task', () => {
-            let task = cron.schedule('* * * * * *', './test/assets/dummy-task.js');
+            let task = cron.schedule('* * * * * *', './test-assets/dummy-task.js');
             assert.isNotNull(task);
             assert.isDefined(task);
             assert.isTrue(task.isRunning());
