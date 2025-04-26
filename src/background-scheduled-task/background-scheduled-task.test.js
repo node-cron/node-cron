@@ -1,5 +1,6 @@
-const { assert } = require('chai');
-const BackgroundScheduledTask = require('.');
+import chai from 'chai';
+const { assert } = chai;
+import BackgroundScheduledTask from './index.js';
 
 describe('BackgroundScheduledTask', () => {
     it('should start a task by default', (done) => {

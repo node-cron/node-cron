@@ -1,14 +1,16 @@
-const { assert } = require('chai');
-const sinon = require('sinon');
-const Scheduler = require('./scheduler');
+import chai from 'chai';
+const { assert } = chai;
+import { useFakeTimers } from 'sinon/pkg/sinon-esm.js';
+import Scheduler from './scheduler.js';
 
+let clock;
 describe('Scheduler', () => {
     beforeEach(() => {
-        this.clock = sinon.useFakeTimers();
+        clock = useFakeTimers();
     });
 
     afterEach(() => {
-        this.clock.restore();
+        clock.restore();
     });
 
     it('should emit an event on matched time', (done) => {
@@ -22,7 +24,7 @@ describe('Scheduler', () => {
         });
 
         scheduler.start();
-        this.clock.tick(1000);
+        clock.tick(1000);
     });
 
     it('should emit an event every second', (done) => {
@@ -38,11 +40,11 @@ describe('Scheduler', () => {
             }
         });
         scheduler.start();
-        this.clock.tick(5000);
+        clock.tick(5000);
     });
 
     it('should recover missed executions', (done) => {
-        this.clock.restore();
+        clock.restore();
         let scheduler = new Scheduler('* * * * * *', null, true);
         let emited = 0;
         scheduler.on('scheduled-time-matched', () => {
@@ -66,7 +68,7 @@ describe('Scheduler', () => {
     }).timeout(3000);
 
     it('should ignore missed executions', (done) => {
-        this.clock.restore();
+        clock.restore();
         let scheduler = new Scheduler('* * * * * *', null, false);
         let emited = 0;
         scheduler.on('scheduled-time-matched', () => {

@@ -1,14 +1,16 @@
-const { assert } = require('chai');
-const sinon = require('sinon');
-const ScheduledTask = require('./scheduled-task');
+import chai from 'chai';
+const { assert } = chai;
+import { useFakeTimers } from 'sinon/pkg/sinon-esm.js';
+import ScheduledTask from './scheduled-task.js';
 
+let clock;
 describe('ScheduledTask', () => {
     beforeEach(() => {
-        this.clock = sinon.useFakeTimers(new Date(2018, 0, 1, 0, 0, 0, 0));
+        clock = useFakeTimers(new Date(2018, 0, 1, 0, 0, 0, 0));
     });
 
     afterEach(() => {
-        this.clock.restore();
+        clock.restore();
     });
 
     it('should start a task by default', (done) => {
@@ -16,7 +18,7 @@ describe('ScheduledTask', () => {
         let scheduledTask = new ScheduledTask('* * * * * *', () => {
             executed += 1;
         });
-        this.clock.tick(3000);
+        clock.tick(3000);
         assert.equal(3, executed);
         scheduledTask.stop();
         done();
@@ -27,7 +29,7 @@ describe('ScheduledTask', () => {
         let scheduledTask = new ScheduledTask('* * * * * *', () => {
             executed += 1;
         }, { scheduled: false });
-        this.clock.tick(3000);
+        clock.tick(3000);
         assert.equal(0, executed);
         scheduledTask.stop();
         done();
@@ -38,10 +40,10 @@ describe('ScheduledTask', () => {
         let scheduledTask = new ScheduledTask('* * * * * *', () => {
             executed += 1;
         }, { scheduled: false });
-        this.clock.tick(3000);
+        clock.tick(3000);
         assert.equal(0, executed);
         scheduledTask.start();
-        this.clock.tick(3000);
+        clock.tick(3000);
         assert.equal(3, executed);
         scheduledTask.stop();
         done();
@@ -52,10 +54,10 @@ describe('ScheduledTask', () => {
         let scheduledTask = new ScheduledTask('* * * * * *', () => {
             executed += 1;
         }, { scheduled: true });
-        this.clock.tick(3000);
+        clock.tick(3000);
         assert.equal(3, executed);
         scheduledTask.stop();
-        this.clock.tick(3000);
+        clock.tick(3000);
         assert.equal(3, executed);
     });
     
@@ -64,7 +66,7 @@ describe('ScheduledTask', () => {
         new ScheduledTask('* * * * * *', () => {
             executed += 1;
         }, { scheduled: false, runOnInit: true });
-        this.clock.tick(3000);
+        clock.tick(3000);
         assert.equal(1, executed);
     });
     
@@ -73,7 +75,7 @@ describe('ScheduledTask', () => {
         let scheduledTask = new ScheduledTask('* * * * * *', () => {
             executed += 1;
         }, { scheduled: false });
-        this.clock.tick(3000);
+        clock.tick(3000);
         assert.equal(0, executed);
         scheduledTask.now();
         assert.equal(1, executed);
@@ -84,7 +86,7 @@ describe('ScheduledTask', () => {
         let scheduledTask = new ScheduledTask('0 * * * * *', () => {
             executed += 1;
         }, { scheduled: true });
-        this.clock.tick(60000 * 3);
+        clock.tick(60000 * 3);
         assert.equal(3, executed);
         scheduledTask.stop();
     });

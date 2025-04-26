@@ -1,7 +1,6 @@
-'use strict';
-
-const { expect } = require('chai');
-const conversion = require('./month-names-conversion');
+import chai from 'chai';
+const { expect } = chai;
+import conversion from './month-names-conversion.js';
 
 describe('month-names-conversion.js', () => {
     it('shuld convert month names', () => {

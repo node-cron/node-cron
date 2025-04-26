@@ -1,3 +1,3 @@
-exports.task = () => {
+export function task() {
     return 'dummy task';
-};
+}

@@ -1,8 +1,13 @@
-const EventEmitter = require('events');
-const path = require('path');
-const { fork } = require('child_process');
-const uuid = require('uuid');
+import EventEmitter from 'events';
+import { resolve } from 'path';
+import { fork } from 'child_process';
+import { v4 } from 'uuid';
 
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const daemonPath = `${__dirname}/daemon.js`;
 
 class BackgroundScheduledTask extends EventEmitter {
@@ -17,7 +22,7 @@ class BackgroundScheduledTask extends EventEmitter {
         this.cronExpression = cronExpression;
         this.taskPath = taskPath;
         this.options = options;
-        this.options.name = this.options.name || uuid.v4();
+        this.options.name = this.options.name || v4();
 
         if(options.scheduled){
             this.start();
@@ -41,7 +46,7 @@ class BackgroundScheduledTask extends EventEmitter {
         
         this.forkProcess.send({
             type: 'register',
-            path: path.resolve(this.taskPath),
+            path: resolve(this.taskPath),
             cron: this.cronExpression,
             options: options
         });
@@ -64,4 +69,4 @@ class BackgroundScheduledTask extends EventEmitter {
     }
 }
 
-module.exports = BackgroundScheduledTask;
+export default BackgroundScheduledTask;

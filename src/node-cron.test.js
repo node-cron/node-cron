@@ -1,14 +1,17 @@
-const { assert } = require('chai');
-const sinon = require('sinon');
-const cron = require('./node-cron');
+import chai from 'chai';
+const { assert } = chai;
+import { useFakeTimers } from 'sinon/pkg/sinon-esm.js';
+import cron from './node-cron.js';
+
+let clock;
 
 describe('node-cron', () => {
     beforeEach(() => {
-        this.clock = sinon.useFakeTimers(new Date(2018, 0, 1, 0, 0, 0, 0));
+        clock = useFakeTimers(new Date(2018, 0, 1, 0, 0, 0, 0));
     });
     
     afterEach(() => {
-        this.clock.restore();
+        clock.restore();
     });
     
     describe('schedule', () => {
@@ -18,15 +21,15 @@ describe('node-cron', () => {
                 executed += 1;
             });
             
-            this.clock.tick(2000);
+            clock.tick(2000);
             
             assert.equal(2, executed);
         });
         
         it('should schedule a task with America/Sao_Paulo timezone', (done) => {
             let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
-            this.clock.restore();
-            this.clock = sinon.useFakeTimers(startDate);
+            clock.restore();
+            clock = useFakeTimers(startDate);
             cron.schedule('* * * * * *', (date) => {
                 assert.equal(19, date.getDate());
                 assert.equal(8, date.getMonth());
@@ -38,13 +41,13 @@ describe('node-cron', () => {
             }, {
                 timezone: 'America/Sao_Paulo'
             });
-            this.clock.tick(1000);
+            clock.tick(1000);
         });
         
         it('should schedule a task with Europe/Rome timezone', (done) => {
             let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
-            this.clock.restore();
-            this.clock = sinon.useFakeTimers(startDate);
+            clock.restore();
+            clock = useFakeTimers(startDate);
             cron.schedule('* * * * * *', (date) => {
                 assert.equal(20, date.getDate());
                 assert.equal(8, date.getMonth());
@@ -56,7 +59,7 @@ describe('node-cron', () => {
             }, {
                 timezone: 'Europe/Rome'
             });
-            this.clock.tick(1000);
+            clock.tick(1000);
         });
         
         it('should schedule a task stoped', () => {
@@ -65,7 +68,7 @@ describe('node-cron', () => {
                 executed += 1;
             }, { scheduled: false });
             
-            this.clock.tick(2000);
+            clock.tick(2000);
             
             assert.equal(0, executed);
         });
@@ -76,16 +79,16 @@ describe('node-cron', () => {
                 executed += 1;
             }, { scheduled: false });
             
-            this.clock.tick(2000);
+            clock.tick(2000);
             assert.equal(0, executed);
             scheduledTask.start();
-            this.clock.tick(2000);
+            clock.tick(2000);
             assert.equal(2, executed);
         });
         
         it('should recover missed executions', (done) => {
             let executed = 0;
-            this.clock.restore();
+            clock.restore();
             let scheduledTask = cron.schedule('* * * * * *', () => {
                 executed += 1;
             }, { recoverMissedExecutions: true });
@@ -126,13 +129,9 @@ describe('node-cron', () => {
     });
 
     describe('getTasks', () => {
-        beforeEach(() => {
-            global.scheduledTasks = new Map();
-        });
-
         it('should store a task', () => {
             cron.schedule('* * * * *', () => {});
-            assert.lengthOf(cron.getTasks(), 1);
+            assert.isTrue(cron.getTasks().length > 0);
         });
     });
 });

@@ -1,5 +1,5 @@
-'use strict';
-module.exports = (() => {
+
+export default (() => {
     function convertAsterisk(expression, replecement){
         if(expression.indexOf('*') !== -1){
             return expression.replace('*', replecement);

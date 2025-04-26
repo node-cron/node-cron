@@ -1,9 +1,9 @@
-const ScheduledTask = require('../scheduled-task');
+import ScheduledTask from '../scheduled-task.js';
 
 let scheduledTask;
 
-function register(message){
-    const script = require(message.path);
+async function register(message){
+    const script = await import(message.path);
     scheduledTask = new ScheduledTask(message.cron, script.task, message.options);
     scheduledTask.on('task-done', (result) => {
         process.send({ type: 'task-done', result});

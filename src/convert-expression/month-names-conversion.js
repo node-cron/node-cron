@@ -1,5 +1,4 @@
-'use strict';
-module.exports = (() => {
+export default (() => {
     const months = ['january','february','march','april','may','june','july',
         'august','september','october','november','december'];
     const shortMonths = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug',

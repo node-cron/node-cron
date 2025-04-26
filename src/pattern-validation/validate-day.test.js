@@ -1,7 +1,6 @@
-'use strict';
-
-const { expect } = require('chai');
-const validate = require('../pattern-validation/pattern-validation');
+import chai from 'chai';
+const { expect } = chai;
+import validate from '../pattern-validation/pattern-validation.js';
 
 describe('pattern-validation.js', () => {
     describe('validate day of month', () => {

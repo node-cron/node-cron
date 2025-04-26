@@ -1,5 +1,4 @@
-'use strict';
-module.exports = (() => {
+export default (() => {
     const weekDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday',
         'friday', 'saturday'];
     const shortWeekDays = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];

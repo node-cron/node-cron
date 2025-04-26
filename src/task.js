@@ -1,6 +1,6 @@
 'use strict';
 
-const EventEmitter = require('events');
+import EventEmitter from 'events';
 
 class Task extends EventEmitter{
     constructor(execution){
@@ -8,13 +8,13 @@ class Task extends EventEmitter{
         if(typeof execution !== 'function') {
             throw 'execution must be a function';
         }
-        this._execution = execution;
+        this.execution = execution;
     }
 
     execute(now) {
         let exec;
         try {
-            exec = this._execution(now);
+            exec = this.execution(now);
         } catch (error) {
             return this.emit('task-failed', error);
         }
@@ -30,5 +30,5 @@ class Task extends EventEmitter{
     }
 }
 
-module.exports = Task;
+export default Task;
 

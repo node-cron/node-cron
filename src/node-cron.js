@@ -1,9 +1,9 @@
 'use strict';
 
-const ScheduledTask = require('./scheduled-task');
-const BackgroundScheduledTask = require('./background-scheduled-task');
-const validation = require('./pattern-validation/pattern-validation');
-const storage = require('./storage');
+import ScheduledTask from './scheduled-task.js';
+import BackgroundScheduledTask from './background-scheduled-task/index.js';
+import validation from './pattern-validation/pattern-validation.js';
+import { save, getTasks as _getTasks } from './storage.js';
 
 /**
  * @typedef {Object} CronScheduleOptions
@@ -24,7 +24,7 @@ const storage = require('./storage');
 function schedule(expression, func, options) {
     const task = createTask(expression, func, options);
 
-    storage.save(task);
+    save(task);
 
     return task;
 }
@@ -58,7 +58,7 @@ function validate(expression) {
  * @returns {ScheduledTask[]} The scheduled tasks.
  */
 function getTasks() {
-    return storage.getTasks();
+    return _getTasks();
 }
 
-module.exports = { schedule, validate, getTasks };
+export default { schedule, validate, getTasks };

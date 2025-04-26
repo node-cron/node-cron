@@ -1,7 +1,7 @@
 'use strict';
 
-const EventEmitter = require('events');
-const TimeMatcher = require('./time-matcher');
+import EventEmitter from 'events';
+import TimeMatcher from './time-matcher.js';
 
 class Scheduler extends EventEmitter{
     constructor(pattern, timezone, autorecover){
@@ -11,7 +11,6 @@ class Scheduler extends EventEmitter{
     }
 
     start(){
-        // clear timeout if exists
         this.stop();
 
         let lastCheck = process.hrtime();
@@ -46,4 +45,4 @@ class Scheduler extends EventEmitter{
     }
 }
 
-module.exports = Scheduler;
+export default Scheduler;

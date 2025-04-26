@@ -1,6 +1,4 @@
-'use strict';
-
-const convertExpression = require('../convert-expression');
+import convertExpression from '../convert-expression/index.js';
 
 const validationRegex = /^(?:\d+|\*|\*\/\d+)$/;
 
@@ -121,4 +119,4 @@ function validate(pattern) {
     validateFields(patterns, executablePatterns);
 }
 
-module.exports = validate;
+export default validate;

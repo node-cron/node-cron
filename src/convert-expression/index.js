@@ -1,12 +1,10 @@
-'use strict';
+import monthNamesConversion from './month-names-conversion.js';
+import weekDayNamesConversion from './week-day-names-conversion.js';
+import convertAsterisksToRanges from './asterisk-to-range-conversion.js';
+import convertRanges from './range-conversion.js';
+import convertSteps from './step-values-conversion.js';
 
-const monthNamesConversion = require('./month-names-conversion');
-const weekDayNamesConversion = require('./week-day-names-conversion');
-const convertAsterisksToRanges = require('./asterisk-to-range-conversion');
-const convertRanges = require('./range-conversion');
-const convertSteps = require('./step-values-conversion');
-
-module.exports = (() => {
+export default (() => {
 
     function appendSeccondExpression(expressions){
         if(expressions.length === 5){

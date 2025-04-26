@@ -1,14 +1,16 @@
-const { assert } = require('chai');
-const sinon = require('sinon');
-const Task = require('./task');
+import chai from 'chai';
+const { assert } = chai;
+import { useFakeTimers } from 'sinon/pkg/sinon-esm.js';
+import Task from './task.js';
 
+let clock;
 describe('Task', () => {
     beforeEach(() => {
-        this.clock = sinon.useFakeTimers(new Date(2018, 0, 1, 0, 0, 0, 0));
+        clock = useFakeTimers(new Date(2018, 0, 1, 0, 0, 0, 0));
     });
 
     afterEach(() => {
-        this.clock.restore();
+        clock.restore();
     });
 
     it('should emit event on finish a task', async () => {

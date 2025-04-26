@@ -1,5 +1,5 @@
-const validatePattern = require('./pattern-validation/pattern-validation');
-const convertExpression = require('./convert-expression');
+import validatePattern from './pattern-validation/pattern-validation.js';
+import convertExpression from './convert-expression/index.js';
 
 function matchPattern(pattern, value){
     if( pattern.indexOf(',') !== -1 ){
@@ -51,4 +51,4 @@ class TimeMatcher{
     }
 }
 
-module.exports = TimeMatcher;
+export default TimeMatcher;

@@ -1,5 +1,4 @@
-'use strict';
-module.exports = ( () => {
+export default ( () => {
     function replaceWithRange(expression, text, init, end) {
 
         const numbers = [];

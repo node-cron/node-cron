@@ -1,6 +1,6 @@
-const { assert } = require('chai');
-const TimeMatcher = require('./time-matcher');
-const moment = require('moment-timezone');
+import chai from 'chai';
+const { assert } = chai;
+import TimeMatcher from './time-matcher.js';
 
 describe('TimeMatcher', () => {
     describe('wildcard', () => {
