@@ -21,11 +21,11 @@ class ScheduledTask extends EventEmitter {
 
         this.status = 'idle';
 
-        this.task = new Task(func);
+        this.func = func;
         this.scheduler = new Scheduler(cronExpression, options.timezone, options.recoverMissedExecutions);
 
-        this.scheduler.on('scheduled-time-matched', (now) => {
-            this.execute(now);
+        this.scheduler.on('scheduled-time-matched', (event) => {
+            this.execute(event);
         });
 
         if(options.scheduled !== false){
@@ -37,10 +37,11 @@ class ScheduledTask extends EventEmitter {
         }
     }
     
-    async execute(now = new Date()) {
+    async execute(event) {
         this.status = 'running';
-        this.emit('task-starded', now);    
-        const result = await this.task.execute(now);
+        this.emit('task-starded', event);
+        event.task = this;  
+        const result = await this.func(event);
         this.status = 'idle';
         this.emit('task-done', result);
     }

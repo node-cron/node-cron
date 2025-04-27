@@ -7,8 +7,8 @@ class Task{
         this.execution = execution;
     }
 
-    async execute(now) {
-        return this.execution(now);
+    async execute(event) {
+        return this.execution(event);
     }
 }
 

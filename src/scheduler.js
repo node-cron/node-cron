@@ -8,10 +8,16 @@ class Scheduler extends EventEmitter{
         super();
         this.timeMatcher = new TimeMatcher(pattern, timezone);
         this.autorecover = autorecover;
+        this.running = false;
     }
 
     start(){
-        this.stop();
+        // prevent starting twice
+        if(this.running){
+           return;
+        }
+
+        this.running = true;
 
         let lastCheck = process.hrtime();
         let lastExecution = new Date();
@@ -35,12 +41,16 @@ class Scheduler extends EventEmitter{
                 }
             }
             lastCheck = process.hrtime();
-            this.timeout = setTimeout(matchTime, delay);
+
+            if(this.running){
+              this.timeout = setTimeout(matchTime, delay);
+            }
         };
         matchTime();
     }
 
     stop(){
+        this.running = false;
         if(this.timeout){
             clearTimeout(this.timeout);
         }
