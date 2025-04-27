@@ -19,3 +19,9 @@ export function clear() {
         delete scheduledTasks[key];
     });
 }
+
+export function remove(name) {
+    if (scheduledTasks[name]) {
+        delete scheduledTasks[name];
+    }
+}

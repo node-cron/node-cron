@@ -4,6 +4,7 @@ import EventEmitter from 'events';
 import Task from './task.js';
 import Scheduler from './scheduler.js';
 import { v4 } from 'uuid';
+import * as storage from './storage.js';
 
 class ScheduledTask extends EventEmitter {
     constructor(cronExpression, func, options) {
@@ -45,15 +46,29 @@ class ScheduledTask extends EventEmitter {
     }
     
     start() {
+      if (this.status === 'destroyed') {
+        throw new Error('Task has been destroyed!');
+      }
+
+      if(this.status === 'stoped') {
         this.scheduler.start();  
+      }
     }
     
     stop() {
+        this.status = 'stoped';
         this.scheduler.stop();
     }
 
     getStatus() {
         return this.status;
+    }
+
+    destroy() {
+        this.stop();
+        this.status = 'destroyed';
+        this.scheduler.removeAllListeners();
+        storage.remove(this.options.name);
     }
 }
 

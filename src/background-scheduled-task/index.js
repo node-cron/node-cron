@@ -31,7 +31,14 @@ class BackgroundScheduledTask extends EventEmitter {
     }
 
     start() {
-        this.stop();
+        if (this.status === 'destroyed') {
+          throw new Error('Task has been destroyed!');
+        }
+
+        if(this.status !== 'stoped') {
+          return;
+        }
+
         this.forkProcess = fork(daemonPath);
 
         this.forkProcess.on('message', (message) => {
@@ -59,6 +66,7 @@ class BackgroundScheduledTask extends EventEmitter {
     }
     
     stop(){
+        this.status = 'stoped';
         if(this.forkProcess){
             this.forkProcess.kill();
         }
@@ -76,7 +84,14 @@ class BackgroundScheduledTask extends EventEmitter {
 
     getStatus() {
       return this.status;
-  }
+    }
+
+    destroy() {
+        this.status = 'destroyed';
+        this.stop();
+        this.forkProcess.removeAllListeners();
+        storage.remove(this.options.name);
+    }
 }
 
 export default BackgroundScheduledTask;

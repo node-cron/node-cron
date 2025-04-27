@@ -1,7 +1,7 @@
 
-fix timezones
-destroy job
+fix timezones-ok
+destroy job-ok
+exception inside task must be thrown -ok
 fix step like 1-59/2
-exception inside task must be thrown 
 singe time jobs
 preventOverrun
