@@ -20,6 +20,11 @@ async function register(message){
     scheduledTask.on('scheduler-stopped', () => {
         process.send({ type: 'scheduler-stopped'});
     }); 
+
+    scheduledTask.on('scheduler-destroyed', () => {
+      process.send({ type: 'scheduler-destroyed'});
+  }); 
+
     
     process.send({ type: 'registred' });
 }

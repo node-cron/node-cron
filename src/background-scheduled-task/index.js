@@ -58,6 +58,10 @@ class BackgroundScheduledTask extends EventEmitter {
                 this.stop();
                 this.emit('scheduler-stopped');
                 break;
+            case 'scheduler-destroyed':
+                this.destroy();
+                this.emit('scheduler-destroyed');
+                break;
             }
         });
 
