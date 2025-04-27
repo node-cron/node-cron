@@ -3,8 +3,7 @@ import ScheduledTask from '../scheduled-task.js';
 let scheduledTask;
 
 async function register(message){
-     
-    const script = require(message.path);
+    const script = await import(message.path);
     scheduledTask = new ScheduledTask(message.cron, script.task, message.options);
     scheduledTask.on('task-done', (result) => {
         process.send({ type: 'task-done', result});
@@ -13,6 +12,14 @@ async function register(message){
     scheduledTask.on('task-started', (time) => {
         process.send({ type: 'task-started', time});
     });
+
+    scheduledTask.on('scheduler-started', () => {
+        process.send({ type: 'scheduler-started'});
+    });
+
+    scheduledTask.on('scheduler-stopped', () => {
+        process.send({ type: 'scheduler-stopped'});
+    }); 
     
     process.send({ type: 'registred' });
 }

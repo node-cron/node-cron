@@ -52,13 +52,15 @@ class ScheduledTask extends EventEmitter {
       }
 
       if(this.status === 'stoped') {
-        this.scheduler.start();  
+        this.scheduler.start();
+        this.emit('scheduler-started');
       }
     }
     
     stop() {
         this.status = 'stoped';
         this.scheduler.stop();
+        this.emit('scheduler-stopped');
     }
 
     getStatus() {
@@ -70,6 +72,7 @@ class ScheduledTask extends EventEmitter {
         this.status = 'destroyed';
         this.scheduler.removeAllListeners();
         storage.remove(this.options.name);
+        this.emit('scheduler-destroyed');
     }
 }
 

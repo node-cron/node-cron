@@ -23,7 +23,7 @@ class BackgroundScheduledTask extends EventEmitter {
         this.taskPath = taskPath;
         this.options = options;
         this.options.name = this.options.name || v4();
-        this.status = 'idle';
+        this.status = 'stoped';
 
         if(options.scheduled){
             this.start();
@@ -50,6 +50,13 @@ class BackgroundScheduledTask extends EventEmitter {
             case 'task-done':
               this.status = 'idle';
                 this.emit('task-done', message.result);
+                break;
+            case 'scheduler-started':
+                this.start();
+                break;
+            case 'scheduler-stopped':
+                this.stop();
+                this.emit('scheduler-stopped');
                 break;
             }
         });
