@@ -1,5 +1,6 @@
 import validatePattern from './pattern-validation/pattern-validation.js';
 import convertExpression from './convert-expression/index.js';
+import weekDayNamesConversion from './convert-expression/week-day-names-conversion.js';
 
 function matchPattern(pattern, value){
     if( pattern.indexOf(',') !== -1 ){
@@ -11,43 +12,41 @@ function matchPattern(pattern, value){
 
 class TimeMatcher{
     constructor(pattern, timezone){
+        const dftOptions = {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          weekday: 'short',
+          hourCycle: 'h23',
+          timeZone: this.timezone
+        }
+
         validatePattern(pattern);
         this.pattern = convertExpression(pattern);
         this.timezone = timezone;
         this.expressions = this.pattern.split(' ');
-        this.dtf = this.timezone
-            ? new Intl.DateTimeFormat('en-US', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hourCycle: 'h23',
-                fractionalSecondDigits: 3,
-                timeZone: this.timezone
-            }) : null;
+        this.dtf = new Intl.DateTimeFormat('en-US', dftOptions);
     }
 
     match(date){
-        date = this.apply(date);
+        const parts = this.dtf.formatToParts(date).filter(part => {
+            return part.type !== 'literal';
+        }).reduce((acc, part) => {
+            acc[part.type] = part.value;
+            return acc;
+        }, {});
 
-        const runOnSecond = matchPattern(this.expressions[0], date.getSeconds());
-        const runOnMinute = matchPattern(this.expressions[1], date.getMinutes());
-        const runOnHour = matchPattern(this.expressions[2], date.getHours());
-        const runOnDay = matchPattern(this.expressions[3], date.getDate());
-        const runOnMonth = matchPattern(this.expressions[4], date.getMonth() + 1);
-        const runOnWeekDay = matchPattern(this.expressions[5], date.getDay());
-
+        const runOnSecond = matchPattern(this.expressions[0], parseInt(parts.second));
+        const runOnMinute = matchPattern(this.expressions[1], parseInt(parts.minute));
+        const runOnHour = matchPattern(this.expressions[2], parseInt(parts.hour));
+        const runOnDay = matchPattern(this.expressions[3], parseInt(parts.day));
+        const runOnMonth = matchPattern(this.expressions[4], parseInt(parts.month));
+        const runOnWeekDay = matchPattern(this.expressions[5], weekDayNamesConversion(parts.weekday));
+      
         return runOnSecond && runOnMinute && runOnHour && runOnDay && runOnMonth && runOnWeekDay;
-    }
-
-    apply(date){
-        if(this.dtf){
-            return new Date(this.dtf.format(date));
-        }
-
-        return date;
     }
 }
 
