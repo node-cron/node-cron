@@ -1,4 +1,4 @@
-import chai from 'chai';
+import * as chai from 'chai';
 const { assert } = chai;
 import { useFakeTimers } from 'sinon/pkg/sinon-esm.js';
 import cron from './node-cron.js';

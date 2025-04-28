@@ -1,4 +1,4 @@
-import chai from 'chai';
+import * as chai from 'chai';
 const { expect } = chai;
 import validate from '../pattern-validation/pattern-validation.js';
 

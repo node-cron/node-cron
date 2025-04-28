@@ -1,4 +1,4 @@
-import chai from 'chai';
+import * as chai from 'chai';
 const { assert } = chai;
 import BackgroundScheduledTask from './index.js';
 
