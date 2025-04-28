@@ -2,7 +2,6 @@ import monthNamesConversion from './month-names-conversion.js';
 import weekDayNamesConversion from './week-day-names-conversion.js';
 import convertAsterisksToRanges from './asterisk-to-range-conversion.js';
 import convertRanges from './range-conversion.js';
-import convertSteps from './step-values-conversion.js';
 
 export default (() => {
 
@@ -53,7 +52,6 @@ export default (() => {
         expressions[5] = weekDayNamesConversion(expressions[5]);
         expressions = convertAsterisksToRanges(expressions);
         expressions = convertRanges(expressions);
-        expressions = convertSteps(expressions);
 
         expressions = normalizeIntegers(expressions);
 

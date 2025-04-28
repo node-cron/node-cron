@@ -19,7 +19,7 @@ class ScheduledTask extends EventEmitter {
         this.options = options;
         this.options.name = this.options.name || v4();
 
-        this.status = 'idle';
+        this.status = 'stoped';
 
         this.func = func;
         this.scheduler = new Scheduler(cronExpression, options.timezone, options.recoverMissedExecutions);
@@ -33,13 +33,27 @@ class ScheduledTask extends EventEmitter {
         }
         
         if(options.runOnInit === true){
-            this.execute();
+          this.execute({
+            date: new Date(),
+            missedExecutions: 0,
+            matchedDate: null,
+            reason: 'runOnInit'
+          });
         }
     }
     
     async execute(event) {
+        if (!event){
+            event = {
+                date: new Date(),
+                missedExecutions: 0,
+                matchedDate: null,
+                reason: 'manual'
+            };
+        }
+        
         this.status = 'running';
-        this.emit('task-starded', event);
+        this.emit('task-started', event);
         event.task = this;  
         const result = await this.func(event);
         this.status = 'idle';

@@ -196,16 +196,17 @@ describe('TimeMatcher', function() {
 
         it('should accept step values for day', function() {
             let matcher = new TimeMatcher('0 0 0 */2 * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 2, 0, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 6, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 7, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2018, 0, 3, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2018, 0, 5, 0, 0, 0)));
+            assert.isFalse(matcher.match(new Date(2018, 0, 6, 0, 0, 0)));
         });
 
         it('should accept step values for month', function() {
             let matcher = new TimeMatcher('0 0 0 1 */2 *');
-            assert.isTrue(matcher.match(new Date(2018, 1, 1, 0, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 5, 1, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 6, 1, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 0, 0)));
+            assert.isTrue(matcher.match(new Date(2018, 2, 1, 0, 0, 0)));
+            assert.isFalse(matcher.match(new Date(2018, 5, 1, 0, 0, 0)));
         });
 
         it('should accept step values for week day', function() {

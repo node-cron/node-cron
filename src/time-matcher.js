@@ -21,12 +21,15 @@ class TimeMatcher{
           second: '2-digit',
           weekday: 'short',
           hourCycle: 'h23',
-          timeZone: this.timezone
+        }
+
+        if(timezone){
+            this.timezone = timezone;
+            dftOptions.timeZone = timezone;
         }
 
         validatePattern(pattern);
         this.pattern = convertExpression(pattern);
-        this.timezone = timezone;
         this.expressions = this.pattern.split(' ');
         this.dtf = new Intl.DateTimeFormat('en-US', dftOptions);
     }

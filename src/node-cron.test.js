@@ -30,13 +30,13 @@ describe('node-cron', function() {
             let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
             clock.restore();
             clock = useFakeTimers(startDate);
-            cron.schedule('* * * * * *', (date) => {
-                assert.equal(19, date.getDate());
-                assert.equal(8, date.getMonth());
-                assert.equal(2018, date.getFullYear());
-                assert.equal(21, date.getHours());
-                assert.equal(0, date.getMinutes());
-                assert.equal(1, date.getSeconds());
+            cron.schedule('* * * * * *', (event) => {
+                assert.equal(19, event.date.getDate());
+                assert.equal(8, event.date.getMonth());
+                assert.equal(2018, event.date.getFullYear());
+                assert.equal(21, event.date.getHours());
+                assert.equal(0, event.date.getMinutes());
+                assert.equal(1, event.date.getSeconds());
                 done();
             }, {
                 timezone: 'America/Sao_Paulo'
@@ -48,13 +48,8 @@ describe('node-cron', function() {
             let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
             clock.restore();
             clock = useFakeTimers(startDate);
-            cron.schedule('* * * * * *', (date) => {
-                assert.equal(20, date.getDate());
-                assert.equal(8, date.getMonth());
-                assert.equal(2018, date.getFullYear());
-                assert.equal(2, date.getHours());
-                assert.equal(0, date.getMinutes());
-                assert.equal(1, date.getSeconds());
+            cron.schedule('* * * * * *', (event) => {
+                assert.equal('Thu, 09/20/2018, 02:00:01', event.matchedDate);
                 done();
             }, {
                 timezone: 'Europe/Rome'

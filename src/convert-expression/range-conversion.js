@@ -1,6 +1,5 @@
 export default ( () => {
     function replaceWithRange(expression, text, init, end, stepTxt) {
-      console.log('replaceWithRange', expression, text, init, end, stepTxt);
         const step = parseInt(stepTxt);
         const numbers = [];
         let last = parseInt(end);

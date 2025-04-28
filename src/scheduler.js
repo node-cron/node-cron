@@ -34,7 +34,8 @@ class Scheduler extends EventEmitter{
                     this.emit('scheduled-time-matched', {
                       date: date,
                       missedExecutions: i,
-                      matchedDate: this.timeMatcher.dtf.format(date)
+                      matchedDate: this.timeMatcher.dtf.format(date),
+                      reason: 'time-matched'
                     });
                     date.setMilliseconds(0);
                     lastExecution = date;

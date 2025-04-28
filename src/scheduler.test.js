@@ -16,9 +16,12 @@ describe('Scheduler', function() {
     it('should emit an event on matched time', function(done) {
         let scheduler = new Scheduler('* * * * * *');
 
-        scheduler.on('scheduled-time-matched', (date) => {
-            assert.isNotNull(date);
-            assert.instanceOf(date, Date);
+        scheduler.on('scheduled-time-matched', (event) => {
+            assert.isNotNull(event.date);
+            assert.instanceOf(event.date, Date);
+            assert.isNotNull(event.matchedDate);
+            assert.equal(event.reason, 'time-matched');
+            assert.equal(event.missedExecutions, 0);
             scheduler.stop();
             done();
         });
@@ -30,17 +33,20 @@ describe('Scheduler', function() {
     it('should emit an event every second', function(done) {
         let scheduler = new Scheduler('* * * * * *');
         let emited = 0;
-        scheduler.on('scheduled-time-matched', (date) => {
+        scheduler.on('scheduled-time-matched', (event) => {
             emited += 1;
-            assert.isNotNull(date);
-            assert.instanceOf(date, Date);
+            assert.isNotNull(event.date);
+            assert.instanceOf(event.date, Date);
+            assert.equal(event.reason, 'time-matched');
+            assert.equal(event.missedExecutions, 0);
             if(emited === 5){
                 scheduler.stop();
                 done();
             }
         });
         scheduler.start();
-        clock.tick(5000);
+        clock.tick(6000);
+        assert.equal(5, emited);
     });
 
     it('should recover missed executions', function(done) {
