@@ -1,6 +1,7 @@
 export default ( () => {
-    function replaceWithRange(expression, text, init, end) {
-
+    function replaceWithRange(expression, text, init, end, stepTxt) {
+      console.log('replaceWithRange', expression, text, init, end, stepTxt);
+        const step = parseInt(stepTxt);
         const numbers = [];
         let last = parseInt(end);
         let first = parseInt(init);
@@ -10,7 +11,7 @@ export default ( () => {
             first = parseInt(end);
         }
 
-        for(let i = first; i <= last; i++) {
+        for(let i = first; i <= last; i += step) {
             numbers.push(i);
         }
 
@@ -18,10 +19,10 @@ export default ( () => {
     }
 
     function convertRange(expression){
-        const rangeRegEx = /(\d+)-(\d+)/;
+        const rangeRegEx = /(\d+)-(\d+)(\/(\d+)|)/;
         let match = rangeRegEx.exec(expression);
         while(match !== null && match.length > 0){
-            expression = replaceWithRange(expression, match[0], match[1], match[2]);
+            expression = replaceWithRange(expression, match[0], match[1], match[2], match[4] || '1');
             match = rangeRegEx.exec(expression);
         }
         return expression;
