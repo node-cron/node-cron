@@ -41,3 +41,5 @@ _site/
 .nyc_output/
 
 testing.js
+
+/dist/
