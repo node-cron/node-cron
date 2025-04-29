@@ -1,2 +1,2 @@
-const nodeCron = require('node-cron');
+const nodeCron = require('./dist/node-cron.js');
 module.exports = nodeCron.default;
