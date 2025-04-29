@@ -1,2 +1,2 @@
 import nodeCron from './dist/node-cron.js';
-export default nodeCron;
+export default nodeCron.default;

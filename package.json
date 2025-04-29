@@ -8,6 +8,12 @@
   "main": "node-cron",
   "types": "./dist/node-cron.d.ts",
   "type": "commonjs",
+  "exports": {
+    ".": {
+      "import": "./node-cron.mjs",
+      "require": "./node-cron.js"
+    }
+  },
   "scripts": {
     "test": "c8 --reporter text --reporter html mocha --recursive './src/**/*.test.ts'",
     "lint": "./node_modules/.bin/eslint ./src",

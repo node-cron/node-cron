@@ -1,26 +1,9 @@
-'use strict';
 
-import ScheduledTask from './scheduled-task';
+import BasicScheduledTask from './basic-scheduled-task';
 import BackgroundScheduledTask from './background-scheduled-task/index';
 import validation from './pattern-validation/pattern-validation';
-import { save, getTasks as _getTasks } from './storage';
-
-/**
- * @typedef {Object} Options
- * @prop {boolean} [scheduled] if a scheduled task is ready and running to be
- *  performed when the time matches the cron expression.
- * @prop {string} [timezone] the timezone to execute the task in.
- */
-
-type Options = {
-    scheduled?: boolean;
-    timezone?: string;
-    recoverMissedExecutions?: boolean;
-    runOnInit?: boolean;
-    name?: string;
-    preventOverrun?: boolean;
-    maxExecutions?: number;
-};
+import * as storage from './storage';
+import { ScheduledTask, Options } from './types';
 
 /**
  * Creates a new task to execute the given function when the cron
@@ -29,19 +12,19 @@ type Options = {
  * @param {string} expression The cron expression.
  * @param {Function} func The task to be executed.
  * @param {Options} [options] A set of options for the scheduled task.
- * @returns {ScheduledTask | BackgroundScheduledTask} The scheduled task.
+ * @returns {ScheduledTask} The scheduled task.
  */
-function schedule(expression:string, func: Function | string, options?: Options) {
+function schedule(expression:string, func: Function | string, options?: Options): ScheduledTask {
     const task = createTask(expression, func, options);
-    save(task);
+    storage.save(task);
     return task;
 }
 
-function createTask(expression, func, options) {
+function createTask(expression: string, func: Function | string, options?: Options): ScheduledTask {
     if (typeof func === 'string')
         return new BackgroundScheduledTask(expression, func, options);
 
-    return new ScheduledTask(expression, func, options);
+    return new BasicScheduledTask(expression, func, options);
 }
 
 /**
@@ -50,7 +33,7 @@ function createTask(expression, func, options) {
  * @param {string} expression The cron expression.
  * @returns {boolean} Whether the expression is valid or not.
  */
-function validate(expression) {
+function validate(expression: string): boolean {
     try {
         validation(expression);
 
@@ -66,8 +49,8 @@ function validate(expression) {
  *
  * @returns {ScheduledTask[]} The scheduled tasks.
  */
-function getTasks() {
-    return _getTasks();
+function getTasks(): ScheduledTask[] {
+    return storage.getTasks();
 }
 
 export default { schedule, validate, getTasks };

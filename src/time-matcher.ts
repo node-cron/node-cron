@@ -12,8 +12,8 @@ function matchPattern(pattern: string, value:string | number){
 
 class TimeMatcher{
     timezone?: string;
-    pattern: any;
-    expressions: any;
+    pattern: string;
+    expressions: string[];
     dtf: Intl.DateTimeFormat;
 
     constructor(pattern:string, timezone?:string){

@@ -1,16 +1,19 @@
 'use strict';
 
 import EventEmitter from 'events';
+import { ScheduledTask, CronEvent, Options } from './types';
 import Scheduler from './scheduler';
 import { randomUUID } from 'crypto';
 import * as storage from './storage';
 
-class ScheduledTask extends EventEmitter {
-    options: any;
-  status: string;
-  func: any;
-  scheduler: Scheduler;
-    constructor(cronExpression, func, options?) {
+class BasicScheduledTask extends EventEmitter implements ScheduledTask {
+    options: Options;
+    status: string;
+    func: Function;
+    scheduler: Scheduler;
+    executionCount: number;
+
+    constructor(cronExpression: string, func: Function, options?: Options) {
         super();
         if(!options){
             options = {
@@ -39,18 +42,18 @@ class ScheduledTask extends EventEmitter {
           this.execute({
             date: new Date(),
             missedExecutions: 0,
-            matchedDate: null,
             reason: 'runOnInit'
           });
         }
+
+        this.executionCount = 0;
     }
     
-    async execute(event?) {
+    async execute(event?: CronEvent): Promise<any> {
         if (!event){
             event = {
                 date: new Date(),
                 missedExecutions: 0,
-                matchedDate: null,
                 reason: 'manual'
             };
         }
@@ -60,7 +63,13 @@ class ScheduledTask extends EventEmitter {
         event.task = this;  
         const result = await this.func(event);
         this.status = 'idle';
+        this.executionCount += 1;
         this.emit('task-done', result);
+
+        if (this.options.maxExecutions && this.executionCount >= this.options.maxExecutions) {
+            this.emit('task-execution-limit-reached');
+            this.destroy();
+        }
     }
     
     start() {
@@ -93,4 +102,4 @@ class ScheduledTask extends EventEmitter {
     }
 }
 
-export default ScheduledTask;
+export default BasicScheduledTask;

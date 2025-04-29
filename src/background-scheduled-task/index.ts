@@ -4,10 +4,11 @@ import { fork, ChildProcess} from 'child_process';
 import { randomUUID } from 'crypto';
 
 import {remove} from '../storage';
+import { ScheduledTask, CronEvent } from '../types';
 
 const daemonPath = resolve(__dirname, 'daemon.js');
 
-class BackgroundScheduledTask extends EventEmitter {
+class BackgroundScheduledTask extends EventEmitter implements ScheduledTask{
     cronExpression: any;
   taskPath: any;
   options: any;
@@ -32,6 +33,28 @@ class BackgroundScheduledTask extends EventEmitter {
             this.start();
         }
     }
+
+    execute(event?: CronEvent): Promise<any> {
+      return new Promise((resolve, reject) => {
+        if(this.forkProcess){
+          this.forkProcess.send({
+              type: 'execute',
+              event: event
+          });
+
+          this.forkProcess.once('message', (message:any) => {
+              switch(message.type){
+              case 'task-done':
+                  resolve(message.result);
+                  break;
+              }
+            }
+          );
+        }
+
+        reject(new Error('Task is not running!'));
+      });
+    }  
 
     async start() {
         if (this.status === 'destroyed') {

@@ -1,33 +1,33 @@
-import ScheduledTask from '../scheduled-task';
+import BasicScheduledTask from '../basic-scheduled-task';
 
-let scheduledTask;
+let basicScheduledTask;
 
 export async function register(message){
     const script = await import(message.path);
-    scheduledTask = new ScheduledTask(message.cron, script.task, message.options);
-    scheduledTask.on('task-done', (result) => {
+    basicScheduledTask = new BasicScheduledTask(message.cron, script.task, message.options);
+    basicScheduledTask.on('task-done', (result) => {
       if (process.send) process.send({ type: 'task-done', result });
     });
 
-    scheduledTask.on('task-started', (time) => {
+    basicScheduledTask.on('task-started', (time) => {
       if (process.send) process.send({ type: 'task-started', time});
     });
 
-    scheduledTask.on('scheduler-started', () => {
+    basicScheduledTask.on('scheduler-started', () => {
       if (process.send)  process.send({ type: 'scheduler-started'});
     });
 
-    scheduledTask.on('scheduler-stopped', () => {
+    basicScheduledTask.on('scheduler-stopped', () => {
       if (process.send) process.send({ type: 'scheduler-stopped'});
     }); 
 
-    scheduledTask.on('scheduler-destroyed', () => {
+    basicScheduledTask.on('scheduler-destroyed', () => {
       if (process.send) process.send({ type: 'scheduler-destroyed'});
     }); 
 
     if (process.send) process.send({ type: 'registred' });
 
-    return scheduledTask;
+    return basicScheduledTask;
 }
 
 export function bind(){

@@ -1,27 +1,28 @@
 import { randomUUID } from 'crypto';
+import { ScheduledTask } from './types';
 
-const scheduledTasks = {};
+const tasks = {};
 
 export function save(task) {
     if (!task.options) {
         task.options = {};
         task.options.name = randomUUID();
     }
-    scheduledTasks[task.options.name] = task;
+    tasks[task.options.name] = task;
 }
 
-export function getTasks() {
-    return Object.values(scheduledTasks);
+export function getTasks(): ScheduledTask[] {
+    return Object.values(tasks);
 }
 
 export function clear() {
-    Object.keys(scheduledTasks).forEach((key) => {
-        delete scheduledTasks[key];
+    Object.keys(tasks).forEach((key) => {
+        delete tasks[key];
     });
 }
 
 export function remove(name) {
-    if (scheduledTasks[name]) {
-        delete scheduledTasks[name];
+    if (tasks[name]) {
+        delete tasks[name];
     }
 }

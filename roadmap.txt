@@ -1,4 +1,5 @@
 singe time jobs (max runs)
 preventOverrun
 error handling, add a onError option
-
+docs comments
+readme

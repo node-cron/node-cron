@@ -69,13 +69,13 @@ describe('node-cron', function() {
         
         it('should start a stoped task', function() {
             let executed = 0;
-            let scheduledTask = cron.schedule('* * * * * *', () => {
+            let BasicScheduledTask = cron.schedule('* * * * * *', () => {
                 executed += 1;
             }, { scheduled: false });
             
             clock.tick(2000);
             assert.equal(0, executed);
-            scheduledTask.start();
+            BasicScheduledTask.start();
             clock.tick(2000);
             assert.equal(2, executed);
         });
@@ -83,7 +83,7 @@ describe('node-cron', function() {
         it('should recover missed executions', function(done) {
             let executed = 0;
             clock.restore();
-            let scheduledTask = cron.schedule('* * * * * *', () => {
+            let BasicScheduledTask = cron.schedule('* * * * * *', () => {
                 executed += 1;
             }, { recoverMissedExecutions: true });
             
@@ -97,7 +97,7 @@ describe('node-cron', function() {
             }
             
             setTimeout(() => {
-                scheduledTask.stop();
+                BasicScheduledTask.stop();
                 assert.equal(2, executed);
                 done();
             }, 1000);
