@@ -5,7 +5,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
-    "declaration": false,
+    "declaration": true,
     "rootDirs": ["src"],
     "outDir": "dist",
     "importHelpers": false,

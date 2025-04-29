@@ -6,11 +6,21 @@ import validation from './pattern-validation/pattern-validation';
 import { save, getTasks as _getTasks } from './storage';
 
 /**
- * @typedef {Object} CronScheduleOptions
+ * @typedef {Object} Options
  * @prop {boolean} [scheduled] if a scheduled task is ready and running to be
  *  performed when the time matches the cron expression.
  * @prop {string} [timezone] the timezone to execute the task in.
  */
+
+type Options = {
+    scheduled?: boolean;
+    timezone?: string;
+    recoverMissedExecutions?: boolean;
+    runOnInit?: boolean;
+    name?: string;
+    preventOverrun?: boolean;
+    maxExecutions?: number;
+};
 
 /**
  * Creates a new task to execute the given function when the cron
@@ -18,10 +28,10 @@ import { save, getTasks as _getTasks } from './storage';
  *
  * @param {string} expression The cron expression.
  * @param {Function} func The task to be executed.
- * @param {CronScheduleOptions} [options] A set of options for the scheduled task.
- * @returns {ScheduledTask} The scheduled task.
+ * @param {Options} [options] A set of options for the scheduled task.
+ * @returns {ScheduledTask | BackgroundScheduledTask} The scheduled task.
  */
-function schedule(expression, func, options?) {
+function schedule(expression:string, func: Function | string, options?: Options) {
     const task = createTask(expression, func, options);
     save(task);
     return task;
