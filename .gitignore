@@ -41,5 +41,6 @@ _site/
 .nyc_output/
 
 testing.js
+todo.txt
 
 /dist/

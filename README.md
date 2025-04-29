@@ -3,8 +3,6 @@
 [![npm](https://img.shields.io/npm/l/node-cron.svg)](https://github.com/merencia/node-cron/blob/master/LICENSE.md)
 [![npm](https://img.shields.io/npm/v/node-cron.svg)](https://img.shields.io/npm/v/node-cron.svg)
 [![Coverage Status](https://coveralls.io/repos/github/node-cron/node-cron/badge.svg?branch=master)](https://coveralls.io/github/node-cron/node-cron?branch=master)
-[![Code Climate](https://codeclimate.com/github/node-cron/node-cron/badges/gpa.svg)](https://codeclimate.com/github/merencia/node-cron)
-[![Build Status](https://travis-ci.org/node-cron/node-cron.svg?branch=master)](https://travis-ci.org/merencia/node-cron)
 [![Dependency Status](https://david-dm.org/node-cron/node-cron.svg)](https://david-dm.org/merencia/node-cron)
 [![devDependency Status](https://david-dm.org/node-cron/node-cron/dev-status.svg)](https://david-dm.org/merencia/node-cron#info=devDependencies)
 [![Backers on Open Collective](https://opencollective.com/node-cron/backers/badge.svg)](#backers)
@@ -101,13 +99,19 @@ cron.schedule('1-5 * * * *', () => {
 
 #### Using step values
 
-Step values can be used in conjunction with ranges, following a range with '/' and a number. e.g: `1-10/2` that is the same as `2,4,6,8,10`. Steps are also permitted after an asterisk, so if you want to say “every two minutes”, just use `*/2`.
+Step values can be used in conjunction with ranges, following a range with '/' and a number. e.g: `0-10/2` that is the same as `0,2,4,6,8,10`. 
+Steps are also permitted after an asterisk, so if you want to say “every two minutes”, just use `*/2`.
+When setting `1-10/2` it's going to start with 1 and increase by 2, the same as `1,3,5,7,9`.
 
 ```javascript
 import cron from 'node-cron';
 
 cron.schedule('*/2 * * * *', () => {
-  console.log('running a task every two minutes');
+  console.log('running a task every even minute');
+});
+
+cron.schedule('1-59/2 * * * *', () => {
+  console.log('running a task every odd minute');
 });
 ```
 
@@ -235,15 +239,6 @@ for (let [key, value] of tasks.entries()) {
   console.log("value", value)
 }
 ```
-
-value is an object with the following properties:
-
-- _events
-- _eventsCount
-- _maxListeners
-- options
-- _task
-- etc...
 
 ## Issues
 
