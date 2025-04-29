@@ -15,7 +15,7 @@
     }
   },
   "scripts": {
-    "test": "c8 --reporter text --reporter html mocha --recursive './src/**/*.test.ts'",
+    "test": "c8 --reporter text --reporter html --reporter=text-lcov mocha --recursive './src/**/*.test.ts'",
     "lint": "./node_modules/.bin/eslint ./src",
     "check": "npm run lint && npm test",
     "build": "tsc",
