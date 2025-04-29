@@ -164,7 +164,7 @@ Arguments:
   });
  ```
 
-## ScheduledTask methods
+## BasicScheduledTask methods
 
 ### Start
 

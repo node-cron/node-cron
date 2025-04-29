@@ -1,0 +1,6 @@
+{
+	"extension": [
+		"ts"
+	],
+  "node-option": ["import=tsx"]
+}
