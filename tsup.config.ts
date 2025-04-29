@@ -4,15 +4,7 @@ export default defineConfig([
   {
     entry: ['src/**/*.ts'],
     format: 'cjs',
-    outDir: 'dist/cjs',
-    dts: false,
-    clean: true,
-    bundle: false,
-  },
-  {
-    entry: ['src/**/*.ts'],
-    format: 'esm',
-    outDir: 'dist/esm',
+    outDir: 'dist',
     dts: true,
     clean: true,
     bundle: false,

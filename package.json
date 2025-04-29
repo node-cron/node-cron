@@ -5,26 +5,14 @@
   "author": "Lucas Merencia",
   "license": "ISC",
   "homepage": "https://github.com/merencia/node-cron",
-  "main": "./dist/cjs/node-cron.js",
-  "module": "./dist/esm/node-cron.js",
-  "types": "./dist/esm/node-cron.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/esm/node-cron.d.ts",
-      "require": "./dist/cjs/node-cron.cjs",
-      "import": "./dist/esm/node-cron.js",
-      "default": "./dist/esm/node-cron.js"
-    }
-  },
-  "type": "module",
+  "main": "node-cron",
+  "types": "./dist/node-cron.d.ts",
+  "type": "commonjs",
   "scripts": {
     "test": "c8 --reporter text --reporter html mocha --recursive './src/**/*.test.ts'",
     "lint": "./node_modules/.bin/eslint ./src",
     "check": "npm run lint && npm test",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
-    "build:esm": "tsc -p tsconfig.esm.json",
-    "build:types": "tsc -p tsconfig.types.json",
-    "build": "npm run build:cjs && npm run build:esm && npm run build:types",
+    "build": "tsc",
     "prepublishOnly": "npm run build"
   },
   "engines": {
@@ -53,6 +41,7 @@
     "@types/expect": "^1.20.4",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.15.3",
+    "@tsconfig/recommended": "^1.0.8",
     "@types/sinon": "^17.0.4",
     "@types/uuid": "^10.0.0",
     "c8": "^10.1.3",
