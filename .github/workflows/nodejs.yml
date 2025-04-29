@@ -16,16 +16,16 @@ jobs:
         node-version: [18.x, 20.x]
 
     steps:
-    - name: Checkout do código
+    - name: Checkout
       uses: actions/checkout@v3
 
-    - name: Configurar Node.js ${{ matrix.node-version }}
+    - name: Configure node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: Instalar dependências
+    - name: Installl dependencies
       run: npm install
 
-    - name: Rodar testes
+    - name: Tests
       run: npm test
