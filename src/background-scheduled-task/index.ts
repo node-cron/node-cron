@@ -1,7 +1,7 @@
 import EventEmitter from 'events';
 import { resolve } from 'path';
 import { fork, ChildProcess} from 'child_process';
-import { v4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 import {remove} from '../storage';
 
@@ -25,7 +25,7 @@ class BackgroundScheduledTask extends EventEmitter {
         this.cronExpression = cronExpression;
         this.taskPath = taskPath;
         this.options = options;
-        this.options.name = this.options.name || v4();
+        this.options.name = this.options.name || randomUUID();
         this.status = 'stoped';
 
         if(options.scheduled){
