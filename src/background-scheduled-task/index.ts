@@ -5,13 +5,7 @@ import { v4 } from 'uuid';
 
 import {remove} from '../storage';
 
-async function getDaemonPath() {
-  if (process.env.MODULE_TYPE === 'commonjs') {
-   return await import('./resolve-daemon.cjs');
-  } else {
-   return  await import('./resolve-daemon.mjs');
-  }
-}
+const daemonPath = resolve(__dirname, 'daemon.js');
 
 class BackgroundScheduledTask extends EventEmitter {
     cronExpression: any;
@@ -48,7 +42,6 @@ class BackgroundScheduledTask extends EventEmitter {
           return;
         }
 
-        const daemonPath = await getDaemonPath();
         this.forkProcess = fork(daemonPath);
 
         this.forkProcess.on('message', (message:any) => {

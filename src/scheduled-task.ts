@@ -2,7 +2,7 @@
 
 import EventEmitter from 'events';
 import Scheduler from './scheduler';
-import { v4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import * as storage from './storage';
 
 class ScheduledTask extends EventEmitter {
@@ -20,7 +20,7 @@ class ScheduledTask extends EventEmitter {
         }
       
         this.options = options;
-        this.options.name = this.options.name || v4();
+        this.options.name = this.options.name || randomUUID();
 
         this.status = 'stoped';
 

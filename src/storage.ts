@@ -1,11 +1,11 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 const scheduledTasks = {};
 
 export function save(task) {
     if (!task.options) {
         task.options = {};
-        task.options.name = uuidv4();
+        task.options.name = randomUUID();
     }
     scheduledTasks[task.options.name] = task;
 }

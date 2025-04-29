@@ -19,7 +19,7 @@ describe('daemon - register', function () {
   it('should register a task', async function () {
     const message = {
       type: 'register',
-      path: '../test-assets/dummy-task.js',
+      path: '../../test-assets/dummy-task.js',
       cron: '* * * * * *',
       options: { scheduled: true, name: 'dummy-task' },
     };
@@ -37,7 +37,7 @@ describe('daemon - register', function () {
     messages = [];
     const message = {
       type: 'register',
-      path: '../test-assets/dummy-task.js',
+      path: '../../test-assets/dummy-task.js',
       cron: '* * * * * *',
       options: { scheduled: true, name: 'dummy-task' },
     };
