@@ -11,10 +11,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
-
     steps:
     - name: Checkout
       uses: actions/checkout@v3
@@ -22,7 +18,7 @@ jobs:
     - name: Configure node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: 22.x
 
     - name: Installl dependencies
       run: npm install
@@ -34,6 +30,3 @@ jobs:
       uses: coverallsapp/github-action@master
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        flag-name: node-${{ matrix.node-versio }}
-        parallel: true
-
