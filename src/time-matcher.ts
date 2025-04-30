@@ -26,6 +26,7 @@ class TimeMatcher{
           second: '2-digit',
           weekday: 'short',
           hour12: false,
+          timeZoneName: 'longOffset'
         }
 
         if(timezone){

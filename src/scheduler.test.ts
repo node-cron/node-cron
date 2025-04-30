@@ -20,7 +20,7 @@ describe('Scheduler', function() {
             assert.instanceOf(event.date, Date);
             assert.isNotNull(event.matchedDate);
             assert.equal(event.reason, 'time-matched');
-            assert.equal(event.missedExecutions, 0);
+            assert.equal(event.missedCount, 0);
             scheduler.stop();
             done();
         });
@@ -37,7 +37,7 @@ describe('Scheduler', function() {
             assert.isNotNull(event.date);
             assert.instanceOf(event.date, Date);
             assert.equal(event.reason, 'time-matched');
-            assert.equal(event.missedExecutions, 0);
+            assert.equal(event.missedCount, 0);
             if(emited === 5){
                 scheduler.stop();
                 done();

@@ -2,16 +2,18 @@
 
 import EventEmitter from 'events';
 import TimeMatcher from './time-matcher';
+import { CronEvent } from './types';
 
 class Scheduler extends EventEmitter{
     timeMatcher: TimeMatcher;
-  autorecover: any;
-  running: boolean;
-  timeout?: NodeJS.Timeout | null;
-    constructor(pattern, timezone?, autorecover?){
+    catchUp: any;
+    running: boolean;
+    timeout?: NodeJS.Timeout | null;
+
+    constructor(pattern, timezone?, catchUp?){
         super();
         this.timeMatcher = new TimeMatcher(pattern, timezone);
-        this.autorecover = autorecover;
+        this.catchUp = catchUp;
         this.running = false;
     }
 
@@ -30,18 +32,18 @@ class Scheduler extends EventEmitter{
             const delay = 1000;
             const elapsedTime = process.hrtime(lastCheck);
             const elapsedMs = (elapsedTime[0] * 1e9 + elapsedTime[1]) / 1e6;
-            const missedExecutions = Math.floor(elapsedMs / 1000);
+            const missedCount = Math.floor(elapsedMs / delay);
             
-            for(let i = missedExecutions; i >= 0; i--){
-                const date = new Date(new Date().getTime() - i * 1000);
-                if(lastExecution.getTime() < date.getTime() && (i === 0 || this.autorecover) && this.timeMatcher.match(date)){
-                    this.emit('scheduled-time-matched', {
+            for(let i = missedCount; i >= 0; i--){
+                const date = new Date(new Date().getTime() - i * delay);
+                if(lastExecution.getTime() < date.getTime() && (i === 0 || this.catchUp) && this.timeMatcher.match(date)){
+                    const event: CronEvent = {
                       date: date,
-                      missedExecutions: i,
-                      matchedDate: this.timeMatcher.dtf.format(date),
+                      missedCount: i,
+                      dateLocalIso: this.toLocalizedIso(date),
                       reason: 'time-matched'
-                    });
-                    date.setMilliseconds(0);
+                    };
+                    this.emit('scheduled-time-matched', event);
                     lastExecution = date;
                 }
             }
@@ -60,6 +62,21 @@ class Scheduler extends EventEmitter{
             clearTimeout(this.timeout);
         }
         this.timeout = null;
+    }
+
+    toLocalizedIso(date: Date) {
+      const parts = this.timeMatcher.dtf.formatToParts(date).filter(part => {
+        return part.type !== 'literal';
+      }).reduce((acc:any, part) => {
+          acc[part.type] = part.value;
+          return acc;
+      }, {});
+
+      const offset = parts.timeZoneName.replace(/^GMT/, '');
+    
+      return `${parts.year}-${parts.month}-${parts.day}`
+           + `T${parts.hour}:${parts.minute}:${parts.second}.${String(date.getMilliseconds()).padStart(3, '0')}`
+           + offset;
     }
 }
 

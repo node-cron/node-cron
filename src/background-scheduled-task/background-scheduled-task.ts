@@ -20,14 +20,14 @@ class BackgroundScheduledTask extends EventEmitter implements ScheduledTask{
         if(!options){
             options = {
                 scheduled: true,
-                recoverMissedExecutions: false,
+                catchUp: false,
             };
         }
         this.cronExpression = cronExpression;
         this.taskPath = taskPath;
         this.options = options;
         this.options.name = this.options.name || randomUUID();
-        this.status = 'stoped';
+        this.status = 'stopped';
 
         if(options.scheduled){
             this.start();
@@ -61,7 +61,7 @@ class BackgroundScheduledTask extends EventEmitter implements ScheduledTask{
           throw new Error('Task has been destroyed!');
         }
 
-        if(this.status !== 'stoped') {
+        if(this.status !== 'stopped') {
           return;
         }
 
@@ -104,7 +104,7 @@ class BackgroundScheduledTask extends EventEmitter implements ScheduledTask{
     }
     
     stop(){
-        this.status = 'stoped';
+        this.status = 'stopped';
         if(this.forkProcess){
             this.forkProcess.kill();
         }

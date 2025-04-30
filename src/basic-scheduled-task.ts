@@ -15,20 +15,18 @@ class BasicScheduledTask extends EventEmitter implements ScheduledTask {
 
     constructor(cronExpression: string, func: Function, options?: Options) {
         super();
-        if(!options){
-            options = {
-                scheduled: true,
-                recoverMissedExecutions: false
-            };
-        }
+        options = Object.assign({
+          scheduled: true,
+          catchUp: false
+        }, options);
       
         this.options = options;
         this.options.name = this.options.name || randomUUID();
 
-        this.status = 'stoped';
+        this.status = 'stopped';
 
         this.func = func;
-        this.scheduler = new Scheduler(cronExpression, options.timezone, options.recoverMissedExecutions);
+        this.scheduler = new Scheduler(cronExpression, options.timezone, options.catchUp);
 
         this.scheduler.on('scheduled-time-matched', (event) => {
             this.execute(event);
@@ -38,11 +36,12 @@ class BasicScheduledTask extends EventEmitter implements ScheduledTask {
             this.scheduler.start();
         }
         
-        if(options.runOnInit === true){
+        if(options.runOnStart === true){
           this.execute({
             date: new Date(),
-            missedExecutions: 0,
-            reason: 'runOnInit'
+            dateLocalIso: this.scheduler.toLocalizedIso(new Date()),
+            missedCount: 0,
+            reason: 'runOnStart'
           });
         }
 
@@ -50,25 +49,43 @@ class BasicScheduledTask extends EventEmitter implements ScheduledTask {
     }
     
     async execute(event?: CronEvent): Promise<any> {
+        if (this.options.maxExecutions && this.executionCount >= this.options.maxExecutions - 1) {
+          this.emit('task-execution-limit-reached');
+          this.destroy();
+        }
+        
         if (!event){
+            const date = new Date();
             event = {
-                date: new Date(),
-                missedExecutions: 0,
+                date: date,
+                dateLocalIso: this.scheduler.toLocalizedIso(date),
+                missedCount: 0,
                 reason: 'manual'
             };
         }
-        
+        event.task = this;
+
+        const previousStatus = this.status;
         this.status = 'running';
         this.emit('task-started', event);
-        event.task = this;  
-        const result = await this.func(event);
-        this.status = 'idle';
         this.executionCount += 1;
-        this.emit('task-done', result);
+        try {
+          const result = await this.func(event);
+          this.emit('task-done', result);
+        } catch(error){
+          if (this.options.onError){
+            this.emit('task-error', { event, error })
+            this.options.onError(error);
+          } else {
+            throw error;
+          }
+        }
 
-        if (this.options.maxExecutions && this.executionCount >= this.options.maxExecutions) {
-            this.emit('task-execution-limit-reached');
-            this.destroy();
+
+        if(previousStatus === 'stopped'){
+            this.status = 'stopped';
+        } else {
+          this.status = 'idle';
         }
     }
     
@@ -77,14 +94,15 @@ class BasicScheduledTask extends EventEmitter implements ScheduledTask {
         throw new Error('Task has been destroyed!');
       }
 
-      if(this.status === 'stoped') {
+      if(this.status === 'stopped') {
+        this.status = 'idle';
         this.scheduler.start();
         this.emit('scheduler-started');
       }
     }
     
     stop() {
-        this.status = 'stoped';
+        this.status = 'stopped';
         this.scheduler.stop();
         this.emit('scheduler-stopped');
     }

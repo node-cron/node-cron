@@ -23,7 +23,7 @@ describe('BasicScheduledTask', function() {
         done();
     });
 
-    it('should create a task stoped', function(done) {
+    it('should create a task stopped', function(done) {
         let executed = 0;
         let basicScheduledTask = new BasicScheduledTask('* * * * * *', () => {
             executed += 1;
@@ -64,7 +64,7 @@ describe('BasicScheduledTask', function() {
         let executed = 0;
         new BasicScheduledTask('* * * * * *', () => {
             executed += 1;
-        }, { scheduled: false, runOnInit: true });
+        }, { scheduled: false, runOnStart: true });
         clock.tick(3000);
         assert.equal(1, executed);
     });

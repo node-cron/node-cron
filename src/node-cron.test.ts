@@ -16,20 +16,21 @@ describe('node-cron', function() {
     describe('schedule', function() {
         it('should schedule a task', function() {
             let executed = 0;
-            cron.schedule('* * * * * *', () => {
+            const task = cron.schedule('* * * * * *', () => {
                 executed += 1;
             });
             
             clock.tick(2000);
             
             assert.equal(2, executed);
+            task.stop();
         });
         
         it('should schedule a task with America/Sao_Paulo timezone', function(done) {
             let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
             clock.restore();
             clock = useFakeTimers(startDate);
-            cron.schedule('* * * * * *', (event) => {
+            const task = cron.schedule('* * * * * *', (event) => {
                 assert.equal(19, event.date.getDate());
                 assert.equal(8, event.date.getMonth());
                 assert.equal(2018, event.date.getFullYear());
@@ -41,51 +42,55 @@ describe('node-cron', function() {
                 timezone: 'America/Sao_Paulo'
             });
             clock.tick(1000);
+            task.stop();
         });
         
         it('should schedule a task with Europe/Rome timezone', function(done) {
             let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
             clock.restore();
             clock = useFakeTimers(startDate);
-            cron.schedule('* * * * * *', (event) => {
-                assert.equal('Thu, 09/20/2018, 02:00:01', event.matchedDate);
+            const task = cron.schedule('* * * * * *', (event) => {
+                assert.equal('2018-09-20T02:00:01.000+02:00', event.dateLocalIso);
                 done();
             }, {
                 timezone: 'Europe/Rome'
             });
             clock.tick(1000);
+            task.stop();
         });
         
-        it('should schedule a task stoped', function() {
+        it('should schedule a task stopped', function() {
             let executed = 0;
-            cron.schedule('* * * * * *', () => {
+            const task = cron.schedule('* * * * * *', () => {
                 executed += 1;
             }, { scheduled: false });
             
             clock.tick(2000);
             
             assert.equal(0, executed);
+            task.stop();
         });
         
-        it('should start a stoped task', function() {
+        it('should start a stopped task', function() {
             let executed = 0;
-            let BasicScheduledTask = cron.schedule('* * * * * *', () => {
+            let task = cron.schedule('* * * * * *', () => {
                 executed += 1;
             }, { scheduled: false });
             
             clock.tick(2000);
             assert.equal(0, executed);
-            BasicScheduledTask.start();
+            task.start();
             clock.tick(2000);
             assert.equal(2, executed);
+            task.stop();
         });
         
         it('should recover missed executions', function(done) {
             let executed = 0;
             clock.restore();
-            let BasicScheduledTask = cron.schedule('* * * * * *', () => {
+            let task = cron.schedule('* * * * * *', () => {
                 executed += 1;
-            }, { recoverMissedExecutions: true });
+            }, { catchUp: true });
             
             let wait = true;
             let startedAt = new Date();
@@ -97,7 +102,7 @@ describe('node-cron', function() {
             }
             
             setTimeout(() => {
-                BasicScheduledTask.stop();
+                task.stop();
                 assert.equal(2, executed);
                 done();
             }, 1000);
@@ -123,7 +128,7 @@ describe('node-cron', function() {
 
     describe('getTasks', function() {
         it('should store a task', function() {
-            cron.schedule('* * * * *', () => {});
+            const task = cron.schedule('* * * * *', () => {});
             assert.isTrue(cron.getTasks().length > 0);
         });
     });

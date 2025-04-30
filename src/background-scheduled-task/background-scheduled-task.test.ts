@@ -11,7 +11,7 @@ describe('BackgroundScheduledTask', function() {
         });
     }).timeout(4000);
 
-    it('should create a task stoped', function() {
+    it('should create a task stopped', function() {
         let task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', {
             scheduled: false
         });
