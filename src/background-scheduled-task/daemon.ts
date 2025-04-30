@@ -4,6 +4,10 @@ let basicScheduledTask;
 
 export async function register(message){
     const script = await import(message.path);
+
+    const options = message.options;
+    options.onError = () => {}
+
     basicScheduledTask = new BasicScheduledTask(message.cron, script.task, message.options);
     basicScheduledTask.on('task-done', (result) => {
       if (process.send) process.send({ type: 'task-done', result });
@@ -11,6 +15,10 @@ export async function register(message){
 
     basicScheduledTask.on('task-started', (time) => {
       if (process.send) process.send({ type: 'task-started', time});
+    });
+
+    basicScheduledTask.on('task-error', (event, error) => {
+      if (process.send) process.send({ type: 'task-error', event, error: serializeError(error)});
     });
 
     basicScheduledTask.on('scheduler-started', () => {
@@ -37,6 +45,22 @@ export function bind(){
         return register(message);
     }
   });
+}
+
+function serializeError(err: Error) {
+  const plain = {
+    name:    err.name,
+    message: err.message,
+    stack:   err.stack,
+    // copy any other own properties:
+    ...Object.getOwnPropertyNames(err)
+      .filter(k => !['name','message','stack'].includes(k))
+      .reduce((acc, k) => {
+        acc[k] = err[k];
+        return acc;
+      }, {})
+  };
+  return JSON.stringify(plain);
 }
 
 bind();

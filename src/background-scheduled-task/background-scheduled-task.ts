@@ -17,12 +17,11 @@ class BackgroundScheduledTask extends EventEmitter implements ScheduledTask{
 
     constructor(cronExpression, taskPath, options?){
         super();
-        if(!options){
-            options = {
-                scheduled: true,
-                catchUp: false,
-            };
-        }
+        options = Object.assign({
+          scheduled: true,
+          catchUp: false
+        }, options);
+
         this.cronExpression = cronExpression;
         this.taskPath = taskPath;
         this.options = options;
@@ -67,6 +66,8 @@ class BackgroundScheduledTask extends EventEmitter implements ScheduledTask{
 
         this.forkProcess = fork(daemonPath);
 
+        this.status = 'running';
+
         this.forkProcess.on('message', (message:any) => {
             switch(message.type){
             case 'task-started':
@@ -77,6 +78,15 @@ class BackgroundScheduledTask extends EventEmitter implements ScheduledTask{
                 this.status = 'idle';
                 this.emit('task-done', message.result);
                 break;
+            case 'task-error':
+              this.status = message.event.task.status;
+              const error = deserializeError(message.error)
+              this.emit('task-error', message.event, error);
+              if(this.options.onError){
+                this.options.onError(error)
+              }
+              this.emit('task-error', message.event);
+              break;
             case 'scheduler-started':
                 this.start();
                 this.emit('scheduler-started');
@@ -128,6 +138,25 @@ class BackgroundScheduledTask extends EventEmitter implements ScheduledTask{
         }
         remove(this.options.name);
     }
+}
+
+function deserializeError(str: string) {
+  const data = JSON.parse(str);
+  // Create the right kind of Error (TypeError, RangeError, etc.)
+  const Err = globalThis[data.name] || Error;
+  const err = new Err(data.message);
+
+  if (data.stack) {
+    err.stack = data.stack;
+  }
+
+  Object.keys(data).forEach(key => {
+    if (!['name','message','stack'].includes(key)) {
+      err[key] = data[key];
+    }
+  });
+
+  return err;
 }
 
 export default BackgroundScheduledTask;

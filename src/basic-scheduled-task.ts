@@ -33,7 +33,7 @@ class BasicScheduledTask extends EventEmitter implements ScheduledTask {
         });
 
         if(options.scheduled !== false){
-            this.scheduler.start();
+            this.start();
         }
         
         if(options.runOnStart === true){
@@ -41,19 +41,24 @@ class BasicScheduledTask extends EventEmitter implements ScheduledTask {
             date: new Date(),
             dateLocalIso: this.scheduler.toLocalizedIso(new Date()),
             missedCount: 0,
-            reason: 'runOnStart'
+            reason: 'initial'
           });
         }
 
         this.executionCount = 0;
     }
     
-    async execute(event?: CronEvent): Promise<any> {
+     async execute(event?: CronEvent): Promise<any> {
+        if(this.options.noOverlap && this.status === 'running'){
+          this.emit('task-already-running', this)
+          return;
+        }
+
         if (this.options.maxExecutions && this.executionCount >= this.options.maxExecutions - 1) {
           this.emit('task-execution-limit-reached');
           this.destroy();
         }
-        
+
         if (!event){
             const date = new Date();
             event = {
@@ -69,23 +74,27 @@ class BasicScheduledTask extends EventEmitter implements ScheduledTask {
         this.status = 'running';
         this.emit('task-started', event);
         this.executionCount += 1;
+
         try {
           const result = await this.func(event);
           this.emit('task-done', result);
-        } catch(error){
+          if(previousStatus === 'stopped'){
+            this.status = 'stopped';
+          } else {
+            this.status = 'idle';
+          }
+        } catch (error){
+          if(previousStatus === 'stopped'){
+            this.status = 'stopped';
+          } else {
+            this.status = 'idle';
+          }
+          this.emit('task-error', event, error)
           if (this.options.onError){
-            this.emit('task-error', { event, error })
             this.options.onError(error);
           } else {
             throw error;
           }
-        }
-
-
-        if(previousStatus === 'stopped'){
-            this.status = 'stopped';
-        } else {
-          this.status = 'idle';
         }
     }
     
