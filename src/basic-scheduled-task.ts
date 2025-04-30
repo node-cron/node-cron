@@ -55,7 +55,7 @@ class BasicScheduledTask extends EventEmitter implements ScheduledTask {
         }
 
         if (this.options.maxExecutions && this.executionCount >= this.options.maxExecutions - 1) {
-          this.emit('task-execution-limit-reached');
+          this.emit('task-execution-limit-reached', true);
           this.destroy();
         }
 
@@ -102,18 +102,17 @@ class BasicScheduledTask extends EventEmitter implements ScheduledTask {
       if (this.status === 'destroyed') {
         throw new Error('Task has been destroyed!');
       }
-
       if(this.status === 'stopped') {
         this.status = 'idle';
         this.scheduler.start();
-        this.emit('scheduler-started');
+        this.emit('scheduler-started', true);
       }
     }
     
     stop() {
         this.status = 'stopped';
         this.scheduler.stop();
-        this.emit('scheduler-stopped');
+        this.emit('scheduler-stopped', true);
     }
 
     getStatus() {
@@ -125,7 +124,7 @@ class BasicScheduledTask extends EventEmitter implements ScheduledTask {
         this.status = 'destroyed';
         this.scheduler.removeAllListeners();
         storage.remove(this.options.name);
-        this.emit('scheduler-destroyed');
+        this.emit('scheduler-destroyed', true);
     }
 }
 

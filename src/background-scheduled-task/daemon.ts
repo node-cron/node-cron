@@ -8,7 +8,8 @@ export async function register(message){
     const options = message.options;
     options.onError = () => {}
 
-    basicScheduledTask = new BasicScheduledTask(message.cron, script.task, message.options);
+    basicScheduledTask = new BasicScheduledTask(message.cron, script.task, options);
+
     basicScheduledTask.on('task-done', (result) => {
       if (process.send) process.send({ type: 'task-done', result });
     });

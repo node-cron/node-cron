@@ -66,10 +66,13 @@ class BackgroundScheduledTask extends EventEmitter implements ScheduledTask{
 
         this.forkProcess = fork(daemonPath);
 
-        this.status = 'running';
+        this.status = 'idle';
 
         this.forkProcess.on('message', (message:any) => {
             switch(message.type){
+            case 'registred':
+                this.emit('daemon-registred', {});
+                break;
             case 'task-started':
                 this.status = 'running';
                 this.emit('task-started', message.time);
@@ -89,15 +92,15 @@ class BackgroundScheduledTask extends EventEmitter implements ScheduledTask{
               break;
             case 'scheduler-started':
                 this.start();
-                this.emit('scheduler-started');
+                this.emit('scheduler-started', {});
                 break;
             case 'scheduler-stopped':
                 this.stop();
-                this.emit('scheduler-stopped');
+                this.emit('scheduler-stopped', {});
                 break;
             case 'scheduler-destroyed':
                 this.destroy();
-                this.emit('scheduler-destroyed');
+                this.emit('scheduler-destroyed', {});
                 break;
             }
         });

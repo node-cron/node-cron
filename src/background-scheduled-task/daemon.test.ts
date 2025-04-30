@@ -39,7 +39,7 @@ describe('daemon - register', function () {
       type: 'register',
       path: '../../test-assets/dummy-task.js',
       cron: '* * * * * *',
-      options: { scheduled: true, name: 'dummy-task' },
+      options: { scheduled: false, name: 'dummy-task' },
     };
   
     bind();
@@ -47,14 +47,14 @@ describe('daemon - register', function () {
     const task = await onMessge.fn(message);
     task.start();
     
-    setTimeout(() => {
-      task.destroy();
-      assert.equal(messages[0].type, 'registred');
-      assert.equal(messages[1].type, 'scheduler-started');
-      assert.equal(messages[2].type, 'task-started');
-      assert.equal(messages[3].type, 'task-done');
-      assert.equal(messages[4].type, 'scheduler-stopped');
-      assert.equal(messages[5].type, 'scheduler-destroyed');
-    }, 1000);
+    await new Promise(r => setTimeout(() => {r(true)}, 1200));
+
+    task.destroy();
+    assert.equal(messages[0].type, 'registred');
+    assert.equal(messages[1].type, 'scheduler-started');
+    assert.equal(messages[2].type, 'task-started');
+    assert.equal(messages[3].type, 'task-done');
+    assert.equal(messages[4].type, 'scheduler-stopped');
+    assert.equal(messages[5].type, 'scheduler-destroyed');
   })
 });
