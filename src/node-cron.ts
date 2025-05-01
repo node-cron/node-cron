@@ -1,7 +1,7 @@
 
 import BasicScheduledTask from './basic-scheduled-task';
 import BackgroundScheduledTask from './background-scheduled-task/index';
-import validation from './pattern-validation/pattern-validation';
+import validation from './pattern/validation/pattern-validation';
 import * as storage from './storage';
 import { ScheduledTask, Options } from './types';
 

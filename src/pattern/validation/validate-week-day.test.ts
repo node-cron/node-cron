@@ -1,6 +1,6 @@
 import * as chai from 'chai';
 const { expect } = chai;
-import validate from '../pattern-validation/pattern-validation';
+import validate from './pattern-validation';
 
 describe('pattern-validation', function() {
     describe('validate week day', function() {

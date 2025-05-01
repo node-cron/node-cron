@@ -1,17 +1,22 @@
-'use strict';
-
+import validatePattern from './pattern/validation/pattern-validation';
 import EventEmitter from 'events';
-import TimeMatcher from './time-matcher';
+import { TimeMatcher } from './time/time-matcher';
 import { CronEvent } from './types';
+import { LocalizedTime } from './time/localized-time';
 
 class Scheduler extends EventEmitter{
     timeMatcher: TimeMatcher;
     catchUp: any;
     running: boolean;
     timeout?: NodeJS.Timeout | null;
+    timezone?: string;
 
     constructor(pattern, timezone?, catchUp?){
         super();
+
+        validatePattern(pattern);
+      
+        this.timezone = timezone;
         this.timeMatcher = new TimeMatcher(pattern, timezone);
         this.catchUp = catchUp;
         this.running = false;
@@ -37,10 +42,11 @@ class Scheduler extends EventEmitter{
             for(let i = missedCount; i >= 0; i--){
                 const date = new Date(new Date().getTime() - i * delay);
                 if(lastExecution.getTime() < date.getTime() && (i === 0 || this.catchUp) && this.timeMatcher.match(date)){
+                  const localizedDate = new LocalizedTime(date, this.timezone);
                     const event: CronEvent = {
-                      date: date,
+                      date:  localizedDate.toDate(),
                       missedCount: i,
-                      dateLocalIso: this.toLocalizedIso(date),
+                      dateLocalIso: localizedDate.toISO(),
                       reason: 'time-matched'
                     };
                     this.emit('scheduled-time-matched', event);
@@ -62,21 +68,6 @@ class Scheduler extends EventEmitter{
             clearTimeout(this.timeout);
         }
         this.timeout = null;
-    }
-
-    toLocalizedIso(date: Date) {
-      const parts = this.timeMatcher.dtf.formatToParts(date).filter(part => {
-        return part.type !== 'literal';
-      }).reduce((acc:any, part) => {
-          acc[part.type] = part.value;
-          return acc;
-      }, {});
-
-      const offset = parts.timeZoneName.replace(/^GMT/, '');
-    
-      return `${parts.year}-${parts.month}-${parts.day}`
-           + `T${parts.hour}:${parts.minute}:${parts.second}.${String(date.getMilliseconds()).padStart(3, '0')}`
-           + offset;
     }
 }
 

@@ -5,6 +5,7 @@ import { ScheduledTask, CronEvent, Options } from './types';
 import Scheduler from './scheduler';
 import { randomUUID } from 'crypto';
 import * as storage from './storage';
+import { LocalizedTime } from './time/localized-time';
 
 class BasicScheduledTask extends EventEmitter implements ScheduledTask {
     options: Options;
@@ -37,9 +38,10 @@ class BasicScheduledTask extends EventEmitter implements ScheduledTask {
         }
         
         if(options.runOnStart === true){
+          const localTime = new LocalizedTime(new Date(), this.options.timezone);
           this.execute({
-            date: new Date(),
-            dateLocalIso: this.scheduler.toLocalizedIso(new Date()),
+            date: localTime.toDate(),
+            dateLocalIso: localTime.toISO(),
             missedCount: 0,
             reason: 'initial'
           });
@@ -60,10 +62,10 @@ class BasicScheduledTask extends EventEmitter implements ScheduledTask {
         }
 
         if (!event){
-            const date = new Date();
+            const localTime = new LocalizedTime(new Date(), this.options.timezone);
             event = {
-                date: date,
-                dateLocalIso: this.scheduler.toLocalizedIso(date),
+                date: localTime.toDate(),
+                dateLocalIso: localTime.toISO(),
                 missedCount: 0,
                 reason: 'manual'
             };
