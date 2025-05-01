@@ -3,7 +3,8 @@ import BasicScheduledTask from './basic-scheduled-task';
 import BackgroundScheduledTask from './background-scheduled-task/index';
 import validation from './pattern/validation/pattern-validation';
 import * as storage from './storage';
-import { ScheduledTask, Options } from './types';
+import { Options } from './types';
+import { ScheduledTask } from './tasks/scheduled-task';
 
 /**
  * Creates a new task to execute the given function when the cron

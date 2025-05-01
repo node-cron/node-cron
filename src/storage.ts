@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { ScheduledTask } from './types';
+import { ScheduledTask } from './tasks/scheduled-task';
 
 const tasks = {};
 

@@ -1,11 +1,13 @@
 'use strict';
 
 import EventEmitter from 'events';
-import { ScheduledTask, CronEvent, Options } from './types';
+import { Options } from './types';
 import Scheduler from './scheduler';
 import { randomUUID } from 'crypto';
 import * as storage from './storage';
 import { LocalizedTime } from './time/localized-time';
+import { ScheduledTask } from './tasks/scheduled-task';
+import { TaskEvent } from './tasks/task-event';
 
 class BasicScheduledTask extends EventEmitter implements ScheduledTask {
     options: Options;
@@ -50,7 +52,7 @@ class BasicScheduledTask extends EventEmitter implements ScheduledTask {
         this.executionCount = 0;
     }
     
-     async execute(event?: CronEvent): Promise<any> {
+     async execute(event?: TaskEvent): Promise<any> {
         if(this.options.noOverlap && this.status === 'running'){
           this.emit('task-already-running', this)
           return;

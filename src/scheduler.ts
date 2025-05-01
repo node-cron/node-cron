@@ -1,8 +1,8 @@
 import validatePattern from './pattern/validation/pattern-validation';
 import EventEmitter from 'events';
 import { TimeMatcher } from './time/time-matcher';
-import { CronEvent } from './types';
 import { LocalizedTime } from './time/localized-time';
+import { TaskEvent } from './tasks/task-event';
 
 class Scheduler extends EventEmitter{
     timeMatcher: TimeMatcher;
@@ -43,7 +43,7 @@ class Scheduler extends EventEmitter{
                 const date = new Date(new Date().getTime() - i * delay);
                 if(lastExecution.getTime() < date.getTime() && (i === 0 || this.catchUp) && this.timeMatcher.match(date)){
                   const localizedDate = new LocalizedTime(date, this.timezone);
-                    const event: CronEvent = {
+                    const event: TaskEvent = {
                       date:  localizedDate.toDate(),
                       missedCount: i,
                       dateLocalIso: localizedDate.toISO(),

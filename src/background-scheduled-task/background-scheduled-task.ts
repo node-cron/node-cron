@@ -4,7 +4,8 @@ import { fork, ChildProcess} from 'child_process';
 import { randomUUID } from 'crypto';
 
 import {remove} from '../storage';
-import { ScheduledTask, CronEvent } from '../types';
+import { ScheduledTask } from 'src/tasks/scheduled-task';
+import { TaskEvent } from 'src/tasks/task-event';
 
 const daemonPath = resolve(__dirname, 'daemon.js');
 
@@ -33,7 +34,7 @@ class BackgroundScheduledTask extends EventEmitter implements ScheduledTask{
         }
     }
 
-    execute(event?: CronEvent): Promise<any> {
+    execute(event?: TaskEvent): Promise<any> {
       return new Promise((resolve, reject) => {
         if(this.forkProcess){
           this.forkProcess.send({
