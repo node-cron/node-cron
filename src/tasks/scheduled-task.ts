@@ -34,3 +34,11 @@ export interface ScheduledTask {
    */
   execute(event?: TaskEvent): Promise<any>;
 }
+
+export enum EventType {
+  taskStarted = 'task-started'
+}
+
+export interface ScheduledTaskV2 extends ScheduledTask {
+  on(event: EventType, fun: (taskEvent: TaskEvent) => Promise<void>): void
+}
