@@ -4,18 +4,18 @@ import { TimeMatcher } from 'src/time/time-matcher';
 
 describe('scheduler/runner', function(){
   it('runs',  async function(){
-    const timeMatcher = new TimeMatcher('10 * * * *');
+    const timeMatcher = new TimeMatcher('* * * * * *');
     const runner = new Runner(timeMatcher, async ()=> {
       console.log(new Date());
-      await new Promise(resolve => { setTimeout(resolve, 500)});
+      await new Promise(resolve => { setTimeout(resolve, 1200)});
       
     }, { noOverlap: true });
     
     runner.start();
 
-    console.log(runner.nextRun());
+    // console.log(runner.nextRun());
     
-    // await new Promise(resolve => { setTimeout(resolve, 2000)});
+    await new Promise(resolve => { setTimeout(resolve, 2000)});
     // simulateBlockingIO(3000);
     await new Promise(resolve => { setTimeout(resolve, 6000)});
     
