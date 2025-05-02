@@ -4,9 +4,36 @@ import { TrackedPromise } from './tracked-promise';
 describe('Tracked Promise', function(){
   it('wraps a promise', function(){
     const tp = new TrackedPromise((resolve) => { resolve('promise run') });
+    assert.isDefined(tp.getPromise())
     assert.equal(tp.getState(), 'fulfilled');
+    assert.isTrue(tp.isFulfilled());
+    assert.isFalse(tp.isPending());
+    assert.isFalse(tp.isRejected());
     assert.equal(tp.getValue(), 'promise run');
   });
+
+  it('returns pending status', function(){
+    const tp = new TrackedPromise((resolve) => { setTimeout(() => {resolve('promise run')}, 500) });
+    assert.equal(tp.getState(), 'pending');
+    assert.isFalse(tp.isFulfilled());
+    assert.isTrue(tp.isPending());
+    assert.isFalse(tp.isRejected());
+  });
+
+  it('returns rejected status', async function(){
+    const tp = new TrackedPromise((r, reject) => { reject(new Error('promise error')) });
+    try {
+      await tp;
+    } catch(error: any){
+      assert.equal(error.message, 'promise error');
+    }
+    assert.equal(tp.getState(), 'rejected');
+    assert.isFalse(tp.isFulfilled());
+    assert.isFalse(tp.isPending());
+    assert.isTrue(tp.isRejected());
+    assert.isDefined(tp.getError());
+  });
+  
 
   it('allows await', async function(){
     const result = await new TrackedPromise((resolve) => { resolve('promise run') });
@@ -15,10 +42,10 @@ describe('Tracked Promise', function(){
 
   it('allows try catch', async function(){
     try{
-      await new TrackedPromise((resolve, reject) => { reject('promise error') });
+      await new TrackedPromise((resolve, reject) => { reject(new Error('promise error')) });
       assert.fail('should fail before');
-    } catch(error) {
-      assert.equal(error, 'promise error');
+    } catch(error: any) {
+      assert.equal(error.message, 'promise error');
     }
   });
 
@@ -30,22 +57,20 @@ describe('Tracked Promise', function(){
   })
 
   it('allows use catch', function(done){
-    new TrackedPromise((resolve, reject) => { reject('promise error') }).catch(result => {
-      assert.equal(result, 'promise error');
+    new TrackedPromise((resolve, reject) => { reject(new Error('promise error')) }).catch(error => {
+      assert.equal(error.message, 'promise error');
       done();
     });
   });
 
   it('allows use finally', function(done){
-    new TrackedPromise((resolve, reject) => { reject('promise error') }).catch(result => {
-      assert.equal(result, 'promise error');
-    }).finally(() => {
+    new TrackedPromise((resolve, reject) => { resolve('promise run') }).finally(() => {
       done();
     });
   });
 
   it('sets the state to rejected on fail', function(){
-    const p = new TrackedPromise((resolve, reject) => { reject('promise error') });
+    const p = new TrackedPromise((resolve, reject) => { reject(new Error('promise error')) });
     assert.equal(p.getState(), 'rejected')
   });
 

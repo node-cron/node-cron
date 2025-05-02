@@ -9,7 +9,7 @@ const validationRegex = /^(?:\d+|\*|\*\/\d+)$/;
  * @returns {boolean}
  */
 function isValidExpression(expression, min, max) {
-    const options = expression.split(',');
+    const options = expression;
 
     for (const option of options) {
         const optionAsInt = parseInt(option, 10);
@@ -112,7 +112,7 @@ function validate(pattern) {
         throw new TypeError('pattern must be a string!');
 
     const patterns = pattern.split(' ');
-    const executablePatterns = convertExpression(pattern).split(' ');
+    const executablePatterns = convertExpression(pattern);
 
     if (patterns.length === 5) patterns.unshift('0');
 

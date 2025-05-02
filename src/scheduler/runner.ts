@@ -1,9 +1,11 @@
 import logger from "src/logger";
 import { TrackedPromise } from "src/promise/tracked-promise";
+import { MatcherWalker } from "src/time/matcher-walker";
 import { TimeMatcher } from "src/time/time-matcher";
 
 type RunnerOptions = {
-  noOverlap?: boolean
+  noOverlap?: boolean,
+  timezone?: string
 }
 
 export class Runner {
@@ -20,46 +22,50 @@ export class Runner {
   }
 
   start() {
-    // TODO: make this configurable
-    // reducing to less then 1000 may execute a task twice
-    const delay = 1000;
-   
-    let lastCheck: [number, number];
     let lastExecution: TrackedPromise<any>;
 
     const heartBeat = async () => {
+      const currentDate = new Date();
+      currentDate.setMilliseconds(0);
+
       // overlap prevention
       if(this.noOverlap && lastExecution && lastExecution.getState() === 'pending'){
         logger.warn('task still running, new execution blocked by overlap prevention!');
-        lastCheck = now();
-        this.heartBeatTimeout = setTimeout(heartBeat, delay);
+        
+        this.heartBeatTimeout = setTimeout(heartBeat, getDelay(this.timeMatcher, currentDate));
         return;
       }
 
-      // missed heart beats verification
-      const sinceLastCheck = elapsedMs(lastCheck);
-      const pendingChecks = Math.floor(sinceLastCheck / delay);
-      if(pendingChecks > 1) {
-        logger.warn(`${pendingChecks} missed ticks — possible heartbeat loss due to blocking I/O or heavy CPU usage.`)
-      }
+      // execute the task
+      lastExecution = checkAndRun(this.timeMatcher, currentDate, this.onMacth);
 
-      lastExecution = checkAndRun(this.timeMatcher, this.onMacth);
-      lastCheck = now();
-      this.heartBeatTimeout = setTimeout(heartBeat, delay);
+      // schedule the next run
+      this.heartBeatTimeout = setTimeout(heartBeat, getDelay(this.timeMatcher, currentDate));
     }
     
     this.heartBeatTimeout = setTimeout(()=>{
-      lastCheck = now();
       heartBeat();
-    }, delay - currentMillisseconds());
+    }, 0);
+  }
+
+  nextRun(){
+    return this.timeMatcher.getNextMatch(new Date());
   }
 
   stop(){
     if(this.heartBeatTimeout) clearTimeout(this.heartBeatTimeout);
-  }  
+  }
+  
+  isStarted(){
+    return !!this.heartBeatTimeout;
+  }
+
+  isStopped(){
+    return !this.isStarted();
+  }
 }
 
-function checkAndRun(timeMatcher: TimeMatcher, onMacth: Function): TrackedPromise<any> {
+function checkAndRun(timeMatcher: TimeMatcher, date: Date, onMacth: Function): TrackedPromise<any> {
   return new TrackedPromise(async (resolve, reject) => {
     try {
       if(timeMatcher.match(new Date())){
@@ -72,18 +78,7 @@ function checkAndRun(timeMatcher: TimeMatcher, onMacth: Function): TrackedPromis
   });
 }
 
-function currentMillisseconds(){
-  return new Date().getMilliseconds();
-}
-
-function elapsedMs(initial: [number, number]): number {
-  const elapsed = process.hrtime(initial);
-  const secondsAsNanoseconds = elapsed[0] * 1e9;
-  const nanoSeconds = elapsed[1];
-  const elapsedMs = (secondsAsNanoseconds + nanoSeconds) / 1e6;
-  return elapsedMs;
-}
-
-function now(): [number, number]{
-  return process.hrtime();
+function getDelay(timeMatcher: TimeMatcher, currentDate: Date) {
+  const nextRun = timeMatcher.getNextMatch(currentDate);
+  return nextRun.getTime() - currentDate.getTime();
 }

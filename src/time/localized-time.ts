@@ -13,9 +13,11 @@ type DateParts = {
 export class LocalizedTime {
   timestamp: number
   parts: DateParts
+  timezone?: string | undefined
 
   constructor(date: Date, timezone?: string){
     this.timestamp = date.getTime();
+    this.timezone = timezone;
     this.parts = buidDateParts(date, timezone);
   }
 
@@ -24,7 +26,9 @@ export class LocalizedTime {
   }
 
   toISO(): string{
-    const offset = this.parts.gmt.replace(/^GMT/, '');
+    const gmt = this.parts.gmt.replace(/^GMT/, '');
+    const offset = gmt ? gmt : 'Z';
+
     const pad = (n: number) => String(n).padStart(2, '0');
     return `${this.parts.year}-${pad(this.parts.month)}-${pad(this.parts.day)}`
          + `T${pad(this.parts.hour)}:${pad(this.parts.minute)}:${pad(this.parts.second)}`
@@ -34,6 +38,13 @@ export class LocalizedTime {
 
   getParts(): DateParts {
     return this.parts;
+  }
+
+  set(field: string, value: number){
+    this.parts[field] = value;
+    const newDate = new Date(this.toISO());
+    this.timestamp = newDate.getTime();
+    this.parts = buidDateParts(newDate, this.timezone)
   }
 }
 

@@ -46,7 +46,7 @@ export default (() => {
    *  - Will be translated to 1,2,3,4,5 * * * *
    */
     function interprete(expression){
-        let expressions = removeSpaces(expression).split(' ');
+        let expressions = removeSpaces(`${expression}`).split(' ');
         expressions = appendSeccondExpression(expressions);
         expressions[4] = monthNamesConversion(expressions[4]);
         expressions[5] = weekDayNamesConversion(expressions[5]);
@@ -55,7 +55,7 @@ export default (() => {
 
         expressions = normalizeIntegers(expressions);
 
-        return expressions.join(' ');
+        return expressions;
     }
 
     return interprete;
