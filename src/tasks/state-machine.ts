@@ -1,10 +1,10 @@
 type TaskStates = 'stopped' | 'idle' | 'running' | 'destroyed';
 
 const allowedTransitions: Record<TaskStates, TaskStates[]> = {
-  'stopped': ['idle', 'destroyed'],
-  'idle': ['running', 'stopped', 'destroyed'],
-  'running': ['idle', 'stopped', 'destroyed'],
-  'destroyed': []
+  'stopped': ['stopped', 'idle', 'destroyed'],
+  'idle': ['idle', 'running', 'stopped', 'destroyed'],
+  'running': ['running', 'idle', 'stopped', 'destroyed'],
+  'destroyed': ['destroyed']
 }
 
 export class StateMachine {

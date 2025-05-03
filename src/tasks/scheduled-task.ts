@@ -38,6 +38,7 @@ export type TaskOptions = {
 
 export type Execution = {
   id: string,
+  reason: 'invoked' | 'scheduled'
   startedAt?: Date,
   finishedAt?: Date,
   error?: Error,

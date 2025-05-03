@@ -32,28 +32,38 @@ export class InlineScheduledTask implements ScheduledTask {
 
     const runnerOptions: RunnerOptions = {
       beforeRun: (date: Date, execution: Execution) => {
-        this.stateMachine.changeState('running');
+        if(execution.reason === 'scheduled'){
+          this.changeState('running');
+        }
         this.emitter.emit('execution:started', this.createContext(date, execution));
         return true;
       },
       onFinished: (date: Date, execution: Execution) => {
-        this.stateMachine.changeState('idle');
+        if(execution.reason === 'scheduled'){
+          this.changeState('idle');
+        }
         this.emitter.emit('execution:finished', this.createContext(date, execution));
         return true;
       },
       onError: (date: Date, error: Error, execution: Execution) => {
         logger.error(error);
         this.emitter.emit('execution:failed', this.createContext(date, execution));
-        this.stateMachine.changeState('idle');
+        this.changeState('idle');
       },
       onOverlap: (date: Date) => {
-        this.emitter.emit('execution:failed', this.createContext(date));
+        this.emitter.emit('execution:overlap', this.createContext(date));
       },
       onMissedExecution: (date: Date) => {
         this.emitter.emit('execution:missed', this.createContext(date));
       }
     }
     this.runner = new Runner(this.timeMatcher, taskFn, runnerOptions);
+  }
+
+  private changeState(state){
+    if(this.runner.isStarted()){
+      this.stateMachine.changeState(state);
+    }
   }
 
   start(): void {
@@ -84,15 +94,34 @@ export class InlineScheduledTask implements ScheduledTask {
     this.emitter.emit('task:destroyed', this.createContext(new Date()));
   }
   
-  execute(): Promise<any> {
-    return this.runner.execute();
+  execute() {
+    return new Promise<any>((resolve, reject) => {
+      const onFail = (context: TaskContext) => {
+        this.off('execution:finished', onFail);
+        reject(context.execution?.error)
+      };
+
+      const onFinished = (context: TaskContext) => {
+        this.off('execution:failed', onFail);
+        resolve(context.execution?.result)
+      }
+
+      this.once('execution:finished', onFinished);
+      this.once('execution:failed', onFail);
+
+      this.runner.execute();
+    })
   }
 
-  on(event: TaskEvent, fun: (context: TaskContext) => Promise<void>): void {
+  on(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void {
     this.emitter.on(event, fun);
   }
 
-  once(event: TaskEvent, fun: (context: TaskContext) => Promise<void>): void {
+  off(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void {
+    this.emitter.off(event, fun);
+  }
+
+  once(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void {
     this.emitter.once(event, fun);
   }
 

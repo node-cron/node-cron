@@ -72,7 +72,8 @@ export class Runner {
     const checkAndRun = (date: Date): TrackedPromise<any> => {
       return new TrackedPromise(async (resolve, reject) => {
         const execution: Execution = {
-          id: createID('exec')
+          id: createID('exec'),
+          reason: 'scheduled'
         }
         try {
           if(this.timeMatcher.match(date)){
@@ -156,7 +157,8 @@ export class Runner {
   async execute(){
     const date = new Date();
     const execution: Execution = {
-      id: createID('exec')
+      id: createID('exec'),
+      reason: 'invoked'
     }
     try {
       const shouldExecute = await this.beforeRun(date, execution);
@@ -166,7 +168,7 @@ export class Runner {
         const result = await this.onMacth();
         execution.finishedAt = new Date();
         execution.result = result;
-        this.onFinished(result, execution);
+        this.onFinished(date, execution);
       }
     } catch (error: any){
       execution.finishedAt = new Date();
