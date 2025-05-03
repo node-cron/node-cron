@@ -1,59 +1,116 @@
 import logger from "src/logger";
 import { TrackedPromise } from "src/promise/tracked-promise";
-import { MatcherWalker } from "src/time/matcher-walker";
+import { LocalizedTime } from "src/time/localized-time";
 import { TimeMatcher } from "src/time/time-matcher";
 
-type RunnerOptions = {
+type OnFn = (date: Date) => void;
+type OnErrorFn = (error: Error) => void;
+
+function emptyOnFn(date: Date){};
+
+function defaultOnError(error: Error){
+  logger.error('Task failed with error!', error);
+}
+
+export type RunnerOptions = {
   noOverlap?: boolean,
-  timezone?: string
+  timezone?: string,
+  onMissedExecution?: OnFn,
+  onOverlap?: OnFn,
+  onError?: OnErrorFn
+  onFinished?: OnFn;
 }
 
 export class Runner {
   timeMatcher: TimeMatcher;
   onMacth: Function;
   noOverlap: boolean;
+  runCount: number;
+
+  running: boolean;
 
   heartBeatTimeout?: NodeJS.Timeout;
+  onMissedExecution: OnFn;
+  onOverlap: OnFn;
+  onError: OnErrorFn;
+  onFinished: OnFn;
 
   constructor(timeMatcher: TimeMatcher, onMacth: Function, options?: RunnerOptions){
       this.timeMatcher = timeMatcher;
       this.onMacth = onMacth;
       this.noOverlap = options == undefined || options.noOverlap === undefined ? false : options.noOverlap;
-  }
 
+      this.onMissedExecution = options?.onMissedExecution || emptyOnFn;
+      this.onOverlap = options?.onOverlap || emptyOnFn;
+
+      this.onError = options?.onError || defaultOnError;
+      this.onFinished = options?.onFinished || emptyOnFn;
+
+      this.runCount = 0;
+      this.running = false;
+  }
+  
   start() {
+    this.running = true;
     let lastExecution: TrackedPromise<any>;
     let expectedNextExecution: Date;
+
+    const scheduleNextHeartBeat = (currentDate: Date) => {
+      if (this.running) {
+          clearTimeout(this.heartBeatTimeout);
+          this.heartBeatTimeout = setTimeout(heartBeat, getDelay(this.timeMatcher, currentDate));
+      }
+    };
+
+    const checkAndRun = (date: Date): TrackedPromise<any> => {
+      return new TrackedPromise(async (resolve, reject) => {
+        try {
+          if(this.timeMatcher.match(date)){
+            this.runCount++;
+            const result = await this.onMacth();
+            this.onFinished(result);
+          }
+          resolve(true);
+        } catch (error){
+          reject(error);
+        }
+      });
+    }
 
     const heartBeat = async () => {
       const currentDate = new Date();
       currentDate.setMilliseconds(0);
 
+      // blocking IO detection
       if(expectedNextExecution && expectedNextExecution.getTime() < currentDate.getTime()){
         while(expectedNextExecution.getTime() < currentDate.getTime()){
           logger.warn(`missed execution at ${expectedNextExecution}! Possible blocking IO or high CPU user at the same process used by node-cron.`);
           expectedNextExecution = this.timeMatcher.getNextMatch(expectedNextExecution);
+          runAsync(this.onMissedExecution, expectedNextExecution, defaultOnError);
         }
-        expectedNextExecution = this.timeMatcher.getNextMatch(currentDate);
-        this.heartBeatTimeout = setTimeout(heartBeat, getDelay(this.timeMatcher, currentDate));
-        return;
+        // expectedNextExecution = this.timeMatcher.getNextMatch(currentDate);
+        // return;
       }
 
       // overlap prevention
-      if(this.noOverlap && lastExecution && lastExecution.getState() === 'pending'){
-        logger.warn('task still running, new execution blocked by overlap prevention!');
-        expectedNextExecution = this.timeMatcher.getNextMatch(currentDate);
-        this.heartBeatTimeout = setTimeout(heartBeat, getDelay(this.timeMatcher, currentDate));
-        return;
+      if(lastExecution && lastExecution.getState() === 'pending'){
+        runAsync(this.onOverlap, currentDate, defaultOnError);
+        if(this.noOverlap){
+          logger.warn('task still running, new execution blocked by overlap prevention!');
+          expectedNextExecution = this.timeMatcher.getNextMatch(currentDate);
+          scheduleNextHeartBeat(currentDate);
+          return;
+        }
       }
 
       // execute the task
-      lastExecution = checkAndRun(this.timeMatcher, currentDate, this.onMacth);
+      lastExecution = checkAndRun(currentDate);
+      lastExecution.catch(this.onError);
 
       expectedNextExecution = this.timeMatcher.getNextMatch(currentDate);
 
       // schedule the next run
-      this.heartBeatTimeout = setTimeout(heartBeat, getDelay(this.timeMatcher, currentDate));
+      scheduleNextHeartBeat(currentDate);
     }
     
     this.heartBeatTimeout = setTimeout(()=>{
@@ -66,11 +123,12 @@ export class Runner {
   }
 
   stop(){
+    this.running = false;
     if(this.heartBeatTimeout) clearTimeout(this.heartBeatTimeout);
   }
   
   isStarted(){
-    return !!this.heartBeatTimeout;
+    return !!this.heartBeatTimeout && this.running;
   }
 
   isStopped(){
@@ -78,17 +136,12 @@ export class Runner {
   }
 }
 
-function checkAndRun(timeMatcher: TimeMatcher, date: Date, onMacth: Function): TrackedPromise<any> {
-  return new TrackedPromise(async (resolve, reject) => {
-    try {
-      if(timeMatcher.match(new Date())){
-        await onMacth();
-      }
-      resolve(true);
-    } catch (error){
-      reject(error);
-    }
-  });
+async function runAsync(fn: OnFn, date: Date, onError){
+  try {
+    await fn(date);
+  }catch (error) {
+    onError(error);
+  }
 }
 
 function getDelay(timeMatcher: TimeMatcher, currentDate: Date) {
