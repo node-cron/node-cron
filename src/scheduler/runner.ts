@@ -1,14 +1,18 @@
+import { createID } from "src/create-id";
 import logger from "src/logger";
 import { TrackedPromise } from "src/promise/tracked-promise";
-import { LocalizedTime } from "src/time/localized-time";
+import { Execution } from "src/tasks/scheduled-task";
 import { TimeMatcher } from "src/time/time-matcher";
 
-type OnFn = (date: Date) => void;
-type OnErrorFn = (error: Error) => void;
+type OnFn = (date: Date) => void | Promise<void>;
+type OnErrorFn = (date: Date, error: Error, execution: Execution) => void | Promise<void>;
+type OnHookFn = (date: Date, execution: Execution) => boolean | Promise<boolean>;
 
-function emptyOnFn(date: Date){};
 
-function defaultOnError(error: Error){
+function emptyOnFn(){};
+function emptyHookFn(){ return true };
+
+function defaultOnError(date, error){
   logger.error('Task failed with error!', error);
 }
 
@@ -18,7 +22,8 @@ export type RunnerOptions = {
   onMissedExecution?: OnFn,
   onOverlap?: OnFn,
   onError?: OnErrorFn
-  onFinished?: OnFn;
+  onFinished?: OnHookFn;
+  beforeRun?: OnHookFn
 }
 
 export class Runner {
@@ -33,7 +38,8 @@ export class Runner {
   onMissedExecution: OnFn;
   onOverlap: OnFn;
   onError: OnErrorFn;
-  onFinished: OnFn;
+  beforeRun: OnHookFn;
+  onFinished: OnHookFn;
 
   constructor(timeMatcher: TimeMatcher, onMacth: Function, options?: RunnerOptions){
       this.timeMatcher = timeMatcher;
@@ -44,7 +50,8 @@ export class Runner {
       this.onOverlap = options?.onOverlap || emptyOnFn;
 
       this.onError = options?.onError || defaultOnError;
-      this.onFinished = options?.onFinished || emptyOnFn;
+      this.onFinished = options?.onFinished || emptyHookFn;
+      this.beforeRun = options?.beforeRun || emptyHookFn;
 
       this.runCount = 0;
       this.running = false;
@@ -64,14 +71,26 @@ export class Runner {
 
     const checkAndRun = (date: Date): TrackedPromise<any> => {
       return new TrackedPromise(async (resolve, reject) => {
+        const execution: Execution = {
+          id: createID('exec')
+        }
         try {
           if(this.timeMatcher.match(date)){
-            this.runCount++;
-            const result = await this.onMacth();
-            this.onFinished(result);
+            const shouldExecute = await this.beforeRun(date, execution);
+            if(shouldExecute){
+              this.runCount++;
+              execution.startedAt = new Date();
+              const result = await this.onMacth();
+              execution.finishedAt = new Date();
+              execution.result = result;
+              this.onFinished(date, execution);
+              }
           }
           resolve(true);
-        } catch (error){
+        } catch (error: any){
+          execution.finishedAt = new Date();
+          execution.error = error;
+          this.onError(date, error, execution);
           reject(error);
         }
       });
@@ -105,7 +124,6 @@ export class Runner {
 
       // execute the task
       lastExecution = checkAndRun(currentDate);
-      lastExecution.catch(this.onError);
 
       expectedNextExecution = this.timeMatcher.getNextMatch(currentDate);
 
@@ -133,6 +151,29 @@ export class Runner {
 
   isStopped(){
     return !this.isStarted();
+  }
+
+  async execute(){
+    const date = new Date();
+    const execution: Execution = {
+      id: createID('exec')
+    }
+    try {
+      const shouldExecute = await this.beforeRun(date, execution);
+      if(shouldExecute){
+        this.runCount++;
+        execution.startedAt = new Date();
+        const result = await this.onMacth();
+        execution.finishedAt = new Date();
+        execution.result = result;
+        this.onFinished(result, execution);
+      }
+    } catch (error: any){
+      execution.finishedAt = new Date();
+      execution.error = error;
+      this.onError(date, error, execution);
+      throw error;
+    }
   }
 }
 

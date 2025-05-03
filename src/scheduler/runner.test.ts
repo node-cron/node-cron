@@ -1,6 +1,7 @@
 import {assert} from 'chai';
 import { Runner, RunnerOptions } from './runner';
 import { TimeMatcher } from 'src/time/time-matcher';
+import { Execution } from 'src/tasks/scheduled-task';
 
 import logger from 'src/logger';
 
@@ -28,9 +29,10 @@ describe('scheduler/runner', function(){
       const runner =  new Runner(timeMatcher, async ()=> {
         return 'task finished';
       }, {
-        onFinished(result: any){
-          resolve(result);
+        onFinished(date, execution){
+          resolve(execution.result);
           runner.stop();
+          return true;
         }
       });
       runner.start();
@@ -40,14 +42,98 @@ describe('scheduler/runner', function(){
     assert.equal(result, 'task finished');
   }).timeout(3000);
 
-  it('allows handle task error', async function(){
+  it('allows handle before execute', async function(){
     const timeMatcher = new TimeMatcher('* * * * * *');
 
-  const errorCaught = new Promise<Error>((resolve) => {
+    const resultCaught = new Promise<any>((resolve) => {
+      const runner =  new Runner(timeMatcher, async ()=> {
+        return 'task finished';
+      }, {
+        async beforeRun(){
+          return true;
+        },
+        onFinished(date, execution){
+          resolve(execution.result);
+          runner.stop();
+          return true;
+        }
+      });
+      runner.start();
+    });
+
+    const result = await resultCaught;
+    assert.equal(result, 'task finished');
+  });
+
+  it('allows manual execution', async function(){
+    const timeMatcher = new TimeMatcher('* * * * * *');
+
+    const resultCaught = new Promise<any>((resolve) => {
+      const runner =  new Runner(timeMatcher, async ()=> {
+        return 'task finished';
+      }, {
+        async beforeRun(){
+          return true;
+        },
+        onFinished(date, execution){
+          resolve(execution.result);
+          runner.stop();
+          return true;
+        }
+      });
+      runner.execute();
+    });
+
+    const result = await resultCaught;
+    assert.equal(result, 'task finished');
+  });
+
+  it('allows handle task error on manual execution', async function(){
+    const timeMatcher = new TimeMatcher('* * * * * *');
+
+    const errorCaught = new Promise<Error>((resolve) => {
       const runner =  new Runner(timeMatcher, async ()=> {
         throw new Error('task failed');
       }, {
-        onError(err){
+        onError(date, err){
+          resolve(err);
+          runner.stop();
+        }
+      });
+      runner.execute();
+    });
+
+    const error = await errorCaught;
+    assert.equal(error.message, 'task failed')
+  }).timeout(3000);
+
+  it('before execute prevents run', async function(){
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let boforeCalled = false;
+
+    const runner =  new Runner(timeMatcher, async ()=> {
+      return 'task finished';
+    }, {
+      beforeRun(date: Date){
+        boforeCalled = true;
+        return false;
+      }
+    });
+    runner.start();
+    await new Promise(resolve => { setTimeout(resolve, 1000)});
+    runner.stop();
+    assert.isTrue(boforeCalled);
+    assert.equal(runner.runCount, 0)
+  });
+
+  it('allows handle task error', async function(){
+    const timeMatcher = new TimeMatcher('* * * * * *');
+
+    const errorCaught = new Promise<Error>((resolve) => {
+      const runner =  new Runner(timeMatcher, async ()=> {
+        throw new Error('task failed');
+      }, {
+        onError(date, err){
           resolve(err);
           runner.stop();
         }
