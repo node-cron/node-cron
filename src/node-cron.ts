@@ -1,9 +1,11 @@
 import { InlineScheduledTask } from "./tasks/inline-scheduled-task";
-import { ScheduledTask, TaskContext, TaskFn, TaskOptions } from "./tasks/scheduled-task";
+import { ScheduledTask, TaskFn, TaskOptions } from "./tasks/scheduled-task";
+import { TaskRegistry } from "./task-registry";
 import { Options } from "./types";
 
 import validation from "./pattern/validation/pattern-validation";
 
+const registry = new TaskRegistry();
 
 /**
  * Creates a new task to execute the given function when the cron
@@ -16,6 +18,8 @@ import validation from "./pattern/validation/pattern-validation";
  */
 function schedule(expression:string, func: TaskFn, options?: Options): ScheduledTask {
     const task = createTask(expression, func, options);
+    registry.add(task);
+
     if(!options || options?.scheduled){
       task.start()
     }
@@ -55,4 +59,8 @@ function getTasks(): ScheduledTask[] {
     return []
 }
 
-export default { schedule, validate, getTasks };
+function getTaksRegistry(): TaskRegistry{
+  return registry;
+}
+
+export default { schedule, validate, getTasks, getTaksRegistry };

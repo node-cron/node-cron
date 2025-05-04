@@ -47,6 +47,8 @@ export type TaskFn = (context: TaskContext) => any | Promise<any>;
  */
 export interface ScheduledTask {
   id: string,
+  name?: string,
+
   /**
    * Starts the scheduled task, enabling it to run according to its schedule.
    */
@@ -77,5 +79,5 @@ export interface ScheduledTask {
    */
   execute(context: TaskContext): Promise<any>;
 
-  on(event: TaskEvent, fun: (context: TaskContext) => Promise<void>): void
+  on(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void
 }
