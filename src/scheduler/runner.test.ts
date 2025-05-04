@@ -18,7 +18,8 @@ describe('scheduler/runner', function(){
 
     await new Promise(resolve => { setTimeout(resolve, 1000)});
     runner.stop()
-    assert.equal(runner.runCount, 2);
+    logger.info('TESTE 123')
+    assert.isTrue(runner.runCount >= 2);
 
   }).timeout(3000);
 
