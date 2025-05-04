@@ -1,8 +1,8 @@
-import { createID } from "src/create-id";
-import logger from "src/logger";
-import { TrackedPromise } from "src/promise/tracked-promise";
-import { Execution } from "src/tasks/scheduled-task";
-import { TimeMatcher } from "src/time/time-matcher";
+import { createID } from "../create-id";
+import logger from "../logger";
+import { TrackedPromise } from "../promise/tracked-promise";
+import { Execution } from "../tasks/scheduled-task";
+import { TimeMatcher } from "../time/time-matcher";
 
 type OnFn = (date: Date) => void | Promise<void>;
 type OnErrorFn = (date: Date, error: Error, execution: Execution) => void | Promise<void>;
@@ -189,5 +189,6 @@ async function runAsync(fn: OnFn, date: Date, onError){
 
 function getDelay(timeMatcher: TimeMatcher, currentDate: Date) {
   const nextRun = timeMatcher.getNextMatch(currentDate);
-  return nextRun.getTime() - currentDate.getTime();
+  const now = new Date();
+  return nextRun.getTime() - now.getTime();
 }

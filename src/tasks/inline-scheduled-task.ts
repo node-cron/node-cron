@@ -1,11 +1,11 @@
 import EventEmitter from "events";
 import { Execution, ScheduledTask, TaskContext, TaskEvent, TaskOptions } from "./scheduled-task";
-import { Runner, RunnerOptions } from "src/scheduler/runner";
-import { TimeMatcher } from "src/time/time-matcher";
-import { createID } from "src/create-id";
+import { Runner, RunnerOptions } from "../scheduler/runner";
+import { TimeMatcher } from "../time/time-matcher";
+import { createID } from "../create-id";
 import { StateMachine } from "./state-machine";
-import logger from "src/logger";
-import { LocalizedTime } from "src/time/localized-time";
+import logger from "../logger";
+import { LocalizedTime } from "../time/localized-time";
 
 class TaskEmitter extends EventEmitter{}
 

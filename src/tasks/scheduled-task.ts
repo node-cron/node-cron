@@ -27,13 +27,8 @@ export type TaskEvent =
   | 'execution:overlap';
 
 export type TaskOptions = {
-  scheduled?: boolean,
   timezone?: string,
   name?: string,
-
-  beforeRun: (date: Date) => boolean | Promise<boolean>;
-  afterRun: (result: any) => void | Promise<void>;
-  
 }
 
 export type Execution = {

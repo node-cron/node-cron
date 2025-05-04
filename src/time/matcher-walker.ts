@@ -28,7 +28,9 @@ export class MatcherWalker{
 
   matchNext(){
     const findNextDateIgnoringWeekday = () => {
-      const localTime = new LocalizedTime(this.baseDate, this.timezone);
+      const baseDate = new Date(this.baseDate.getTime());
+      baseDate.setMilliseconds(0);
+      const localTime = new LocalizedTime(baseDate, this.timezone);
       const dateParts = localTime.getParts();
       const date = new LocalizedTime(localTime.toDate(), this.timezone);
 
