@@ -1,3 +1,4 @@
+import { LocalizedTime } from "src/time/localized-time";
 import { createID } from "../create-id";
 import logger from "../logger";
 import { TrackedPromise } from "../promise/tracked-promise";
@@ -5,14 +6,16 @@ import { Execution } from "../tasks/scheduled-task";
 import { TimeMatcher } from "../time/time-matcher";
 
 type OnFn = (date: Date) => void | Promise<void>;
-type OnErrorFn = (date: Date, error: Error, execution: Execution) => void | Promise<void>;
+type OnErrorHookFn = (date: Date, error: Error, execution: Execution) => void | Promise<void>;
+type OnErrorFn = (date: Date, error: Error) => void | Promise<void>;
 type OnHookFn = (date: Date, execution: Execution) => boolean | Promise<boolean>;
 
+type OnMatch = (date: Date, execution: Execution) => any | Promise<any>;
 
 function emptyOnFn(){};
 function emptyHookFn(){ return true };
 
-function defaultOnError(date, error){
+function defaultOnError(date: Date, error: Error){
   logger.error('Task failed with error!', error);
 }
 
@@ -21,14 +24,14 @@ export type RunnerOptions = {
   timezone?: string,
   onMissedExecution?: OnFn,
   onOverlap?: OnFn,
-  onError?: OnErrorFn
+  onError?: OnErrorHookFn
   onFinished?: OnHookFn;
   beforeRun?: OnHookFn
 }
 
 export class Runner {
   timeMatcher: TimeMatcher;
-  onMacth: Function;
+  onMatch: OnMatch;
   noOverlap: boolean;
   runCount: number;
 
@@ -37,13 +40,13 @@ export class Runner {
   heartBeatTimeout?: NodeJS.Timeout;
   onMissedExecution: OnFn;
   onOverlap: OnFn;
-  onError: OnErrorFn;
+  onError: OnErrorHookFn;
   beforeRun: OnHookFn;
   onFinished: OnHookFn;
 
-  constructor(timeMatcher: TimeMatcher, onMacth: Function, options?: RunnerOptions){
+  constructor(timeMatcher: TimeMatcher, onMatch: OnMatch, options?: RunnerOptions){
       this.timeMatcher = timeMatcher;
-      this.onMacth = onMacth;
+      this.onMatch = onMatch;
       this.noOverlap = options == undefined || options.noOverlap === undefined ? false : options.noOverlap;
 
       this.onMissedExecution = options?.onMissedExecution || emptyOnFn;
@@ -81,7 +84,7 @@ export class Runner {
             if(shouldExecute){
               this.runCount++;
               execution.startedAt = new Date();
-              const result = await this.onMacth();
+              const result = await this.onMatch(date, execution);
               execution.finishedAt = new Date();
               execution.result = result;
               this.onFinished(date, execution);
@@ -144,7 +147,10 @@ export class Runner {
 
   stop(){
     this.running = false;
-    if(this.heartBeatTimeout) clearTimeout(this.heartBeatTimeout);
+    if(this.heartBeatTimeout) {
+      clearTimeout(this.heartBeatTimeout);
+      this.heartBeatTimeout = undefined;
+    }
   }
   
   isStarted(){
@@ -166,7 +172,7 @@ export class Runner {
       if(shouldExecute){
         this.runCount++;
         execution.startedAt = new Date();
-        const result = await this.onMacth();
+        const result = await this.onMatch(date, execution);
         execution.finishedAt = new Date();
         execution.result = result;
         this.onFinished(date, execution);
@@ -180,11 +186,11 @@ export class Runner {
   }
 }
 
-async function runAsync(fn: OnFn, date: Date, onError){
+async function runAsync(fn: OnFn, date: Date, onError: OnErrorFn){
   try {
     await fn(date);
-  }catch (error) {
-    onError(error);
+  }catch (error: any) {
+    onError(date, error);
   }
 }
 
@@ -192,5 +198,6 @@ function getDelay(timeMatcher: TimeMatcher, currentDate: Date) {
   const nextRun = timeMatcher.getNextMatch(currentDate);
   // must use now for calculating the delay, it avoids miliseconds addition to the timeout.
   const now = new Date();
-  return nextRun.getTime() - now.getTime();
+  const delay = nextRun.getTime() - now.getTime();
+  return Math.max(0, delay);
 }

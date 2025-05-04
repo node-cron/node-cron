@@ -37,7 +37,7 @@ describe('InlineScheduledTask', function() {
   });
 
   it('executes', async function(){
-    const task = new InlineScheduledTask('* * * * * *', async ()=> { return "task result" });
+    const task = new InlineScheduledTask('* * * * * *', async () => { return "task result" });
     const result = await task.execute();
     assert.equal(result, "task result");
   });
@@ -171,7 +171,7 @@ describe('InlineScheduledTask', function() {
     task.start();
 
     await new Promise(resolve => { setTimeout(resolve, 1000)});
-    blockIO(1000);
+    blockIO(2000);
     await new Promise(resolve => { setTimeout(resolve, 1200)});
 
     const event = await eventCaught;

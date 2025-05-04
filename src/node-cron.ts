@@ -1,8 +1,9 @@
 import { InlineScheduledTask } from "./tasks/inline-scheduled-task";
-import { ScheduledTask, TaskOptions } from "./tasks/scheduled-task";
+import { ScheduledTask, TaskContext, TaskFn, TaskOptions } from "./tasks/scheduled-task";
 import { Options } from "./types";
 
 import validation from "./pattern/validation/pattern-validation";
+
 
 /**
  * Creates a new task to execute the given function when the cron
@@ -13,7 +14,7 @@ import validation from "./pattern/validation/pattern-validation";
  * @param {Options} [options] A set of options for the scheduled task.
  * @returns {ScheduledTask} The scheduled task.
  */
-function schedule(expression:string, func: Function, options?: Options): ScheduledTask {
+function schedule(expression:string, func: TaskFn, options?: Options): ScheduledTask {
     const task = createTask(expression, func, options);
     if(!options || options?.scheduled){
       task.start()
@@ -21,7 +22,7 @@ function schedule(expression:string, func: Function, options?: Options): Schedul
     return task;
 }
 
-function createTask(expression: string, func: Function, options?: Options): ScheduledTask {
+function createTask(expression: string, func: TaskFn, options?: Options): ScheduledTask {
     const taskOptions: TaskOptions = {
       timezone: options?.timezone
     }

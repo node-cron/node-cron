@@ -40,6 +40,8 @@ export type Execution = {
   result?: any
 }
 
+export type TaskFn = (context: TaskContext) => any | Promise<any>;
+
 /**
  * Represents a scheduled task that can be managed and executed.
  */

@@ -1,5 +1,5 @@
 import EventEmitter from "events";
-import { Execution, ScheduledTask, TaskContext, TaskEvent, TaskOptions } from "./scheduled-task";
+import { Execution, ScheduledTask, TaskContext, TaskEvent, TaskFn, TaskOptions } from "./scheduled-task";
 import { Runner, RunnerOptions } from "../scheduler/runner";
 import { TimeMatcher } from "../time/time-matcher";
 import { createID } from "../create-id";
@@ -19,7 +19,7 @@ export class InlineScheduledTask implements ScheduledTask {
   stateMachine: StateMachine;
   timezone?: string;
 
-  constructor(cronExpression: string, taskFn: Function, options?: TaskOptions){
+  constructor(cronExpression: string, taskFn: TaskFn, options?: TaskOptions){
     this.emitter = new TaskEmitter();
     this.cronExpression = cronExpression;
   
@@ -57,7 +57,10 @@ export class InlineScheduledTask implements ScheduledTask {
         this.emitter.emit('execution:missed', this.createContext(date));
       }
     }
-    this.runner = new Runner(this.timeMatcher, taskFn, runnerOptions);
+    
+    this.runner = new Runner(this.timeMatcher, (date, execution) => {
+      return taskFn(this.createContext(date, execution));
+    }, runnerOptions);
   }
 
   private changeState(state){
