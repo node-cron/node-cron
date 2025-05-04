@@ -99,6 +99,7 @@ export class Runner {
 
     const heartBeat = async () => {
       const currentDate = new Date();
+      // get next is ignoring millisecond setting to zero to get a closer time here.
       currentDate.setMilliseconds(0);
 
       // blocking IO detection
@@ -189,6 +190,7 @@ async function runAsync(fn: OnFn, date: Date, onError){
 
 function getDelay(timeMatcher: TimeMatcher, currentDate: Date) {
   const nextRun = timeMatcher.getNextMatch(currentDate);
+  // must use now for calculating the delay, it avoids miliseconds addition to the timeout.
   const now = new Date();
   return nextRun.getTime() - now.getTime();
 }

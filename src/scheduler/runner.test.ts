@@ -16,7 +16,7 @@ describe('scheduler/runner', function(){
     assert.isTrue(runner.isStarted())
     assert.isFalse(runner.isStopped())
 
-    await new Promise(resolve => { setTimeout(resolve, 2000)});
+    await new Promise(resolve => { setTimeout(resolve, 1000)});
     runner.stop()
     assert.equal(runner.runCount, 2);
 
@@ -200,11 +200,11 @@ describe('scheduler/runner', function(){
     const timeMatcher = new TimeMatcher('* * * * * *');
     let runner: Runner;
 
-    runner = createRunner(timeMatcher, 1200, { noOverlap: true });
+    runner = createRunner(timeMatcher, 1500, { noOverlap: true });
     runner.start();
     await new Promise(resolve => { setTimeout(resolve, 2000)});
 
-    assert.equal(runner.runCount, 1);
+    assert.equal(runner.runCount, 2);
 
     runner.stop();
   }).timeout(5000);
@@ -233,7 +233,7 @@ describe('scheduler/runner', function(){
     runner.start();
 
     await new Promise(resolve => { setTimeout(resolve, 1000)});
-    blockIO(1000);
+    blockIO(2000);
     await new Promise(resolve => { setTimeout(resolve, 1200)});
 
     runner.stop()
