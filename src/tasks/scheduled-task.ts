@@ -48,36 +48,14 @@ export type TaskFn = (context: TaskContext) => any | Promise<any>;
 export interface ScheduledTask {
   id: string,
   name?: string,
-
-  /**
-   * Starts the scheduled task, enabling it to run according to its schedule.
-   */
+  
   start(): void;
-
-  /**
-   * Stops the scheduled task, preventing it from running until started again.
-   */
   stop(): void;
-
-  /**
-   * Retrieves the current status of the scheduled task.
-   * 
-   * @returns A string representing the status of the task.
-   */
   getStatus(): string;
-
-  /**
-   * Destroys the scheduled task, cleaning up any resources associated with it.
-   */
   destroy(): void;
-
-  /**
-   * Executes the scheduled task, optionally triggered by a specific event.
-   * 
-   * @param context - An `TaskContext` that  triggered the execution.
-   * @returns A promise that resolves with the result of the execution.
-   */
-  execute(context: TaskContext): Promise<any>;
+  execute(): Promise<any>;
 
   on(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void
+  off(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void
+  once(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void 
 }

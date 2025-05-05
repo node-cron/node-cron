@@ -4,6 +4,7 @@ import { TaskRegistry } from "./task-registry";
 import { Options } from "./types";
 
 import validation from "./pattern/validation/pattern-validation";
+import BackgroundScheduledTask from "./tasks/background-scheduled-task/background-scheduled-task";
 
 const registry = new TaskRegistry();
 
@@ -16,7 +17,7 @@ const registry = new TaskRegistry();
  * @param {Options} [options] A set of options for the scheduled task.
  * @returns {ScheduledTask} The scheduled task.
  */
-function schedule(expression:string, func: TaskFn, options?: Options): ScheduledTask {
+function schedule(expression:string, func: TaskFn | string, options?: Options): ScheduledTask {
     const task = createTask(expression, func, options);
     registry.add(task);
 
@@ -26,11 +27,15 @@ function schedule(expression:string, func: TaskFn, options?: Options): Scheduled
     return task;
 }
 
-function createTask(expression: string, func: TaskFn, options?: Options): ScheduledTask {
+function createTask(expression: string, func: TaskFn | string, options?: Options): ScheduledTask {
     const taskOptions: TaskOptions = {
       timezone: options?.timezone
     }
-    return new InlineScheduledTask(expression, func, taskOptions);
+    if(func instanceof Function){
+      return new InlineScheduledTask(expression, func, taskOptions);
+    }
+
+    return new BackgroundScheduledTask(expression, func, taskOptions);
 }
 
 /**
@@ -59,8 +64,8 @@ function getTasks(): ScheduledTask[] {
     return []
 }
 
-function getTaksRegistry(): TaskRegistry{
+function getTaskRegistry(): TaskRegistry{
   return registry;
 }
 
-export default { schedule, validate, getTasks, getTaksRegistry };
+export default { schedule, validate, getTasks, getTaskRegistry };

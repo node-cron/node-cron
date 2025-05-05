@@ -1,4 +1,3 @@
-import { LocalizedTime } from "src/time/localized-time";
 import { createID } from "../create-id";
 import logger from "../logger";
 import { TrackedPromise } from "../promise/tracked-promise";
@@ -101,9 +100,8 @@ export class Runner {
     }
 
     const heartBeat = async () => {
-      const currentDate = new Date();
       // get next is ignoring millisecond setting to zero to get a closer time here.
-      currentDate.setMilliseconds(0);
+      const currentDate = nowWithoutMs()
 
       // blocking IO detection
       if(expectedNextExecution && expectedNextExecution.getTime() < currentDate.getTime()){
@@ -138,7 +136,7 @@ export class Runner {
     
     this.heartBeatTimeout = setTimeout(()=>{
       heartBeat();
-    }, 0);
+    }, getDelay(this.timeMatcher, nowWithoutMs()));
   }
 
   nextRun(){
@@ -200,4 +198,10 @@ function getDelay(timeMatcher: TimeMatcher, currentDate: Date) {
   const now = new Date();
   const delay = nextRun.getTime() - now.getTime();
   return Math.max(0, delay);
+}
+
+function nowWithoutMs(): Date{
+  const date = new Date();
+  date.setMilliseconds(0);
+  return date;
 }
