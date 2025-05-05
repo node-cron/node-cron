@@ -1,3 +1,4 @@
+import logger from "src/logger";
 import { InlineScheduledTask } from "../inline-scheduled-task";
 import { ScheduledTask, TaskContext, TaskEvent } from "../scheduled-task";
 
@@ -54,14 +55,18 @@ function serializeError(err: Error) {
   return JSON.stringify(plain);
 }
 
-function safelySerializeContext(context: TaskContext): any {
-  const safeContext: any = {};
+function safelySerializeContext(context: TaskContext): TaskContext {
+  const safeContext: any = {
+    date: context.date,
+    dateLocalIso: context.dateLocalIso,
+    triggeredAt: context.triggeredAt
+  };
   
   if (context.task) {
     safeContext.task = {
       id: context.task.id,
       name: context.task.name,
-      timezone: context.task.name
+      status: context.task.getStatus()
     };
   }
   
@@ -75,13 +80,14 @@ function safelySerializeContext(context: TaskContext): any {
       result: context.execution.result
     };
   }
-  
+
   return safeContext;
 }
 
 
 export function bind(){
   let task: ScheduledTask;
+
   process.on('message', async (message: any) => {
     switch(message.command){
     case 'task:start':
@@ -89,10 +95,17 @@ export function bind(){
         return task;
     case 'task:stop':
       if(task) task.stop();
-      break;
+      return task;
     case 'task:destroy':
       if(task) task.destroy();
-      break;
+      return task;
+    case 'task:execute':
+      try {
+        if (task) await task.execute();
+      } catch(error: any){
+        // logger.debug('Daemon task:execute falied:', error);
+      }
+      break
     }
   });
 }

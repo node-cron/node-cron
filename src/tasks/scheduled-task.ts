@@ -49,10 +49,10 @@ export interface ScheduledTask {
   id: string,
   name?: string,
   
-  start(): void;
-  stop(): void;
-  getStatus(): string;
-  destroy(): void;
+  start(): void | Promise<void>;
+  stop(): void | Promise<void>;
+  getStatus(): string | Promise<string>;
+  destroy(): void | Promise<void>;
   execute(): Promise<any>;
 
   on(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void

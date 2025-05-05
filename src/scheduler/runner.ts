@@ -72,7 +72,7 @@ export class Runner {
     };
 
     const checkAndRun = (date: Date): TrackedPromise<any> => {
-      return new TrackedPromise(async (resolve, reject) => {
+      return new TrackedPromise(async (resolve) => {
         const execution: Execution = {
           id: createID('exec'),
           reason: 'scheduled'
@@ -94,7 +94,6 @@ export class Runner {
           execution.finishedAt = new Date();
           execution.error = error;
           this.onError(date, error, execution);
-          reject(error);
         }
       });
     }
@@ -179,7 +178,6 @@ export class Runner {
       execution.finishedAt = new Date();
       execution.error = error;
       this.onError(date, error, execution);
-      throw error;
     }
   }
 }

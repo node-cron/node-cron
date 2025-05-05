@@ -1,6 +1,6 @@
-type TaskStates = 'stopped' | 'idle' | 'running' | 'destroyed';
+export type TaskState = 'stopped' | 'idle' | 'running' | 'destroyed';
 
-const allowedTransitions: Record<TaskStates, TaskStates[]> = {
+const allowedTransitions: Record<TaskState, TaskState[]> = {
   'stopped': ['stopped', 'idle', 'destroyed'],
   'idle': ['idle', 'running', 'stopped', 'destroyed'],
   'running': ['running', 'idle', 'stopped', 'destroyed'],
@@ -8,13 +8,13 @@ const allowedTransitions: Record<TaskStates, TaskStates[]> = {
 }
 
 export class StateMachine {
-  state: TaskStates;
+  state: TaskState;
 
-  constructor(initial: TaskStates = 'stopped'){
+  constructor(initial: TaskState = 'stopped'){
     this.state = initial;
   }
 
-  changeState(state: TaskStates){
+  changeState(state: TaskState){
     if(allowedTransitions[this.state].includes(state)){
       this.state = state;
     } else {
