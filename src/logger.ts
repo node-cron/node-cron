@@ -20,12 +20,15 @@ function log(level: LogLevel, message: string, extra?: any): void {
     case 'ERROR':
       console.error(output, extra ?? '');
       break;
+    case 'DEBUG':
+        console.debug(output, extra ?? '');
+        break;
     case 'WARN':
       console.warn(output);
       break;
     case 'INFO':
     default:
-      console.log(output);
+      console.info(output);
       break;
   }
 }
