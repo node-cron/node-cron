@@ -160,9 +160,10 @@ describe('Logger', () => {
       logger.error('Error message');
       logger.debug('Debug message');
       
-      expect(consoleInfoStub.calledTwice).to.be.true; // info and debug
+      expect(consoleInfoStub.calledOnce).to.be.true;
       expect(consoleWarnStub.calledOnce).to.be.true;
       expect(consoleErrorStub.calledOnce).to.be.true;
+      expect(consoleDebugStub.calledOnce).to.be.true;
     });
   });
 });
