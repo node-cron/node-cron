@@ -96,7 +96,7 @@ describe('Logger', () => {
     });
   });
   
-  describe.only('debug', () => {
+  describe('debug', () => {
     it('should call console.log with properly formatted message when passed string', () => {
       const message = 'Debug test';
       logger.debug(message);

@@ -11,15 +11,6 @@ import path from "path";
 
 const registry = new TaskRegistry();
 
-/**
- * Creates a new task to execute the given function when the cron
- *  expression ticks.
- *
- * @param {string} expression The cron expression.
- * @param {Function} func The task to be executed.
- * @param {Options} [options] A set of options for the scheduled task.
- * @returns {ScheduledTask} The scheduled task.
- */
 function schedule(expression:string, func: TaskFn | string, options?: Options): ScheduledTask {
     const task = createTask(expression, func, options);
     registry.add(task);
@@ -39,16 +30,10 @@ function createTask(expression: string, func: TaskFn | string, options?: Options
     }
 
     const taskPath = solvePath(func);
-    
+
     return new BackgroundScheduledTask(expression, taskPath, taskOptions);
 }
 
-/**
- * Check if a cron expression is valid.
- *
- * @param {string} expression The cron expression.
- * @returns {boolean} Whether the expression is valid or not.
- */
 function validate(expression: string): boolean {
     try {
         validation(expression);
@@ -60,11 +45,6 @@ function validate(expression: string): boolean {
     }
 }
 
-/**
- * Gets the scheduled tasks.
- *
- * @returns {ScheduledTask[]} The scheduled tasks.
- */
 function getTasks(): ScheduledTask[] {
     return []
 }
