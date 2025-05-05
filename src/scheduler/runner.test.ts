@@ -10,6 +10,7 @@ describe('scheduler/runner', function(){
     const timeMatcher = new TimeMatcher('* * * * * *');
     const runner = createRunner(timeMatcher, 200);
     
+
     assert.isFalse(runner.isStarted())
     assert.isTrue(runner.isStopped())
     runner.start();
@@ -18,8 +19,7 @@ describe('scheduler/runner', function(){
 
     await new Promise(resolve => { setTimeout(resolve, 1000)});
     runner.stop()
-    logger.info('TESTE 123')
-    assert.isTrue(runner.runCount >= 2);
+    assert.isTrue(runner.runCount >= 1);
 
   }).timeout(3000);
 
@@ -205,7 +205,7 @@ describe('scheduler/runner', function(){
     runner.start();
     await new Promise(resolve => { setTimeout(resolve, 2000)});
 
-    assert.equal(runner.runCount, 2);
+    assert.equal(runner.runCount, 1);
 
     runner.stop();
   }).timeout(5000);

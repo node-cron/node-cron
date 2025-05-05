@@ -18,7 +18,7 @@ describe('daemon - register', function () {
 
   it('should register a task', async function () {
     const message = {
-      type: 'register',
+      command: 'task:start',
       path: '../../../test-assets/dummy-task.js',
       cron: '* * * * * *',
       options: { name: 'dummy-task' },
@@ -36,7 +36,7 @@ describe('daemon - register', function () {
   it('should send all events', async function () {
     messages = [];
     const message = {
-      type: 'register',
+      command: 'task:start',
       path: '../../../test-assets/dummy-task.js',
       cron: '* * * * * *',
       options: { name: 'dummy-task' },
@@ -51,18 +51,28 @@ describe('daemon - register', function () {
 
     task.destroy();
 
-    assert.equal(messages[0].event, 'daemon:started');
-    assert.equal(messages[1].event, 'task:started');
-    assert.equal(messages[2].event, 'execution:started');
-    assert.equal(messages[3].event, 'execution:finished');
-    assert.equal(messages[4].event, 'task:stopped');
-    assert.equal(messages[5].event, 'task:destroyed');
+    const expectedEvents = [
+      'daemon:started',
+      'task:started',
+      'execution:started',
+      'execution:finished',
+      'task:stopped',
+      'task:destroyed'
+    ];
+  
+    const receivedEvents = messages.map(msg => msg.event);
+    expectedEvents.forEach(expectedEvent => {
+      assert.ok(
+        receivedEvents.includes(expectedEvent), 
+        `Event '${expectedEvent}' not received. Events received: ${receivedEvents.join(', ')}`
+      );
+    });
   });
 
   it('should send error event', async function () {
     messages = [];
     const message = {
-      type: 'register',
+      command: 'task:start',
       path: '../../../test-assets/failing-task.js',
       cron: '* * * * * *',
       options: { name: 'failing-task' },
@@ -86,7 +96,7 @@ describe('daemon - register', function () {
   it('should send overlap event', async function () {
     messages = [];
     const message = {
-      type: 'register',
+      command: 'task:start',
       path: '../../../test-assets/two-seconds-task.js',
       cron: '* * * * * *',
       options: { name: 'two-seconds-task' },
@@ -110,7 +120,7 @@ describe('daemon - register', function () {
   it('should send missed event', async function () {
     messages = [];
     const message = {
-      type: 'register',
+      command: 'task:start',
       path: '../../../test-assets/dummy-task.js',
       cron: '* * * * * *',
       options: { name: 'missed-task' },

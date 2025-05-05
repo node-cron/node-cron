@@ -1,3 +1,4 @@
+
 import { InlineScheduledTask } from "./tasks/inline-scheduled-task";
 import { ScheduledTask, TaskFn, TaskOptions } from "./tasks/scheduled-task";
 import { TaskRegistry } from "./task-registry";
@@ -5,6 +6,8 @@ import { Options } from "./types";
 
 import validation from "./pattern/validation/pattern-validation";
 import BackgroundScheduledTask from "./tasks/background-scheduled-task/background-scheduled-task";
+
+import path from "path";
 
 const registry = new TaskRegistry();
 
@@ -35,7 +38,9 @@ function createTask(expression: string, func: TaskFn | string, options?: Options
       return new InlineScheduledTask(expression, func, taskOptions);
     }
 
-    return new BackgroundScheduledTask(expression, func, taskOptions);
+    const taskPath = solvePath(func);
+    
+    return new BackgroundScheduledTask(expression, taskPath, taskOptions);
 }
 
 /**
@@ -66,6 +71,23 @@ function getTasks(): ScheduledTask[] {
 
 function getTaskRegistry(): TaskRegistry{
   return registry;
+}
+
+function solvePath(filePath: string): string {
+  if(path.isAbsolute(filePath)) return filePath;
+
+  const stackLines = new Error().stack?.split('\n');
+  if(stackLines){
+    stackLines?.shift();
+    const callerLine = stackLines?.find((line) => { return line.indexOf(__filename) === -1; });
+    const match = callerLine?.match(/\((.*):\d+:\d+\)/);
+    if (match) {
+      const dir = path.dirname(match[1]);
+      return path.resolve(dir, filePath);
+    }
+  }
+
+  throw new Error(`Could not locate task file ${path}`);
 }
 
 export default { schedule, validate, getTasks, getTaskRegistry };
