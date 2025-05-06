@@ -72,10 +72,10 @@ function schedule(expression:string, func: TaskFn | string, options?: Options): 
     registry.add(task);
 
     async function init(){
-      if(options && options?.scheduled){
+      if(!options || options?.scheduled){
         await task.start()
   
-        if(options.runOnScheduling){
+        if(options && options.runOnScheduling){
           await task.execute();
         }
       }

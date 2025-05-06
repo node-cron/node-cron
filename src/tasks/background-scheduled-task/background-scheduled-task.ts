@@ -6,7 +6,7 @@ import { createID } from '../../create-id';
 import { EventEmitter } from 'stream';
 import { StateMachine } from '../state-machine';
 import { LocalizedTime } from '../../time/localized-time';
-import logger from 'src/logger';
+import logger from '../../logger';
 
 const daemonPath = resolvePath(__dirname, 'daemon.js');
 

@@ -1,4 +1,4 @@
-import logger from "src/logger";
+import logger from "../../logger";
 import { InlineScheduledTask } from "../inline-scheduled-task";
 import { ScheduledTask, TaskContext, TaskEvent } from "../scheduled-task";
 
