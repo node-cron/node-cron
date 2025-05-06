@@ -31,6 +31,9 @@ export class InlineScheduledTask implements ScheduledTask {
     this.stateMachine = new StateMachine();
 
     const runnerOptions: RunnerOptions = {
+      timezone: options?.timezone,
+      noOverlap: options?.noOverlap,
+      maxExecutions: options?.maxExecutions,
       beforeRun: (date: Date, execution: Execution) => {
         if(execution.reason === 'scheduled'){
           this.changeState('running');
@@ -55,6 +58,10 @@ export class InlineScheduledTask implements ScheduledTask {
       },
       onMissedExecution: (date: Date) => {
         this.emitter.emit('execution:missed', this.createContext(date));
+      },
+      onMaxExecutions: (date: Date) => {
+        this.emitter.emit('execution:maxReached', this.createContext(date));
+        this.destroy();
       }
     }
     

@@ -24,11 +24,14 @@ export type TaskEvent =
   | 'execution:finished'
   | 'execution:failed'
   | 'execution:missed'
-  | 'execution:overlap';
+  | 'execution:overlap'
+  | 'execution:maxReached'
 
 export type TaskOptions = {
   timezone?: string,
   name?: string,
+  noOverlap?: boolean,
+  maxExecutions?: number,
 }
 
 export type Execution = {

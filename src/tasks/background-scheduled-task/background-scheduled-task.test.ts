@@ -5,6 +5,8 @@ import { TaskContext } from '../scheduled-task';
 import { TaskRegistry } from 'src/task-registry';
 
 describe('BackgroundScheduledTask', function() {
+  this.timeout(10000);
+
   it('builds with default values', function(){
     const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
 
@@ -75,7 +77,7 @@ describe('BackgroundScheduledTask', function() {
         resolve(event);
       })
     });
-    task.start();
+    await task.start();
     const event = await eventCaught;
     assert.isDefined(event?.date)
     assert.isDefined(event?.triggeredAt)
@@ -115,6 +117,7 @@ describe('BackgroundScheduledTask', function() {
         resolve(event);
       })
     });
+    await task.start();
     await task.destroy();
     const event = await eventCaught;
     assert.isDefined(event?.date)
@@ -128,6 +131,7 @@ describe('BackgroundScheduledTask', function() {
         resolve(event);
       })
     });
+
     await task.start();
     const event = await eventCaught;
     assert.isDefined(event?.date)
@@ -185,7 +189,7 @@ describe('BackgroundScheduledTask', function() {
         resolve(event);
       })
     });
-    task.start();
+    await task.start();
     const event = await eventCaught;
     assert.isDefined(event?.date)
     assert.isDefined(event?.triggeredAt)

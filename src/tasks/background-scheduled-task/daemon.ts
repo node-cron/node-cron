@@ -5,7 +5,7 @@ import { ScheduledTask, TaskContext, TaskEvent } from "../scheduled-task";
 export async function startDaemon(message: any): Promise<ScheduledTask> {
     const script = await import(message.path);
 
-    const task = new InlineScheduledTask(message.cron, script.task,  message.options);
+    const task = new InlineScheduledTask(message.cron, script.task, message.options);
 
     task.on('task:started', (context => sendEvent('task:started', context)));
 
@@ -22,6 +22,8 @@ export async function startDaemon(message: any): Promise<ScheduledTask> {
     task.on('execution:missed', (context => sendEvent('execution:missed', context)));
 
     task.on('execution:overlap', (context => sendEvent('execution:overlap', context)));
+
+    task.on('execution:maxReached', (context => sendEvent('execution:maxReached', context)));
 
     if (process.send) process.send({ event: 'daemon:started' });
     

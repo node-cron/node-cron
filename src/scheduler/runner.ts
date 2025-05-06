@@ -21,17 +21,20 @@ function defaultOnError(date: Date, error: Error){
 export type RunnerOptions = {
   noOverlap?: boolean,
   timezone?: string,
+  maxExecutions?: number,
   onMissedExecution?: OnFn,
   onOverlap?: OnFn,
   onError?: OnErrorHookFn
   onFinished?: OnHookFn;
   beforeRun?: OnHookFn
+  onMaxExecutions?: OnFn
 }
 
 export class Runner {
   timeMatcher: TimeMatcher;
   onMatch: OnMatch;
   noOverlap: boolean;
+  maxExecutions?: number;
   runCount: number;
 
   running: boolean;
@@ -42,11 +45,13 @@ export class Runner {
   onError: OnErrorHookFn;
   beforeRun: OnHookFn;
   onFinished: OnHookFn;
+  onMaxExecutions: OnFn;
 
   constructor(timeMatcher: TimeMatcher, onMatch: OnMatch, options?: RunnerOptions){
       this.timeMatcher = timeMatcher;
       this.onMatch = onMatch;
       this.noOverlap = options == undefined || options.noOverlap === undefined ? false : options.noOverlap;
+      this.maxExecutions = options?.maxExecutions;
 
       this.onMissedExecution = options?.onMissedExecution || emptyOnFn;
       this.onOverlap = options?.onOverlap || emptyOnFn;
@@ -54,6 +59,8 @@ export class Runner {
       this.onError = options?.onError || defaultOnError;
       this.onFinished = options?.onFinished || emptyHookFn;
       this.beforeRun = options?.beforeRun || emptyHookFn;
+
+      this.onMaxExecutions = options?.onMaxExecutions || emptyOnFn;
 
       this.runCount = 0;
       this.running = false;
@@ -77,6 +84,7 @@ export class Runner {
           id: createID('exec'),
           reason: 'scheduled'
         }
+
         try {
           if(this.timeMatcher.match(date)){
             const shouldExecute = await this.beforeRun(date, execution);
@@ -87,7 +95,12 @@ export class Runner {
               execution.finishedAt = new Date();
               execution.result = result;
               this.onFinished(date, execution);
+
+              if( this.maxExecutions && this.runCount >= this.maxExecutions){
+                this.onMaxExecutions(date);
+                this.stop();
               }
+            }
           }
           resolve(true);
         } catch (error: any){
@@ -109,8 +122,6 @@ export class Runner {
           expectedNextExecution = this.timeMatcher.getNextMatch(expectedNextExecution);
           runAsync(this.onMissedExecution, expectedNextExecution, defaultOnError);
         }
-        // expectedNextExecution = this.timeMatcher.getNextMatch(currentDate);
-        // return;
       }
 
       // overlap prevention
