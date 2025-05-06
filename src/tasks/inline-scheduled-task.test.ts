@@ -179,6 +179,23 @@ describe('InlineScheduledTask', function() {
     assert.isDefined(event?.triggeredAt)
     task.destroy();
   }).timeout(5000);
+
+  it('emmits execution:maxReached', async function(){
+    const task = new InlineScheduledTask('* * * * * *', async ()=> {  return "task result" }, { maxExecutions: 1 });
+    const eventCaught = new Promise<TaskContext>(resolve => {
+      task.on('execution:maxReached', (event)=> {
+        resolve(event);
+      })
+    });
+    task.start();
+
+    await new Promise(resolve => { setTimeout(resolve, 1000)});
+
+    const event = await eventCaught;
+    assert.isDefined(event?.date)
+    assert.isDefined(event?.triggeredAt)
+    task.destroy();
+  }).timeout(5000);
 });
 
 function blockIO(ms: number) {

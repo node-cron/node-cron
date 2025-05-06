@@ -18,7 +18,15 @@ describe('BackgroundScheduledTask', function() {
   it('starts', async function(){
     const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
     await task.start();
-    // assert.equal(task.getStatus(), 'idle');
+    assert.equal(task.getStatus(), 'idle');
+    await task.destroy();
+  });
+
+  it('calls starts twice', async function(){
+    const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+    await task.start();
+    await task.start();
+    assert.equal(task.getStatus(), 'idle');
     await task.destroy();
   });
 
@@ -127,7 +135,7 @@ describe('BackgroundScheduledTask', function() {
   it('emmits execution:started', async function(){
     const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
     const eventCaught = new Promise<TaskContext>(resolve => {
-      task.on('execution:started', (event)=> {
+      task.on('execution:43', (event)=> {
         resolve(event);
       })
     });
@@ -200,6 +208,21 @@ describe('BackgroundScheduledTask', function() {
     const task = new BackgroundScheduledTask('* * * * * *', './test-assets/blocking-task.js');
     const eventCaught = new Promise<TaskContext>(resolve => {
       task.on('execution:missed', (event)=> {
+        resolve(event);
+      })
+    });
+    await task.start();
+
+    const event = await eventCaught;
+    assert.isDefined(event?.date)
+    assert.isDefined(event?.triggeredAt)
+    await task.destroy();
+  }).timeout(10000);
+
+  it('emmits execution:maxReached', async function(){
+    const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { maxExecutions: 1});
+    const eventCaught = new Promise<TaskContext>(resolve => {
+      task.on('execution:maxReached', (event)=> {
         resolve(event);
       })
     });
