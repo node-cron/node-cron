@@ -44,7 +44,6 @@ function serializeError(err: Error) {
     name:    err.name,
     message: err.message,
     stack:   err.stack,
-    // copy any other own properties:
     ...Object.getOwnPropertyNames(err)
       .filter(k => !['name','message','stack'].includes(k))
       .reduce((acc, k) => {

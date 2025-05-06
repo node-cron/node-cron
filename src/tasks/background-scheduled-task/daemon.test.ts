@@ -235,10 +235,11 @@ describe('daemon - register', function () {
     
     const executeMessage = { command: 'task:execute' };
     await onMessage.fn(executeMessage);
-    
-    const failedEvent = messages.find(m => m.event === 'execution:failed');
+
+    const failedEvent = messages.find(m => m.event === 'execution:failed');    
     assert.isDefined(failedEvent, 'execution:failed event should be sent');
     assert.isDefined(failedEvent.jsonError, 'error should be serialized');
+    assert.equal(JSON.parse(failedEvent.jsonError).extra, 'extra');
     task.destroy();
   }).timeout(10000);
 });

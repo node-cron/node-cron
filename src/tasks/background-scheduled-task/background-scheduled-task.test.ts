@@ -45,6 +45,17 @@ describe('BackgroundScheduledTask', function() {
     await task.destroy();
   });
 
+  it('fails on execute stopped task', async function(){
+    const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+    try{
+      await task.execute();
+      assert.fail('shoud fail before');
+    } catch(error: any){
+      assert.equal(error.message, 'Cannot execute background task because it hasn\'t been started yet. Please initialize the task using the start() method before attempting to execute it.')
+    }
+    await task.destroy();
+  });
+
   it('executes and fails', async function(){
     const task = new BackgroundScheduledTask('* * * * * *', './test-assets/failing-task.js');
     try{
@@ -84,6 +95,17 @@ describe('BackgroundScheduledTask', function() {
     assert.isDefined(event?.date)
     assert.isDefined(event?.triggeredAt)
     task.destroy();
+  });
+
+  it('does not fail on stop stopped task', async function(){
+    const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+    try{
+      const result = await task.stop();
+      assert.isUndefined(result);
+    } catch(error: any){
+      assert.fail('it should work');
+    }
+    await task.destroy();
   });
 
   it('emmits task:destroyed', async function(){
@@ -144,12 +166,15 @@ describe('BackgroundScheduledTask', function() {
     await task.start();
     const event = await eventCaught;
 
+    const err: any = event?.execution?.error;
+
     assert.isDefined(event?.date)
     assert.isDefined(event?.triggeredAt)
     assert.isDefined(event?.execution)
     assert.isDefined(event?.execution.id)
     assert.isUndefined(event?.execution.result)
-    assert.isDefined(event?.execution.error)
+    assert.isDefined(err)
+    assert.equal(err.extra, 'extra');
     await task.destroy();
   }).timeout(10000);
 

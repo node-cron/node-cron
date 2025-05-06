@@ -70,4 +70,8 @@ function solvePath(filePath: string): string {
   throw new Error(`Could not locate task file ${path}`);
 }
 
-export default { schedule, validate, getTasks, getTaskRegistry };
+export function validateExpression(expression: string){
+  return validate(expression);
+}
+
+export default { schedule, getTasks, getTaskRegistry };
