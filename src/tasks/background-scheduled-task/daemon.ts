@@ -105,9 +105,8 @@ export function bind(){
         if (task) await task.execute();
       } catch(error: any){
         logger.debug('Daemon task:execute falied:', error);
-      } finally {
-        return task;
       }
+      return task;
     }
   });
 }

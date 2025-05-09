@@ -7,7 +7,7 @@ import { EventEmitter } from 'stream';
 import { StateMachine } from '../state-machine';
 import { LocalizedTime } from '../../time/localized-time';
 import logger from '../../logger';
-import { TimeMatcher } from 'src/time/time-matcher';
+import { TimeMatcher } from '../../time/time-matcher';
 
 const daemonPath = resolvePath(__dirname, 'daemon.js');
 

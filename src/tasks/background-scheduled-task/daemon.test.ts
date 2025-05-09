@@ -3,7 +3,7 @@ import { bind } from './daemon';
 
 describe('daemon - register', function () {
   let messages: any[] = [];
-  let listeners: any[] = [];
+  const listeners: any[] = [];
 
   beforeEach(() => {
     process.send = (message: any) => {
@@ -246,6 +246,5 @@ describe('daemon - register', function () {
 
 function blockIO(ms: number) {
   const start = Date.now();
-  while (Date.now() - start < ms) {
-  }
+  while (Date.now() - start < ms);
 }

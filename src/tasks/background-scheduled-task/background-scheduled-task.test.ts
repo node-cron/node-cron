@@ -4,14 +4,12 @@ import sinon from 'sinon';
 import BackgroundScheduledTask from "./background-scheduled-task";
 
 import { EventEmitter } from 'stream';
-import { equal } from 'assert';
 
 
 describe('BackgroundScheduledTask', function() {
   this.timeout(10000);
   
   let fakeChildProcess: EventEmitter & { send: sinon.SinonStub; kill: sinon.SinonStub };
-  let forkStub: sinon.SinonStub;
 
   beforeEach(() => {
     fakeChildProcess = Object.assign(new EventEmitter(), {
@@ -20,7 +18,8 @@ describe('BackgroundScheduledTask', function() {
       killed: false
     });
 
-    forkStub = sinon.stub(require('child_process'), 'fork').returns(fakeChildProcess as any);
+    // eslint-disable-next-line
+    sinon.stub(require('child_process'), 'fork').returns(fakeChildProcess as any);
   });
 
   afterEach(() => {
@@ -249,7 +248,7 @@ describe('BackgroundScheduledTask', function() {
       try {
         await task.execute();
       } catch(error: any){
-        assert.equal(error.message, "Cannot execute background task because it hasn\'t been started yet. Please initialize the task using the start() method before attempting to execute it.")
+        assert.equal(error.message, "Cannot execute background task because it hasn't been started yet. Please initialize the task using the start() method before attempting to execute it.")
       }
     });
 
@@ -284,7 +283,7 @@ describe('BackgroundScheduledTask', function() {
       await task.start();
       
       try{
-      const result = await task.execute();
+      await task.execute();
       } catch(error: any){
         assert.equal(error.message, 'task error');
       }

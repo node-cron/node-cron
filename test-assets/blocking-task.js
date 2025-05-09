@@ -5,6 +5,5 @@ export async function task() {
 
 function blockIO(ms) {
   const start = Date.now();
-  while (Date.now() - start < ms) {
-  }
+  while (Date.now() - start < ms);
 }

@@ -58,7 +58,7 @@ describe('InlineScheduledTask', function() {
   it('executes and fails', async function(){
     const task = new InlineScheduledTask('* * * * * *', async ()=> { throw new Error("task error") });
     try{
-      const result = await task.execute();
+      await task.execute();
       assert.fail('should fail before')
     } catch(error: any){
       assert.equal(error.message, 'task error')
@@ -213,6 +213,5 @@ describe('InlineScheduledTask', function() {
 
 function blockIO(ms: number) {
   const start = Date.now();
-  while (Date.now() - start < ms) {
-  }
+  while (Date.now() - start < ms);
 }

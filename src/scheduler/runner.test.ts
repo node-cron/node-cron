@@ -1,9 +1,8 @@
 import {assert} from 'chai';
 import { Runner, RunnerOptions } from './runner';
-import { TimeMatcher } from 'src/time/time-matcher';
-import { Execution } from 'src/tasks/scheduled-task';
+import { TimeMatcher } from '../time/time-matcher';
 
-import logger from 'src/logger';
+import logger from '../logger';
 
 describe('scheduler/runner', function(){
   it('starts running',  async function(){
@@ -115,7 +114,7 @@ describe('scheduler/runner', function(){
     const runner =  new Runner(timeMatcher, async ()=> {
       return 'task finished';
     }, {
-      beforeRun(date: Date){
+      beforeRun(){
         boforeCalled = true;
         return false;
       }
@@ -148,7 +147,7 @@ describe('scheduler/runner', function(){
 
   it('does not break if onError was not set',  async function(){
     const preError = logger.error;
-    const errorCaught = new Promise<Error>(resolve => {
+    new Promise<Error>(resolve => {
       const timeMatcher = new TimeMatcher('* * * * * *');
       const runner =  new Runner(timeMatcher, async ()=> {
         throw new Error('task failed');
@@ -179,7 +178,6 @@ describe('scheduler/runner', function(){
 
   it('prevents overlap', function(done){
     const timeMatcher = new TimeMatcher('* * * * * *');
-    let runner: Runner;
 
     const onOverlap = (date: Date) => {
       try{
@@ -192,16 +190,14 @@ describe('scheduler/runner', function(){
       }
     }
 
-    runner = createRunner(timeMatcher, 1200, { noOverlap: true, onOverlap: onOverlap });
+    const runner = createRunner(timeMatcher, 1200, { noOverlap: true, onOverlap: onOverlap });
     runner.start();
 
   }).timeout(5000);
 
   it('prevents overlap without setting an onOverlap function', async function(){
     const timeMatcher = new TimeMatcher('* * * * * *');
-    let runner: Runner;
-
-    runner = createRunner(timeMatcher, 1500, { noOverlap: true });
+    const runner  = createRunner(timeMatcher, 1500, { noOverlap: true });
     runner.start();
     await new Promise(resolve => { setTimeout(resolve, 2000)});
 
@@ -212,9 +208,7 @@ describe('scheduler/runner', function(){
 
   it('when prevents overlap function failing', async function(){
     const timeMatcher = new TimeMatcher('* * * * * *');
-    let runner: Runner;
-
-    runner = createRunner(timeMatcher, 1200, { noOverlap: true, onOverlap: ()=> { throw new Error('fail!')} });
+    const runner = createRunner(timeMatcher, 1200, { noOverlap: true, onOverlap: ()=> { throw new Error('fail!')} });
     runner.start();
     await new Promise(resolve => { setTimeout(resolve, 2000)});
     runner.stop();
@@ -246,8 +240,7 @@ describe('scheduler/runner', function(){
 
 function blockIO(ms: number) {
   const start = Date.now();
-  while (Date.now() - start < ms) {
-  }
+  while (Date.now() - start < ms);
 }
 
 function createRunner(timeMatcher: TimeMatcher, delay: number, options?: RunnerOptions){

@@ -10,14 +10,14 @@ describe('range-conversion', function() {
     });
 
     it('should convert comma delimited ranges to numbers', function() {
-        var expressions = '0-2,10-23'.split(' ');
-        var expression = conversion(expressions).join(' ');
+        const expressions = '0-2,10-23'.split(' ');
+        const expression = conversion(expressions).join(' ');
         expect(expression).to.equal('0,1,2,10,11,12,13,14,15,16,17,18,19,20,21,22,23');
     });
 
     it('should convert comma delimited ranges to numbers with step', function() {
-      var expressions = '0-10/2 11-21/2'.split(' ');
-      var expression = conversion(expressions).join(' ');
+      const expressions = '0-10/2 11-21/2'.split(' ');
+      const expression = conversion(expressions).join(' ');
       expect(expression).to.equal('0,2,4,6,8,10 11,13,15,17,19,21');
   });
 });

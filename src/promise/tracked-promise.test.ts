@@ -64,7 +64,7 @@ describe('Tracked Promise', function(){
   });
 
   it('allows use finally', function(done){
-    new TrackedPromise((resolve, reject) => { resolve('promise run') }).finally(() => {
+    new TrackedPromise((resolve) => { resolve('promise run') }).finally(() => {
       done();
     });
   });

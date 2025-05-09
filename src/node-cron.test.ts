@@ -1,5 +1,5 @@
 import { assert }  from 'chai';
-import { useFakeTimers, spy } from 'sinon';
+import { useFakeTimers } from 'sinon';
 import cron from './node-cron';
 
 describe('node-cron', function() {
@@ -32,7 +32,7 @@ describe('node-cron', function() {
         });
         
         it('should schedule a task with America/Sao_Paulo timezone', function(done) {
-            let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
+            const startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
             clock.restore();
             clock = useFakeTimers(startDate);
             const task = cron.schedule('* * * * * *', (event) => {
@@ -53,7 +53,7 @@ describe('node-cron', function() {
         });
         
         it('should schedule a task with Europe/Rome timezone', function(done) {
-            let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
+            const startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
             clock.restore();
             clock = useFakeTimers(startDate);
             const task = cron.schedule('* * * * * *', (event) => {
@@ -67,7 +67,7 @@ describe('node-cron', function() {
         });
         
         it('should schedule a background task', async function() {
-            let task = cron.schedule('* * * * *', '../test-assets/dummy-task');
+            const task = cron.schedule('* * * * *', '../test-assets/dummy-task');
             await wait(1000);
             assert.isNotNull(task);
             assert.isDefined(task);
