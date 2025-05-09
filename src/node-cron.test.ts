@@ -91,6 +91,22 @@ describe('node-cron', function() {
             assert.isTrue(cron.getTaskRegistry().all().length > 0);
         });
     });
+
+    describe('createTask', function(){
+      it('creates a inline task', function(){
+        const task = cron.createTask('* * * * *', ()=>{});
+        assert.isDefined(task);
+        assert.isDefined(task.id);
+        assert.equal(task.getStatus(), 'stopped');
+      });
+
+      it('creates a background task', function(){
+        const task = cron.createTask('* * * * *', '../test-assets/dummy-task');
+        assert.isDefined(task);
+        assert.isDefined(task.id);
+        assert.equal(task.getStatus(), 'stopped');
+      });
+    })
 });
 
 
