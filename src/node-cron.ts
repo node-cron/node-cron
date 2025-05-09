@@ -30,9 +30,7 @@ import path from "path";
  */
 export type Options = {
   name?: string;
-  scheduled?: boolean;
   timezone?: string;
-  runOnScheduling?: boolean;
   noOverlap?: boolean;
   maxExecutions?: number;
 };
@@ -71,24 +69,14 @@ function schedule(expression:string, func: TaskFn | string, options?: Options): 
     }
 
     const task = createTask(expression, func, taskOptions);
-    registry.add(task);
 
-    async function init(){
-      if(options?.scheduled){
-        await task.start();
-  
-        if(options && options.runOnScheduling){
-          await task.execute();
-        }
-      }
-    };
+    task.start();
 
-    init();
     return task;
 }
 
 /**
- * Creates a task instance based on the provided parameters without adding it to the registry.
+ * Creates a task instance based on the provided parameters adding it to the registry.
  * 
  * @param expression - A cron expression that determines when the task executes
  * @param func - Either a function to be executed or a file path to a module containing the task function
@@ -100,13 +88,18 @@ function createTask(expression: string, func: TaskFn | string, options?: Options
     const taskOptions: TaskOptions = {
       timezone: options?.timezone
     }
+
+    let task: ScheduledTask;
     if(func instanceof Function){
-      return new InlineScheduledTask(expression, func, taskOptions);
+      task = new InlineScheduledTask(expression, func, taskOptions);
+    } else {
+      const taskPath = solvePath(func);
+      task = new BackgroundScheduledTask(expression, taskPath, taskOptions);
     }
 
-    const taskPath = solvePath(func);
+    registry.add(task);
 
-    return new BackgroundScheduledTask(expression, taskPath, taskOptions);
+    return task;
 }
 
 /**
@@ -168,6 +161,11 @@ export default {
    * Schedules a task to be executed according to the provided cron expression.
    */
   schedule, 
+
+  /**
+   * Creates a task instance based on the provided parameters.
+   */
+  createTask,
   
   /**
    * Returns the task registry instance that maintains all scheduled tasks.

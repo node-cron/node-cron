@@ -70,6 +70,13 @@ export class InlineScheduledTask implements ScheduledTask {
     }, runnerOptions);
   }
 
+  getNextRun(): Date | null{
+    if ( this.stateMachine.state !== 'stopped'){
+      return this.runner.nextRun();
+    }
+    return null;
+  }
+
   private changeState(state){
     if(this.runner.isStarted()){
       this.stateMachine.changeState(state);

@@ -7,6 +7,7 @@ import { EventEmitter } from 'stream';
 import { StateMachine } from '../state-machine';
 import { LocalizedTime } from '../../time/localized-time';
 import logger from '../../logger';
+import { TimeMatcher } from 'src/time/time-matcher';
 
 const daemonPath = resolvePath(__dirname, 'daemon.js');
 
@@ -42,6 +43,14 @@ class BackgroundScheduledTask implements ScheduledTask{
       this.forkProcess = undefined;
       this.stateMachine.changeState('destroyed');
     });
+  }
+
+  getNextRun(): Date | null {
+    if ( this.stateMachine.state !== 'stopped'){
+      const timeMatcher = new TimeMatcher(this.cronExpression, this.options?.timezone);
+      return timeMatcher.getNextMatch(new Date());
+    }
+    return null;
   }
 
   start(): Promise<void> {
@@ -94,6 +103,7 @@ class BackgroundScheduledTask implements ScheduledTask{
         });
         
         this.once('task:started', () => {
+          this.stateMachine.changeState('idle');
           clearTimeout(timeout);
           resolve(undefined);
         });

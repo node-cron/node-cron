@@ -34,6 +34,25 @@ describe('BackgroundScheduledTask', function() {
       assert.equal(task.getStatus(), 'stopped');
   });
 
+  describe('getNextRun', function(){
+    it('returns next run', async function(){
+      const task = new BackgroundScheduledTask('* * * * *', './test-assets/dummy-task.js');
+      fakeChildProcess.send.callsFake(()=>{
+        task.emitter.emit('task:started');
+      });
+
+      await task.start();
+  
+      const nextMinute = new Date();
+      nextMinute.setMilliseconds(0);
+      nextMinute.setSeconds(0);
+      nextMinute.setMinutes(nextMinute.getMinutes() + 1);
+  
+      assert.equal(task.getNextRun()?.getTime(), nextMinute.getTime());
+      task.destroy();
+    });
+  });
+
   describe('start', () => {
     it('do not fail if already started', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
@@ -139,7 +158,7 @@ describe('BackgroundScheduledTask', function() {
       assert.equal(event.execution?.error.message, 'task failed');
       assert.equal(event.execution?.error.extra, 'extra');
       assert.equal(event.execution?.error.stack, 'fake stack');
-      assert.equal(event.task.stateMachine.state, 'stopped')
+      assert.equal(event.task.stateMachine.state, 'idle')
     });
 
     it('fails on start timeout', async function(){

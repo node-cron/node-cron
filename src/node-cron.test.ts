@@ -30,20 +30,6 @@ describe('node-cron', function() {
             assert.equal(2, executed);
             task.stop();
         });
-
-        it('should schedule a task on start', async function() {
-          let executed = 0;
-          const task = cron.schedule('* * * * *', () => {
-              executed += 1;
-          }, { runOnScheduling: true});
-          
-          clock.tick(1000);
-          // adds a delay after tick
-          await new Promise(r=>{setTimeout(r, 200)})
-
-          assert.equal(1, executed);
-          task.stop();
-      });
         
         it('should schedule a task with America/Sao_Paulo timezone', function(done) {
             let startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
@@ -80,36 +66,6 @@ describe('node-cron', function() {
             task.stop();
         });
         
-        it('should schedule a task stopped', function() {
-            let executed = 0;
-            const task = cron.schedule('* * * * * *', () => {
-                executed += 1;
-            }, { scheduled: false });
-            
-            clock.tick(2000);
-            
-            assert.equal(0, executed);
-            task.stop();
-        });
-        
-        it('should start a stopped task', async function() {
-            let executed = 0;
-            let task = cron.schedule('* * * * * *', () => {
-                executed += 1;
-            }, { scheduled: false });
-            
-            clock.tick(2000);
-            // adds a delay after tick
-            await new Promise(r=>{setTimeout(r, 200)})
-            assert.equal(0, executed);
-            task.start();
-            clock.tick(2000);
-            // adds a delay after tick
-            await new Promise(r=>{setTimeout(r, 200)})
-            assert.equal(2, executed);
-            task.stop();
-        });
-
         it('should schedule a background task', async function() {
             let task = cron.schedule('* * * * *', '../test-assets/dummy-task');
             await wait(1000);

@@ -19,6 +19,19 @@ describe('InlineScheduledTask', function() {
     task.destroy();
   });
 
+  it('returns next run', function(){
+    const task = new InlineScheduledTask('* * * * *', ()=> {});
+    task.start();
+
+    const nextMinute = new Date();
+    nextMinute.setMilliseconds(0);
+    nextMinute.setSeconds(0);
+    nextMinute.setMinutes(nextMinute.getMinutes() + 1);
+
+    assert.equal(task.getNextRun()?.getTime(), nextMinute.getTime());
+    task.destroy();
+  });
+
   it('stops', function(){
     const task = new InlineScheduledTask('* * * * * *', ()=> {});
     task.start();

@@ -57,6 +57,7 @@ export interface ScheduledTask {
   getStatus(): string | Promise<string>;
   destroy(): void | Promise<void>;
   execute(): Promise<any>;
+  getNextRun(): Date | null;
 
   on(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void
   off(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void
