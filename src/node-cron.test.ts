@@ -85,13 +85,6 @@ describe('node-cron', function() {
         });
     });
 
-    describe('getTaskRegistry', function() {
-        it('should store a task', function() {
-            const task = cron.schedule('* * * * *', () => {});
-            assert.isTrue(cron.getTaskRegistry().all().length > 0);
-        });
-    });
-
     describe('createTask', function(){
       it('creates a inline task', function(){
         const task = cron.createTask('* * * * *', ()=>{});

@@ -24,7 +24,6 @@ import path from "path";
  * @property {string} [name] - An optional name for the task, useful for identification and debugging.
  * @property {boolean} [scheduled] - Indicates whether the task should be scheduled. Defaults to `true`.
  * @property {string} [timezone] - Specifies the timezone in which the task should run. Accepts a string in the IANA timezone database format (e.g., "America/New_York").
- * @property {boolean} [runOnScheduling] - If `true`, the task will execute immediately upon creation. Defaults to `false`.
  * @property {boolean} [noOverlap] - Ensures that the task does not run concurrently with itself.Defaults to `false`.
  * @property {number} [maxExecutions] - Specifies the maximum number of times the task should execute. If not provided, the task will run indefinitely.
  */
@@ -103,15 +102,6 @@ function createTask(expression: string, func: TaskFn | string, options?: Options
 }
 
 /**
- * Returns the task registry instance that maintains all scheduled tasks.
- * 
- * @returns The task registry instance
- */
-function getTaskRegistry(): TaskRegistry{
-  return registry;
-}
-
-/**
  * Resolves a relative file path to an absolute path based on the caller's location.
  * 
  * @param filePath - The path to the task file, can be absolute or relative
@@ -166,11 +156,6 @@ export default {
    * Creates a task instance based on the provided parameters.
    */
   createTask,
-  
-  /**
-   * Returns the task registry instance that maintains all scheduled tasks.
-   */
-  getTaskRegistry,
 
   /**
    * Validates a cron expression to ensure it follows the correct format.
