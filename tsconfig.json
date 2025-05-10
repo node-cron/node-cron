@@ -6,7 +6,7 @@
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
     "declaration": true,
-    "rootDirs": ["src"],
+    "rootDir": "src",
     "outDir": "dist",
     "importHelpers": false,
     "sourceMap": true,

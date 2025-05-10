@@ -8,7 +8,6 @@
  * @module node-cron
  */
 
-
 import { InlineScheduledTask } from "./tasks/inline-scheduled-task";
 import { ScheduledTask, TaskFn, TaskOptions } from "./tasks/scheduled-task";
 import { TaskRegistry } from "./task-registry";
@@ -17,6 +16,12 @@ import validation from "./pattern/validation/pattern-validation";
 import BackgroundScheduledTask from "./tasks/background-scheduled-task/background-scheduled-task";
 
 import path from "path";
+
+export interface NodeCron {
+  schedule: typeof schedule;
+  createTask: typeof createTask;
+  validate: typeof validate;
+}
 
 /**
  * Represents the configuration options for a scheduled task.
@@ -143,22 +148,16 @@ function validate(expression: string): boolean {
   }
 }
 
+export { ScheduledTask } from './tasks/scheduled-task';
+export type { TaskFn, TaskContext, TaskOptions } from './tasks/scheduled-task';
+
+const nodeCron: NodeCron = {
+  schedule,
+  createTask,
+  validate
+};
+
 /**
  * Default export containing the main functions of the module.
  */
-export default { 
-  /**
-   * Schedules a task to be executed according to the provided cron expression.
-   */
-  schedule, 
-
-  /**
-   * Creates a task instance based on the provided parameters.
-   */
-  createTask,
-
-  /**
-   * Validates a cron expression to ensure it follows the correct format.
-   */
-  validate
-};
+export default nodeCron;

@@ -11,7 +11,8 @@
   "exports": {
     ".": {
       "import": "./node-cron.mjs",
-      "require": "./node-cron.cjs"
+      "require": "./node-cron.cjs",
+      "types": "./dist/node-cron.d.ts"
     }
   },
   "scripts": {
