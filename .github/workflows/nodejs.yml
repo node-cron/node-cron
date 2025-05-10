@@ -23,8 +23,11 @@ jobs:
     - name: Installl dependencies
       run: npm install
 
+    - name: Lint
+      run: npm run lint
+
     - name: Tests
-      run: npm test
+      run: npm run test
 
     - name: Coveralls
       uses: coverallsapp/github-action@master
