@@ -202,10 +202,20 @@ async function runAsync(fn: OnFn, date: Date, onError: OnErrorFn){
 }
 
 function getDelay(timeMatcher: TimeMatcher, currentDate: Date) {
+  const maxDelay = 86400000;
   const nextRun = timeMatcher.getNextMatch(currentDate);
   // must use now for calculating the delay, it avoids miliseconds addition to the timeout.
   const now = new Date();
   const delay = nextRun.getTime() - now.getTime();
+
+  // If the calculated delay exceeds the safe range for setTimeout (max ~24.85 days),
+  // it may trigger a TimeoutOverflowWarning and fallback to a delay of 1 ms.
+  // To avoid this, we cap the delay to 1 day (86,400,000 ms), which ensures a daily heartbeat.
+  // This allows the time checker to re-evaluate pending executions and reschedule accordingly.
+  if (delay > maxDelay) {
+    return maxDelay;
+  }
+
   return Math.max(0, delay);
 }
 

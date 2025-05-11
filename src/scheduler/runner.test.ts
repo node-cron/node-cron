@@ -236,6 +236,19 @@ describe('scheduler/runner', function(){
     assert.equal(missedCount, 1)
 
   }).timeout(10000);
+
+  it('sets a max delay on heartbeat', function(){
+    const timeMatcher = new TimeMatcher('0 0 1 1 *');
+    const runner = createRunner(timeMatcher, 1000);
+    runner.start();
+
+    const timeout: any = runner.heartBeatTimeout;
+    
+    assert.equal(timeout._idleTimeout, 86400000);
+
+    runner.stop();
+  }).timeout(5000);
+
 });
 
 function blockIO(ms: number) {
