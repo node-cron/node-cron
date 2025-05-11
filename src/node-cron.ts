@@ -115,14 +115,15 @@ function solvePath(filePath: string): string {
   if(stackLines){
     stackLines?.shift();
     const callerLine = stackLines?.find((line) => { return line.indexOf(__filename) === -1; });
-    const match = callerLine?.match(/\((.*):\d+:\d+\)/);
+    const match = callerLine?.match(/(file:\/\/|)(\/.+):\d+:\d+/);
+   
     if (match) {
-      const dir = path.dirname(match[1]);
+      const dir = path.dirname(match[2]);
       return path.resolve(dir, filePath);
     }
   }
 
-  throw new Error(`Could not locate task file ${path}`);
+  throw new Error(`Could not locate task file ${filePath}`);
 }
 
 /**

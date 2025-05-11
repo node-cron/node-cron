@@ -67,7 +67,7 @@ describe('node-cron', function() {
         });
         
         it('should schedule a background task', async function() {
-            const task = cron.schedule('* * * * *', '../test-assets/dummy-task');
+            const task = cron.schedule('* * * * *', '../test-assets/dummy-task.js');
             await wait(1000);
             assert.isNotNull(task);
             assert.isDefined(task);
@@ -94,7 +94,7 @@ describe('node-cron', function() {
       });
 
       it('creates a background task', function(){
-        const task = cron.createTask('* * * * *', '../test-assets/dummy-task');
+        const task = cron.createTask('* * * * *', '../test-assets/dummy-task.js');
         assert.isDefined(task);
         assert.isDefined(task.id);
         assert.equal(task.getStatus(), 'stopped');
