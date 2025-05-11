@@ -5,30 +5,35 @@
   "author": "Lucas Merencia",
   "license": "ISC",
   "homepage": "https://github.com/merencia/node-cron",
-  "main": "node-cron",
-  "types": "./dist/node-cron.d.ts",
+  "main": "./dist/cjs/node-cron.js",
+  "module": "./dist/esm/node-cron.js",
   "type": "commonjs",
   "exports": {
     ".": {
-      "import": "./node-cron.mjs",
-      "require": "./node-cron.cjs",
-      "types": "./dist/node-cron.d.ts"
+      "require": {
+        "types": "./dist/cjs/node-cron.d.ts",
+        "default":  "./dist/cjs/node-cron.js"
+      },
+      "import": {
+      "types": "./dist/esm/node-cron.d.ts",
+        "default":  "./dist/esm/node-cron.js"
+      }
     }
   },
   "scripts": {
     "test": "c8 --reporter text --reporter=lcov --exclude '**/*.test.ts' mocha --recursive './src/**/*.test.ts'",
     "lint": "./node_modules/.bin/eslint ./src",
     "check": "npm run lint && npm test",
-    "build": "tsc",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build": "npm run build:esm; npm run build:cjs",
     "prepublishOnly": "npm run build"
   },
   "engines": {
     "node": ">=6.0.0"
   },
   "files": [
-    "dist/",
-    "node-cron.cjs",
-    "node-cron.mjs"
+    "dist/"
   ],
   "repository": {
     "type": "git",

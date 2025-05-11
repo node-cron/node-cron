@@ -17,12 +17,6 @@ import BackgroundScheduledTask from "./tasks/background-scheduled-task/backgroun
 
 import path from "path";
 
-export interface NodeCron {
-  schedule: typeof schedule;
-  createTask: typeof createTask;
-  validate: typeof validate;
-}
-
 /**
  * Represents the configuration options for a scheduled task.
  *
@@ -62,7 +56,7 @@ const registry = new TaskRegistry();
  * // Schedule background task by providing a separate file to run daily with a specific timezone
  * const dailyTask = schedule('0 0 * * *', './tasks/daily-backup.js', { timezone: 'America/New_York' });
  */
-function schedule(expression:string, func: TaskFn | string, options?: Options): ScheduledTask {
+export function schedule(expression:string, func: TaskFn | string, options?: Options): ScheduledTask {
     options = Object.assign({ scheduled: true }, options);
 
     const taskOptions: TaskOptions = {
@@ -88,7 +82,7 @@ function schedule(expression:string, func: TaskFn | string, options?: Options): 
  * @returns A task instance of the appropriate type (inline or background)
  * @private
  */
-function createTask(expression: string, func: TaskFn | string, options?: Options): ScheduledTask {
+export function createTask(expression: string, func: TaskFn | string, options?: Options): ScheduledTask {
     const taskOptions: TaskOptions = {
       timezone: options?.timezone
     }
@@ -137,7 +131,7 @@ function solvePath(filePath: string): string {
  * @param expression - The cron expression to validate
  * @returns `true` if the expression is valid, `false` otherwise
  */
-function validate(expression: string): boolean {
+export function validate(expression: string): boolean {
   try {
       validation(expression);
 
@@ -151,7 +145,13 @@ function validate(expression: string): boolean {
 export { ScheduledTask } from './tasks/scheduled-task';
 export type { TaskFn, TaskContext, TaskOptions } from './tasks/scheduled-task';
 
-const nodeCron: NodeCron = {
+export interface NodeCron {
+  schedule: typeof schedule;
+  createTask: typeof createTask;
+  validate: typeof validate;
+}
+
+export const nodeCron: NodeCron = {
   schedule,
   createTask,
   validate

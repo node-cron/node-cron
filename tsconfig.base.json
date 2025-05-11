@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "declaration": true,
+    "rootDir": "src",
+    "importHelpers": false,
+    "sourceMap": true,
+    "removeComments": true,
+    "skipLibCheck": true,
+    "noImplicitAny": false,
+    "target": "ES2022",
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "**/*.test.ts"]
+}

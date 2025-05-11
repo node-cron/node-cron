@@ -1,18 +1,1 @@
-{
-  "extends": "@tsconfig/recommended/tsconfig.json",
-  "compilerOptions": {
-    "strict": true,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node",
-    "declaration": true,
-    "rootDir": "src",
-    "outDir": "dist",
-    "importHelpers": false,
-    "sourceMap": true,
-    "baseUrl": ".",
-    "noImplicitAny": false,
-  },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules"]
-}
+{ "extends": "./tsconfig.esm.json" }
