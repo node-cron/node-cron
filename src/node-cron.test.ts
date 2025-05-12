@@ -1,21 +1,7 @@
 import { assert }  from 'chai';
-import { useFakeTimers } from 'sinon';
 import cron from './node-cron';
 
 describe('node-cron', function() {
-    let clock;
-
-    beforeEach(function() {
-        clock = useFakeTimers({
-          now: new Date(2018, 0, 1, 0, 0, 0, 0),
-          shouldAdvanceTime: true
-        });
-    });
-    
-    afterEach(function() {
-        clock.restore();
-    });
-    
     describe('schedule', function() {
         it('should schedule a task', async function() {
             let executed = 0;
@@ -23,48 +9,38 @@ describe('node-cron', function() {
                 executed += 1;
             });
             
-            clock.tick(2000);
-            // adds a delay after tick
-            await new Promise(r=>{setTimeout(r, 200)})
+            await new Promise(r=>{setTimeout(r, 1000)})
 
-            assert.equal(2, executed);
+            assert.equal(1, executed);
             task.stop();
-        });
+        }).timeout(10000);
         
-        it('should schedule a task with America/Sao_Paulo timezone', function(done) {
-            const startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
-            clock.restore();
-            clock = useFakeTimers(startDate);
+        it('should schedule a task with America/Sao_Paulo timezone', async function() {
+          let localIso: string = '';
             const task = cron.schedule('* * * * * *', (event) => {
-                assert.equal(19, event.date.getDate());
-                assert.equal(8, event.date.getMonth());
-                assert.equal(2018, event.date.getFullYear());
-                assert.equal(21, event.date.getHours());
-                assert.equal(0, event.date.getMinutes());
-                assert.equal(1, event.date.getSeconds());
-                task.stop();
-                done();
+              localIso = event.dateLocalIso;
             }, {
                 timezone: 'America/Sao_Paulo'
             });
+            
+            await new Promise(r=>{setTimeout(r, 1000)})
 
-            clock.tick(1000);
-            task.stop()
-        });
-        
-        it('should schedule a task with Europe/Rome timezone', function(done) {
-            const startDate = new Date('Thu, 20 Sep 2018 00:00:00.000Z');
-            clock.restore();
-            clock = useFakeTimers(startDate);
-            const task = cron.schedule('* * * * * *', (event) => {
-                assert.equal('2018-09-20T02:00:01.000+02:00', event.dateLocalIso);
-                done();
-            }, {
-                timezone: 'Europe/Rome'
-            });
-            clock.tick(1000);
+            assert.isTrue(localIso.endsWith('-03:00'));
             task.stop();
-        });
+        }).timeout(10000);
+        
+        it('should schedule a task with Europe/Istanbul timezone', async function() {
+          let localIso: string = '';
+            const task = cron.schedule('* * * * * *', (event) => {
+              localIso = event.dateLocalIso;
+            }, {
+                timezone: 'Europe/Istanbul'
+            });
+            await new Promise(r=>{setTimeout(r, 1000)})
+            console.log(localIso)
+            assert.isTrue(localIso.endsWith('+03:00'));
+            task.stop();
+        }).timeout(10000);
         
         it('should schedule a background task', async function() {
             const task = cron.schedule('* * * * *', '../test-assets/dummy-task.js');

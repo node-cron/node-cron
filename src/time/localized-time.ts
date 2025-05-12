@@ -82,6 +82,20 @@ function buidDateParts(date: Date, timezone?: string): DateParts {
     second: parseInt(parts.second),
     milisecond: date.getMilliseconds(),
     weekday: parts.weekday,
-    gmt: parts.timeZoneName
+    gmt: getTimezoneGMT(date, timezone)
   }
+}
+
+
+function getTimezoneGMT(date: Date, timezone?: string) {
+  const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
+  const tzDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
+  let offsetInMinutes = (utcDate.getTime() - tzDate.getTime()) / 60000;
+  const sign = offsetInMinutes <= 0 ? '+' : '-';
+  offsetInMinutes = Math.abs(offsetInMinutes);
+  if(offsetInMinutes === 0) return 'Z';
+  const hours = Math.floor(offsetInMinutes / 60).toString().padStart(2, '0');
+  const minutes = Math.floor(offsetInMinutes % 60).toString().padStart(2, '0');
+  
+  return `GMT${sign}${hours}:${minutes}`;
 }
