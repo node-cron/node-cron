@@ -1,3 +1,5 @@
+import crypto from 'node:crypto';
+
 export function createID(prefix: string = '', length: number = 16): string {
   const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const values = new Uint8Array(length);
