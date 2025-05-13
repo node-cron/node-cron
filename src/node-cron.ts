@@ -57,8 +57,6 @@ const registry = new TaskRegistry();
  * const dailyTask = schedule('0 0 * * *', './tasks/daily-backup.js', { timezone: 'America/New_York' });
  */
 export function schedule(expression:string, func: TaskFn | string, options?: Options): ScheduledTask {
-    options = Object.assign({ scheduled: true }, options);
-
     const taskOptions: TaskOptions = {
       name: options?.name,
       timezone: options?.timezone,
