@@ -8,9 +8,9 @@
  * @module node-cron
  */
 
-import { InlineScheduledTask } from "./tasks/inline-scheduled-task";
-import { ScheduledTask, TaskFn, TaskOptions } from "./tasks/scheduled-task";
-import { TaskRegistry } from "./task-registry";
+import {InlineScheduledTask} from "./tasks/inline-scheduled-task";
+import {ScheduledTask, TaskFn, TaskOptions} from "./tasks/scheduled-task";
+import {TaskRegistry} from "./task-registry";
 
 import validation from "./pattern/validation/pattern-validation";
 import BackgroundScheduledTask from "./tasks/background-scheduled-task/background-scheduled-task";
@@ -28,6 +28,7 @@ import path from "path";
  */
 export type Options = {
   name?: string;
+  scheduled?: boolean;
   timezone?: string;
   noOverlap?: boolean;
   maxExecutions?: number;
