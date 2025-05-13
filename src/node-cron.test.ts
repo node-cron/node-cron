@@ -1,5 +1,6 @@
 import { assert }  from 'chai';
 import cron from './node-cron';
+import { InlineScheduledTask } from './tasks/inline-scheduled-task';
 
 describe('node-cron', function() {
     describe('schedule', function() {
@@ -14,7 +15,22 @@ describe('node-cron', function() {
             assert.equal(1, executed);
             task.stop();
         }).timeout(10000);
-        
+
+        it('should schedule an inline task with name', function() {
+            const task = cron.schedule(
+                '* * * * *',
+                () => {},
+                { name: 'Dummy Task' },
+            ) as InlineScheduledTask;
+
+            assert.isDefined(task);
+            assert.instanceOf(task, InlineScheduledTask);
+            assert.isDefined(task.name);
+            assert.equal(task.name, 'Dummy Task');
+
+            task.stop();
+        }).timeout(10000);
+
         it('should schedule a task with America/Sao_Paulo timezone', async function() {
           let localIso: string = '';
             const task = cron.schedule('* * * * * *', (event) => {
@@ -39,6 +55,36 @@ describe('node-cron', function() {
             await new Promise(r=>{setTimeout(r, 1000)})
             console.log(localIso)
             assert.isTrue(localIso.endsWith('+03:00'));
+            task.stop();
+        }).timeout(10000);
+
+        it('should schedule a task with noOverlap option', function() {
+            const task = cron.schedule(
+                '* * * * * *',
+                () => {},
+                { noOverlap: true },
+            );
+
+            assert.isDefined(task);
+            assert.instanceOf(task, InlineScheduledTask);
+            assert.isDefined(task.runner.noOverlap);
+            assert.isTrue(task.runner.noOverlap);
+
+            task.stop();
+        }).timeout(10000);
+
+        it('should schedule a task with maxExecutions option', function() {
+            const task = cron.schedule(
+                '* * * * * *',
+                () => {},
+                { maxExecutions: 5 },
+            );
+
+            assert.isDefined(task);
+            assert.instanceOf(task, InlineScheduledTask);
+            assert.isDefined(task.runner.maxExecutions);
+            assert.equal(task.runner.maxExecutions, 5);
+
             task.stop();
         }).timeout(10000);
         
@@ -67,6 +113,62 @@ describe('node-cron', function() {
         assert.isDefined(task);
         assert.isDefined(task.id);
         assert.equal(task.getStatus(), 'stopped');
+      });
+
+      it('creates an inline task with name', function() {
+        const task = cron.createTask(
+          '* * * * *',
+          () => {},
+          { name: 'Dummy Task' },
+        );
+
+        assert.isDefined(task);
+        assert.instanceOf(task, InlineScheduledTask);
+        assert.equal(task.getStatus(), 'stopped');
+        assert.isDefined(task.name);
+        assert.equal(task.name, 'Dummy Task');
+      });
+
+      it('creates an inline task with America/Sao_Paulo timezone', function() {
+        const task = cron.createTask(
+          '* * * * *',
+          () => {},
+          { timezone: 'America/Sao_Paulo' },
+        ) as InlineScheduledTask;
+
+        assert.isDefined(task);
+        assert.instanceOf(task, InlineScheduledTask);
+        assert.equal(task.getStatus(), 'stopped');
+        assert.isDefined(task.timezone);
+        assert.equal(task.timezone, 'America/Sao_Paulo');
+      });
+
+      it('creates an inline task with noOverlap option', function() {
+        const task = cron.createTask(
+          '* * * * *',
+          () => {},
+          { noOverlap: true },
+        ) as InlineScheduledTask;
+
+        assert.isDefined(task);
+        assert.instanceOf(task, InlineScheduledTask);
+        assert.equal(task.getStatus(), 'stopped');
+        assert.isDefined(task.runner.noOverlap);
+        assert.isTrue(task.runner.noOverlap);
+      });
+
+      it('creates an inline task with maxExecutions option', function() {
+        const task = cron.createTask(
+          '* * * * *',
+          () => {},
+          { maxExecutions: 5 },
+        ) as InlineScheduledTask;
+
+        assert.isDefined(task);
+        assert.instanceOf(task, InlineScheduledTask);
+        assert.equal(task.getStatus(), 'stopped');
+        assert.isDefined(task.runner.maxExecutions);
+        assert.equal(task.runner.maxExecutions, 5);
       });
 
       it('creates a background task', function(){

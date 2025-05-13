@@ -84,7 +84,10 @@ export function schedule(expression:string, func: TaskFn | string, options?: Opt
  */
 export function createTask(expression: string, func: TaskFn | string, options?: Options): ScheduledTask {
     const taskOptions: TaskOptions = {
-      timezone: options?.timezone
+      name: options?.name,
+      timezone: options?.timezone,
+      noOverlap: options?.noOverlap,
+      maxExecutions: options?.maxExecutions,
     }
 
     let task: ScheduledTask;
