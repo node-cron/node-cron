@@ -18,7 +18,7 @@ export class LocalizedTime {
   constructor(date: Date, timezone?: string){
     this.timestamp = date.getTime();
     this.timezone = timezone;
-    this.parts = buidDateParts(date, timezone);
+    this.parts = buildDateParts(date, timezone);
   }
 
   toDate(): Date{
@@ -44,11 +44,12 @@ export class LocalizedTime {
     this.parts[field] = value;
     const newDate = new Date(this.toISO());
     this.timestamp = newDate.getTime();
-    this.parts = buidDateParts(newDate, this.timezone)
+
+    this.parts = buildDateParts(newDate, this.timezone)
   }
 }
 
-function buidDateParts(date: Date, timezone?: string): DateParts {
+function buildDateParts(date: Date, timezone?: string): DateParts {
   const dftOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: '2-digit',
@@ -77,7 +78,7 @@ function buidDateParts(date: Date, timezone?: string): DateParts {
     day: parseInt(parts.day),
     month: parseInt(parts.month),
     year: parseInt(parts.year),
-    hour: parseInt(parts.hour),
+    hour: parts.hour === '24' ? 0 : parseInt(parts.hour),
     minute: parseInt(parts.minute),
     second: parseInt(parts.second),
     milisecond: date.getMilliseconds(),
