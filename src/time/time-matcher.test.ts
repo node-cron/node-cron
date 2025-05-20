@@ -229,4 +229,13 @@ describe('TimeMatcher', function() {
             assert.isTrue(matcher.match(utcTime));
         });
     });
+
+    describe('getNextMatch', ()=> {
+      it('should return next match', ()=>{
+        const matcher = new TimeMatcher('1 0 * * *', 'Etc/UTC');
+        const nextMatch = matcher.getNextMatch(new Date(Date.UTC(2025, 4, 20, 18, 0, 0)));
+        const expected = new Date(Date.UTC(2025, 4, 21, 0, 1, 0))
+        assert.deepEqual(nextMatch, expected)
+      })
+    })
 });
