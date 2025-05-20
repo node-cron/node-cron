@@ -33,37 +33,43 @@ export class MatcherWalker{
       const localTime = new LocalizedTime(baseDate, this.timezone);
       const dateParts = localTime.getParts();
       const date = new LocalizedTime(localTime.toDate(), this.timezone);
-
       const seconds = this.expressions[0];
       const nextSecond = availableValue(seconds, dateParts.second);
       if(nextSecond){
         date.set('second', nextSecond);
-        return date;
+        if(this.timeMatcher.match(date.toDate())){
+          return date;
+        }
       }
       date.set('second', seconds[0]);
-      
+
       const minutes = this.expressions[1];
       const nextMinute = availableValue(minutes, dateParts.minute);
       if(nextMinute){
         date.set('minute', nextMinute);
-        return date;
+        if(this.timeMatcher.match(date.toDate())){
+          return date;
+        }
       }
       date.set('minute',minutes[0]);
-
 
       const hours = this.expressions[2];
       const nextHour = availableValue(hours, dateParts.hour);
       if(nextHour){
         date.set('hour', nextHour);
-        return date;
+        if(this.timeMatcher.match(date.toDate())){
+          return date;
+        }
       }
       date.set('hour', hours[0]);
 
       const days = this.expressions[3];
       const nextDay = availableValue(days, dateParts.day);
       if(nextDay){
-        date.set('day',nextDay);
-        return date;
+        date.set('day', nextDay);
+        if(this.timeMatcher.match(date.toDate())){
+          return date;
+        }
       }
       
       date.set('day', days[0]);
@@ -73,8 +79,11 @@ export class MatcherWalker{
       
       if(nextMonth){
         date.set('month', nextMonth);
-        return date;
+        if(this.timeMatcher.match(date.toDate())){
+          return date;
+        }
       }
+
       date.set('year', date.getParts().year + 1);
       date.set('month', months[0]);
 
