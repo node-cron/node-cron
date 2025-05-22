@@ -92,7 +92,7 @@ export class Runner {
         const randomDelay = Math.floor(Math.random() * this.maxRandomDelay);
 
         if(shouldExecute){
-          // uses a setTimeout for aplying a jiter
+          // uses a setTimeout for aplying a jitter
           setTimeout(async () => {
             try {
               this.runCount++;
