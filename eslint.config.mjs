@@ -14,6 +14,7 @@ export default defineConfig([
   {
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
+      "no-async-promise-executor": "off",
       'no-restricted-imports': ['error', {
           patterns: [{
             group: ['src/*', '/src/*'],

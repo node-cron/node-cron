@@ -18,22 +18,6 @@ import BackgroundScheduledTask from "./tasks/background-scheduled-task/backgroun
 import path from "path";
 
 /**
- * Represents the configuration options for a scheduled task.
- *
- * @property {string} [name] - An optional name for the task, useful for identification and debugging.
- * @property {boolean} [scheduled] - Indicates whether the task should be scheduled. Defaults to `true`.
- * @property {string} [timezone] - Specifies the timezone in which the task should run. Accepts a string in the IANA timezone database format (e.g., "America/New_York").
- * @property {boolean} [noOverlap] - Ensures that the task does not run concurrently with itself.Defaults to `false`.
- * @property {number} [maxExecutions] - Specifies the maximum number of times the task should execute. If not provided, the task will run indefinitely.
- */
-export type Options = {
-  name?: string;
-  timezone?: string;
-  noOverlap?: boolean;
-  maxExecutions?: number;
-};
-
-/**
  * The central registry that maintains all scheduled tasks.
  * @private
  */
@@ -56,18 +40,9 @@ const registry = new TaskRegistry();
  * // Schedule background task by providing a separate file to run daily with a specific timezone
  * const dailyTask = schedule('0 0 * * *', './tasks/daily-backup.js', { timezone: 'America/New_York' });
  */
-export function schedule(expression:string, func: TaskFn | string, options?: Options): ScheduledTask {
-    const taskOptions: TaskOptions = {
-      name: options?.name,
-      timezone: options?.timezone,
-      noOverlap: options?.noOverlap,
-      maxExecutions: options?.maxExecutions
-    }
-
-    const task = createTask(expression, func, taskOptions);
-
+export function schedule(expression:string, func: TaskFn | string, options?: TaskOptions): ScheduledTask {
+    const task = createTask(expression, func, options);
     task.start();
-
     return task;
 }
 
@@ -80,24 +55,16 @@ export function schedule(expression:string, func: TaskFn | string, options?: Opt
  * @returns A task instance of the appropriate type (inline or background)
  * @private
  */
-export function createTask(expression: string, func: TaskFn | string, options?: Options): ScheduledTask {
-    const taskOptions: TaskOptions = {
-      name: options?.name,
-      timezone: options?.timezone,
-      noOverlap: options?.noOverlap,
-      maxExecutions: options?.maxExecutions,
-    }
-
+export function createTask(expression: string, func: TaskFn | string, options?: TaskOptions): ScheduledTask {
     let task: ScheduledTask;
     if(func instanceof Function){
-      task = new InlineScheduledTask(expression, func, taskOptions);
+      task = new InlineScheduledTask(expression, func, options);
     } else {
       const taskPath = solvePath(func);
-      task = new BackgroundScheduledTask(expression, taskPath, taskOptions);
+      task = new BackgroundScheduledTask(expression, taskPath, options);
     }
 
     registry.add(task);
-
     return task;
 }
 
