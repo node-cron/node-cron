@@ -58,8 +58,7 @@ function buildDateParts(date: Date, timezone?: string): DateParts {
     minute: '2-digit',
     second: '2-digit',
     weekday: 'short',
-    hour12: false,
-    timeZoneName: 'longOffset'
+    hour12: false
   }
 
   if(timezone){
