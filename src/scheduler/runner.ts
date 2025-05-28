@@ -22,6 +22,7 @@ export type RunnerOptions = {
   noOverlap?: boolean,
   timezone?: string,
   maxExecutions?: number,
+  maxRandomDelay?: number,
   onMissedExecution?: OnFn,
   onOverlap?: OnFn,
   onError?: OnErrorHookFn
@@ -35,6 +36,7 @@ export class Runner {
   onMatch: OnMatch;
   noOverlap: boolean;
   maxExecutions?: number;
+  maxRandomDelay: number;
   runCount: number;
 
   running: boolean;
@@ -52,6 +54,7 @@ export class Runner {
       this.onMatch = onMatch;
       this.noOverlap = options == undefined || options.noOverlap === undefined ? false : options.noOverlap;
       this.maxExecutions = options?.maxExecutions;
+      this.maxRandomDelay = options?.maxRandomDelay || 0;
 
       this.onMissedExecution = options?.onMissedExecution || emptyOnFn;
       this.onOverlap = options?.onOverlap || emptyOnFn;
@@ -78,35 +81,48 @@ export class Runner {
       }
     };
 
-    const checkAndRun = (date: Date): TrackedPromise<any> => {
-      return new TrackedPromise(async (resolve) => {
+    const runTask = (date: Date): Promise<any> => {
+      return new Promise(async (resolve) => {
         const execution: Execution = {
           id: createID('exec'),
           reason: 'scheduled'
         }
+        
+        const shouldExecute = await this.beforeRun(date, execution);
+        const randomDelay = Math.floor(Math.random() * this.maxRandomDelay);
 
-        try {
-          if(this.timeMatcher.match(date)){
-            const shouldExecute = await this.beforeRun(date, execution);
-            if(shouldExecute){
+        if(shouldExecute){
+          // uses a setTimeout for aplying a jitter
+          setTimeout(async () => {
+            try {
               this.runCount++;
               execution.startedAt = new Date();
               const result = await this.onMatch(date, execution);
               execution.finishedAt = new Date();
               execution.result = result;
               this.onFinished(date, execution);
-
+  
               if( this.maxExecutions && this.runCount >= this.maxExecutions){
                 this.onMaxExecutions(date);
                 this.stop();
               }
+            } catch (error: any){
+              execution.finishedAt = new Date();
+              execution.error = error;
+              this.onError(date, error, execution);
             }
-          }
+
+            resolve(true);
+          }, randomDelay);
+        }
+      })
+    }
+
+    const checkAndRun = (date: Date): TrackedPromise<any> => {
+      return new TrackedPromise(async (resolve) => {
+        if(this.timeMatcher.match(date)){
+          await runTask(date);
           resolve(true);
-        } catch (error: any){
-          execution.finishedAt = new Date();
-          execution.error = error;
-          this.onError(date, error, execution);
         }
       });
     }
