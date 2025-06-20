@@ -119,11 +119,15 @@ export class Runner {
     }
 
     const checkAndRun = (date: Date): TrackedPromise<any> => {
-      return new TrackedPromise(async (resolve) => {
+      return new TrackedPromise(async (resolve, reject) => {
+      try {
         if(this.timeMatcher.match(date)){
           await runTask(date);
-          resolve(true);
         }
+        resolve(true);
+       } catch(err) {
+         reject(err)
+       }
       });
     }
 
