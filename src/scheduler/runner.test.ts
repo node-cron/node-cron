@@ -22,6 +22,25 @@ describe('scheduler/runner', function(){
 
   }).timeout(3000);
 
+  it('allows handle failed', async function(){
+    const timeMatcher = new TimeMatcher('* * * * * *');
+
+    const errorCaught = new Promise<any>((resolve) => {
+      const runner =  new Runner(timeMatcher, async ()=> {
+        throw new Error('fail!')
+      }, {
+        onError(date, error){
+          resolve(error);
+          runner.stop()
+        }
+      });
+      runner.start();
+    });
+
+    const result = await errorCaught;
+    assert.equal(result.message, 'fail!');
+  }).timeout(3000);
+
   it('allows handle task finished', async function(){
     const timeMatcher = new TimeMatcher('* * * * * *');
 
