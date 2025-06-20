@@ -29,7 +29,7 @@ describe('scheduler/runner', function(){
       const runner =  new Runner(timeMatcher, async ()=> {
         throw new Error('fail!')
       }, {
-        onError(date, error, execution){
+        onError(date, error){
           resolve(error);
           runner.stop()
         }
