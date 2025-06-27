@@ -26,16 +26,15 @@ export class TaskRegistry {
     }
   }
 
-  all(): ScheduledTask[]{
-    return Array.from(tasks.values());
+  all(): typeof tasks {
+    return tasks;
   }
-
 
   has(taskId: string): boolean {
     return tasks.has(taskId);
   }
 
-  killAll(){
-    this.all().forEach( id => this.remove(id));
+  killAll() {
+   tasks.forEach(id => this.remove(id));
   }
 }
