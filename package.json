@@ -1,6 +1,6 @@
 {
   "name": "node-cron",
-  "version": "4.1.1",
+  "version": "4.2.0",
   "description": "A Lightweight Task Scheduler for Node.js",
   "author": "Lucas Merencia",
   "license": "ISC",
