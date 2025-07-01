@@ -111,6 +111,21 @@ export function validate(expression: string): boolean {
   }
 }
 
+/**
+ * Retrieves all scheduled tasks from the registry.
+ * 
+ * @returns A map of scheduled tasks
+ */
+export const getTasks = registry.all;
+
+/**
+ * Retrieves a specific scheduled task from the registry.
+ * 
+ * @params taskId - The ID of the task to retrieve
+ * @returns The task instance if found, `undefined` otherwise
+ */
+export const getTask = registry.get;
+
 export { ScheduledTask } from './tasks/scheduled-task';
 export type { TaskFn, TaskContext, TaskOptions } from './tasks/scheduled-task';
 
@@ -118,12 +133,16 @@ export interface NodeCron {
   schedule: typeof schedule;
   createTask: typeof createTask;
   validate: typeof validate;
+  getTasks: typeof getTasks;
+  getTask: typeof getTask;
 }
 
 export const nodeCron: NodeCron = {
   schedule,
   createTask,
-  validate
+  validate,
+  getTasks,
+  getTask,
 };
 
 /**
