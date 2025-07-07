@@ -16,6 +16,7 @@ import validation from "./pattern/validation/pattern-validation";
 import BackgroundScheduledTask from "./tasks/background-scheduled-task/background-scheduled-task";
 
 import path from "path";
+import { pathToFileURL } from "url";
 
 /**
  * The central registry that maintains all scheduled tasks.
@@ -69,25 +70,29 @@ export function createTask(expression: string, func: TaskFn | string, options?: 
 }
 
 /**
- * Resolves a relative file path to an absolute path based on the caller's location.
+ * Resolves a relative file path to a file URL path based on the caller's location.
  * 
  * @param filePath - The path to the task file, can be absolute or relative
- * @returns The absolute path to the task file
+ * @returns The file URL to the task file
  * @throws Error if the task file location cannot be determined
  * @private
  */
 function solvePath(filePath: string): string {
-  if(path.isAbsolute(filePath)) return filePath;
+  // Convert to file URL
+  if(path.isAbsolute(filePath)) return pathToFileURL(filePath).href;
+
+  // Return immediately if it's a file URL
+  if (filePath.startsWith('file://')) return filePath;
 
   const stackLines = new Error().stack?.split('\n');
   if(stackLines){
     stackLines?.shift();
     const callerLine = stackLines?.find((line) => { return line.indexOf(__filename) === -1; });
-    const match = callerLine?.match(/(file:\/\/|)(\/.+):\d+:\d+/);
+    const match = callerLine?.match(/(file:\/\/)?(((\/?)(\w:))?([/\\].+)):\d+:\d+/);
    
     if (match) {
-      const dir = path.dirname(match[2]);
-      return path.resolve(dir, filePath);
+      const dir = `${match[5] ?? ""}${path.dirname(match[6])}`;
+      return pathToFileURL(path.resolve(dir, filePath)).href;
     }
   }
 

@@ -110,7 +110,7 @@ class BackgroundScheduledTask implements ScheduledTask{
         
         this.forkProcess.send({
           command: 'task:start',
-          path: resolvePath(this.taskPath),
+          path: this.taskPath,
           cron: this.cronExpression,
           options: this.options
         });
