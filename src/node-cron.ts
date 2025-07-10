@@ -77,7 +77,7 @@ export function createTask(expression: string, func: TaskFn | string, options?: 
  * @throws Error if the task file location cannot be determined
  * @private
  */
-function solvePath(filePath: string): string {
+export function solvePath(filePath: string): string {
   // Convert to file URL
   if(path.isAbsolute(filePath)) return pathToFileURL(filePath).href;
 
