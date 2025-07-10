@@ -107,7 +107,7 @@ class BackgroundScheduledTask implements ScheduledTask{
           clearTimeout(timeout);
           resolve(undefined);
         });
-        
+
         this.forkProcess.send({
           command: 'task:start',
           path: this.taskPath,

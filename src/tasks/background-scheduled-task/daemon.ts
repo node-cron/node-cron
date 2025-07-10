@@ -1,9 +1,15 @@
+import { fileURLToPath } from "url";
 import logger from "../../logger";
 import { InlineScheduledTask } from "../inline-scheduled-task";
 import { ScheduledTask, TaskContext, TaskEvent } from "../scheduled-task";
 
 export async function startDaemon(message: any): Promise<ScheduledTask> {
-    const script = await import(message.path);
+    let script;
+    try {
+      script = await import(message.path);
+    } catch {
+      script = await import(fileURLToPath(message.path))
+    }
 
     const task = new InlineScheduledTask(message.cron, script.task, message.options);
 
