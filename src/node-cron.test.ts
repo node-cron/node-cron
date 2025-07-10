@@ -1,5 +1,5 @@
 import { assert }  from 'chai';
-import cron from './node-cron';
+import cron, { solvePath } from './node-cron';
 import { InlineScheduledTask } from './tasks/inline-scheduled-task';
 
 describe('node-cron', function() {
@@ -176,6 +176,31 @@ describe('node-cron', function() {
         assert.isDefined(task);
         assert.isDefined(task.id);
         assert.equal(task.getStatus(), 'stopped');
+      });
+    })
+
+     describe('solvePath', function(){
+      it('should resolve an absolute path', function(){
+        const path = '/home/usr/dir/script.js';
+        const solvedPath = solvePath(path);
+        assert.isDefined(solvedPath);
+        assert.include(solvedPath, `file:///`);
+        assert.include(solvedPath, path);
+      });
+
+      it('should resolve a file url', function(){
+        const path = 'file:///home/usr/dir/script.js';
+        const solvedPath = solvePath(path);
+        assert.isDefined(solvedPath);
+        assert.equal(solvedPath, `file:///home/usr/dir/script.js`);
+      });
+
+      it('should resolve a relative path', function(){
+        const path = './home/usr/dir/script.js';
+        const solvedPath = solvePath(path);
+        assert.isDefined(solvedPath);
+        assert.include(solvedPath, `file:///`);
+        assert.include(solvedPath, path.slice(1));
       });
     })
 });
