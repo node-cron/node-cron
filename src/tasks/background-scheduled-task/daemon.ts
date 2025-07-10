@@ -5,6 +5,18 @@ import { ScheduledTask, TaskContext, TaskEvent } from "../scheduled-task";
 
 export async function startDaemon(message: any): Promise<ScheduledTask> {
     let script;
+    /* HACK: this hack was added because CJS vs ESM issues in combination with Windows vs Linux issues:
+     *
+     * 1. On CJS, require should always receive a path
+     * 2. On ESM + Windows, import should always receive a file URL
+     * 3. On ESM + Linux, import can receive either a URL or a Path
+     *
+     * Because we need esModuleInterop: true on our TS config file, it's almost impossible
+     * to determine during runtime whether we are running in CJS or ESM.
+     * This try-catch ensures we will be able to import or require in any environment.
+     * 
+     * If both fail, then the path cannot be found.
+     */
     try {
       script = await import(message.path);
     } catch {
