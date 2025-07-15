@@ -29,7 +29,7 @@
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build": "npm run build:esm; npm run build:cjs",
     "prepublishOnly": "npm run build",
-    "prepare": "npm run build"
+    "postinstall": "npm run build"
   },
   "engines": {
     "node": ">=6.0.0"
