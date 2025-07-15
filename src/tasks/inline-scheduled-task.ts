@@ -34,6 +34,7 @@ export class InlineScheduledTask implements ScheduledTask {
       timezone: options?.timezone,
       noOverlap: options?.noOverlap,
       maxExecutions: options?.maxExecutions,
+      randomDelay: options?.randomDelay,
       maxRandomDelay: options?.maxRandomDelay,
       beforeRun: (date: Date, execution: Execution) => {
         if(execution.reason === 'scheduled'){

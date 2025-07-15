@@ -22,6 +22,7 @@ export type RunnerOptions = {
   noOverlap?: boolean,
   timezone?: string,
   maxExecutions?: number,
+  randomDelay?: number,
   maxRandomDelay?: number,
   onMissedExecution?: OnFn,
   onOverlap?: OnFn,
@@ -37,6 +38,7 @@ export class Runner {
   noOverlap: boolean;
   maxExecutions?: number;
   maxRandomDelay: number;
+  randomDelay?: number;
   runCount: number;
 
   running: boolean;
@@ -92,7 +94,7 @@ export class Runner {
         }
         
         const shouldExecute = await this.beforeRun(date, execution);
-        const randomDelay = Math.floor(Math.random() * this.maxRandomDelay);
+        const randomDelay = this.randomDelay ?? Math.floor(Math.random() * this.maxRandomDelay);
 
         if(shouldExecute){
           // uses a setTimeout for aplying a jitter

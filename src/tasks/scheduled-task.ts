@@ -32,6 +32,7 @@ export type TaskOptions = {
   name?: string,
   noOverlap?: boolean,
   maxExecutions?: number,
+  randomDelay?: number,
   maxRandomDelay?: number
 }
 
