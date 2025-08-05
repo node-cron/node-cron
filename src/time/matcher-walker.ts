@@ -26,6 +26,17 @@ export class MatcherWalker{
     return this.timeMatcher.match(this.baseDate);
   }
 
+  matchIgnoringWeekday(localizedTime: LocalizedTime): boolean {
+    const parts = localizedTime.getParts();
+    const runOnSecond = this.expressions[0].indexOf(parts.second) !== -1;
+    const runOnMinute = this.expressions[1].indexOf(parts.minute) !== -1;
+    const runOnHour = this.expressions[2].indexOf(parts.hour) !== -1;
+    const runOnDay = this.expressions[3].indexOf(parts.day) !== -1;
+    const runOnMonth = this.expressions[4].indexOf(parts.month) !== -1;
+    
+    return runOnSecond && runOnMinute && runOnHour && runOnDay && runOnMonth;
+  }
+
   matchNext(){
     const findNextDateIgnoringWeekday = () => {
       const baseDate = new Date(this.baseDate.getTime());
@@ -37,7 +48,7 @@ export class MatcherWalker{
       const nextSecond = availableValue(seconds, dateParts.second);
       if(nextSecond){
         date.set('second', nextSecond);
-        if(this.timeMatcher.match(date.toDate())){
+        if(this.matchIgnoringWeekday(date)){
           return date;
         }
       }
@@ -47,7 +58,7 @@ export class MatcherWalker{
       const nextMinute = availableValue(minutes, dateParts.minute);
       if(nextMinute){
         date.set('minute', nextMinute);
-        if(this.timeMatcher.match(date.toDate())){
+        if(this.matchIgnoringWeekday(date)){
           return date;
         }
       }
@@ -57,7 +68,7 @@ export class MatcherWalker{
       const nextHour = availableValue(hours, dateParts.hour);
       if(nextHour){
         date.set('hour', nextHour);
-        if(this.timeMatcher.match(date.toDate())){
+        if(this.matchIgnoringWeekday(date)){
           return date;
         }
       }
@@ -67,7 +78,7 @@ export class MatcherWalker{
       const nextDay = availableValue(days, dateParts.day);
       if(nextDay){
         date.set('day', nextDay);
-        if(this.timeMatcher.match(date.toDate())){
+        if(this.matchIgnoringWeekday(date)){
           return date;
         }
       }
@@ -79,7 +90,7 @@ export class MatcherWalker{
       
       if(nextMonth){
         date.set('month', nextMonth);
-        if(this.timeMatcher.match(date.toDate())){
+        if(this.matchIgnoringWeekday(date)){
           return date;
         }
       }
@@ -90,16 +101,56 @@ export class MatcherWalker{
       return date;
     }
 
-
     const date = findNextDateIgnoringWeekday();
     const weekdays = this.expressions[5];
+    const days = this.expressions[3];
     
-    let currentWeekday = parseInt(weekDayNamesConversion(date.getParts().weekday));
-
-    while(!(weekdays.indexOf(currentWeekday) > -1)){
-      date.set('year', date.getParts().year + 1);
-      currentWeekday = parseInt(weekDayNamesConversion(date.getParts().weekday));
+    // Check if day-of-month is wildcard (contains all possible days 1-31)
+    const isDayWildcard = Array.from({ length: 31 }, (_, i) => i + 1).every(day => days.includes(day));
+    
+    if (isDayWildcard) {
+      // When day is wildcard, use OR logic: find next occurrence of weekday OR month
+      // Since we already found the right month, just find the next weekday in that month
+      let currentWeekday = parseInt(weekDayNamesConversion(date.getParts().weekday));
+      
+      while(!(weekdays.indexOf(currentWeekday) > -1)){
+        date.set('day', date.getParts().day + 1); 
+        currentWeekday = parseInt(weekDayNamesConversion(date.getParts().weekday));
+      }
+    } else {
+      // When day is specific, use AND logic: must match exact day AND weekday
+      // Keep searching until we find a date where the specified day falls on the specified weekday
+      const maxAttempts = 10 * 12; // 10 years * 12 months
+      let attempts = 0;
+      
+      while (attempts < maxAttempts) {
+        const currentWeekday = parseInt(weekDayNamesConversion(date.getParts().weekday));
+        
+        if (weekdays.indexOf(currentWeekday) > -1) {
+          // Found matching weekday for the specified day
+          break;
+        }
+        
+        // Move to next occurrence of the same day in the same month (next year if necessary)
+        const currentParts = date.getParts();
+        const nextMonth = availableValue(this.expressions[4], currentParts.month);
+        
+        if (nextMonth) {
+          date.set('month', nextMonth);
+        } else {
+          // Move to next year and reset to first allowed month
+          date.set('year', currentParts.year + 1);
+          date.set('month', this.expressions[4][0]);
+        }
+        
+        attempts++;
+      }
+      
+      if (attempts >= maxAttempts) {
+        throw new Error('Could not find next matching date within reasonable time range');
+      }
     }
+    
     return date;
   }
 }
