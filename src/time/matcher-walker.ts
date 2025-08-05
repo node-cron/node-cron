@@ -106,7 +106,7 @@ export class MatcherWalker{
     const days = this.expressions[3];
     
     // Check if day-of-month is wildcard (contains all possible days 1-31)
-    const isDayWildcard = days.length >= 31 && days.includes(1) && days.includes(31);
+    const isDayWildcard = Array.from({ length: 31 }, (_, i) => i + 1).every(day => days.includes(day));
     
     if (isDayWildcard) {
       // When day is wildcard, use OR logic: find next occurrence of weekday OR month
