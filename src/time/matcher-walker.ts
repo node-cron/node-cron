@@ -120,11 +120,11 @@ export class MatcherWalker{
     } else {
       // When day is specific, use AND logic: must match exact day AND weekday
       // Keep searching until we find a date where the specified day falls on the specified weekday
-      let maxAttempts = 10 * 12; // 10 years * 12 months
+      const maxAttempts = 10 * 12; // 10 years * 12 months
       let attempts = 0;
       
       while (attempts < maxAttempts) {
-        let currentWeekday = parseInt(weekDayNamesConversion(date.getParts().weekday));
+        const currentWeekday = parseInt(weekDayNamesConversion(date.getParts().weekday));
         
         if (weekdays.indexOf(currentWeekday) > -1) {
           // Found matching weekday for the specified day
