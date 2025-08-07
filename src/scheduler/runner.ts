@@ -1,8 +1,9 @@
-import { createID } from "../create-id";
-import logger from "../logger";
-import { TrackedPromise } from "../promise/tracked-promise";
-import { Execution } from "../tasks/scheduled-task";
-import { TimeMatcher } from "../time/time-matcher";
+import { createID } from "../create-id.js";
+import logger from "../logger.js";
+import { TrackedPromise } from "../promise/tracked-promise.js";
+import { TimeMatcher } from "../time/time-matcher.js";
+
+import type { Execution } from "../tasks/scheduled-task.js";
 
 type OnFn = (date: Date) => void | Promise<void>;
 type OnErrorHookFn = (date: Date, error: Error, execution: Execution) => void | Promise<void>;
@@ -68,7 +69,7 @@ export class Runner {
       this.runCount = 0;
       this.running = false;
   }
-  
+
   start() {
     this.running = true;
     let lastExecution: TrackedPromise<any>;
@@ -87,7 +88,7 @@ export class Runner {
           id: createID('exec'),
           reason: 'scheduled'
         }
-        
+
         const shouldExecute = await this.beforeRun(date, execution);
         const randomDelay = Math.floor(Math.random() * this.maxRandomDelay);
 
@@ -101,7 +102,7 @@ export class Runner {
               execution.finishedAt = new Date();
               execution.result = result;
               this.onFinished(date, execution);
-  
+
               if( this.maxExecutions && this.runCount >= this.maxExecutions){
                 this.onMaxExecutions(date);
                 this.stop();
@@ -163,7 +164,7 @@ export class Runner {
       // schedule the next run
       scheduleNextHeartBeat(currentDate);
     }
-    
+
     this.heartBeatTimeout = setTimeout(()=>{
       heartBeat();
     }, getDelay(this.timeMatcher, nowWithoutMs()));
@@ -180,7 +181,7 @@ export class Runner {
       this.heartBeatTimeout = undefined;
     }
   }
-  
+
   isStarted(){
     return !!this.heartBeatTimeout && this.running;
   }

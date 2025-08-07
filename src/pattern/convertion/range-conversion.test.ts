@@ -1,6 +1,7 @@
 import * as chai from 'chai';
 const { expect } = chai;
-import conversion from './range-conversion';
+
+import conversion from './range-conversion.js';
 
 describe('range-conversion', function() {
     it('should convert ranges to numbers', function() {

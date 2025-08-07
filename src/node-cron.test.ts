@@ -1,6 +1,7 @@
 import { assert }  from 'chai';
-import cron, { solvePath } from './node-cron';
-import { InlineScheduledTask } from './tasks/inline-scheduled-task';
+
+import cron, { solvePath } from './node-cron.js';
+import { InlineScheduledTask } from './tasks/inline-scheduled-task.js';
 
 describe('node-cron', function() {
     describe('schedule', function() {
@@ -9,7 +10,7 @@ describe('node-cron', function() {
             const task = cron.schedule('* * * * * *', () => {
                 executed += 1;
             });
-            
+
             await new Promise(r=>{setTimeout(r, 1000)})
 
             assert.equal(1, executed);
@@ -38,13 +39,13 @@ describe('node-cron', function() {
             }, {
                 timezone: 'America/Sao_Paulo'
             });
-            
+
             await new Promise(r=>{setTimeout(r, 1000)})
 
             assert.isTrue(localIso.endsWith('-03:00'));
             task.stop();
         }).timeout(10000);
-        
+
         it('should schedule a task with Europe/Istanbul timezone', async function() {
           let localIso: string = '';
             const task = cron.schedule('* * * * * *', (event) => {
@@ -87,7 +88,7 @@ describe('node-cron', function() {
 
             task.stop();
         }).timeout(10000);
-        
+
         it('should schedule a background task', async function() {
             const task = cron.schedule('* * * * *', '../test-assets/dummy-task.js');
             await wait(1000);
@@ -96,14 +97,14 @@ describe('node-cron', function() {
             await task.destroy();
         }).timeout(10000);
     });
-    
+
     describe('validate', function() {
         it('should validate a pattern', function() {
-            assert.isTrue(cron.validate('* * * * * *')); 
+            assert.isTrue(cron.validate('* * * * * *'));
         });
-        
+
         it('should fail with a invalid pattern', function() {
-            assert.isFalse(cron.validate('62 * * * * *')); 
+            assert.isFalse(cron.validate('62 * * * * *'));
         });
     });
 

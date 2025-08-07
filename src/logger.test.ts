@@ -1,6 +1,7 @@
 import { assert } from 'chai';
 import sinon from 'sinon';
-import logger from './logger';
+
+import logger from './logger.js';
 
 describe('Logger', () => {
   let consoleInfoStub: sinon.SinonStub;

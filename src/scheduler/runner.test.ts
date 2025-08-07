@@ -1,14 +1,17 @@
-import {assert} from 'chai';
-import { Runner, RunnerOptions } from './runner';
-import { TimeMatcher } from '../time/time-matcher';
+import { assert } from 'chai';
 
-import logger from '../logger';
+import { Runner } from './runner.js';
+import { TimeMatcher } from '../time/time-matcher.js';
+
+import logger from '../logger.js';
+
+import type { RunnerOptions } from './runner.js';
 
 describe('scheduler/runner', function(){
   it('starts running',  async function(){
     const timeMatcher = new TimeMatcher('* * * * * *');
     const runner = createRunner(timeMatcher, 200);
-    
+
 
     assert.isFalse(runner.isStarted())
     assert.isTrue(runner.isStopped())
@@ -184,7 +187,7 @@ describe('scheduler/runner', function(){
   it('returns next run',  async function(){
     const timeMatcher = new TimeMatcher('* * * * *');
     const runner = createRunner(timeMatcher, 200);
-    
+
     const now = new Date();
     runner.start();
 
@@ -241,9 +244,9 @@ describe('scheduler/runner', function(){
     let missedCount = 0;
 
     const onMissedExecution = (date: Date) => { missedDate = date; missedCount++ };
-    
+
     const runner = createRunner(timeMatcher, 200, { onMissedExecution: onMissedExecution });
-    
+
     runner.start();
 
     await new Promise(resolve => { setTimeout(resolve, 1000)});
@@ -262,7 +265,7 @@ describe('scheduler/runner', function(){
     runner.start();
 
     const timeout: any = runner.heartBeatTimeout;
-    
+
     assert.equal(timeout._idleTimeout, 86400000);
 
     runner.stop();

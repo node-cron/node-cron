@@ -1,6 +1,7 @@
 import * as chai from 'chai';
 const { expect } = chai;
-import conversion from './asterisk-to-range-conversion';
+
+import conversion from './asterisk-to-range-conversion.js';
 
 describe('asterisk-to-range-conversion', function() {
     it('shuld convert * to ranges', function() {

@@ -1,15 +1,18 @@
-import { resolve as resolvePath } from 'path';
-import { fork, ChildProcess} from 'child_process';
+import path from 'node:path';
+import { fork, ChildProcess} from 'node:child_process';
+import { EventEmitter } from 'node:events';
 
-import { Execution, ScheduledTask, TaskContext, TaskEvent, TaskOptions } from '../scheduled-task';
-import { createID } from '../../create-id';
-import { EventEmitter } from 'stream';
-import { StateMachine } from '../state-machine';
-import { LocalizedTime } from '../../time/localized-time';
-import logger from '../../logger';
-import { TimeMatcher } from '../../time/time-matcher';
+import { createID } from '../../create-id.js';
+import { StateMachine } from '../state-machine.js';
+import { LocalizedTime } from '../../time/localized-time.js';
+import logger from '../../logger.js';
+import { TimeMatcher } from '../../time/time-matcher.js';
 
-const daemonPath = resolvePath(__dirname, 'daemon.js');
+import type { Execution, ScheduledTask, TaskContext, TaskEvent, TaskOptions } from '../scheduled-task.js';
+
+import rootDirname from '../../dirname.js';
+
+const daemonPath = path.join(rootDirname, "tasks", "background-scheduled-task", "daemon.js");
 
 class TaskEmitter extends EventEmitter{}
 
@@ -58,19 +61,19 @@ class BackgroundScheduledTask implements ScheduledTask{
       if (this.forkProcess) {
         return resolve(undefined);
       }
-      
+
       const timeout = setTimeout(() => {
         reject(new Error('Start operation timed out'));
       }, 5000);
-      
+
       try {
         this.forkProcess = fork(daemonPath);
-        
+
         this.forkProcess.on('error', (err) => {
           clearTimeout(timeout);
           reject(new Error(`Error on daemon: ${err.message}`));
         });
-        
+
         this.forkProcess.on('exit', (code, signal) => {
           if (code !== 0 && signal !== 'SIGTERM') {
             const erro = new Error(`node-cron daemon exited with code ${code || signal}`)
@@ -79,7 +82,7 @@ class BackgroundScheduledTask implements ScheduledTask{
             reject(erro)
           }
         });
-        
+
         this.forkProcess.on('message', (message: any) => {
           if (message.jsonError) {
             if (message.context?.execution) {
@@ -87,21 +90,21 @@ class BackgroundScheduledTask implements ScheduledTask{
               delete message.jsonError;
             }
           }
-          
+
           if (message.context?.task?.state) {
             this.stateMachine.changeState(message.context?.task?.state);
           }
-          
+
           if (message.context) {
             const execution = message.context?.execution;
             delete execution?.hasError;
-                                         
+
             const context = this.createContext(new Date(message.context.date), execution);
 
             this.emitter.emit(message.event, context);
           }
         });
-        
+
         this.once('task:started', () => {
           this.stateMachine.changeState('idle');
           clearTimeout(timeout);
@@ -125,16 +128,16 @@ class BackgroundScheduledTask implements ScheduledTask{
       if (!this.forkProcess) {
         return resolve(undefined);
       }
-      
+
       const timeoutId = setTimeout(() => {
         clearTimeout(timeoutId);
         reject(new Error('Stop operation timed out'))
-      }, 5000); 
-      
+      }, 5000);
+
       const cleanupAndResolve = () => {
         clearTimeout(timeoutId);
         this.off('task:stopped', onStopped);
-        
+
         this.forkProcess = undefined;
         resolve(undefined);
       };
@@ -142,7 +145,7 @@ class BackgroundScheduledTask implements ScheduledTask{
       const onStopped = () => {
         cleanupAndResolve();
       };
-      
+
       this.once('task:stopped', onStopped);
       this.forkProcess.send({
         command: 'task:stop'
@@ -163,17 +166,17 @@ class BackgroundScheduledTask implements ScheduledTask{
       const timeoutId = setTimeout(() => {
         clearTimeout(timeoutId);
         reject(new Error('Destroy operation timed out'))
-      }, 5000); 
-  
-      
+      }, 5000);
+
+
       const onDestroy = () => {
         clearTimeout(timeoutId);
-        this.off('task:destroyed', onDestroy);    
+        this.off('task:destroyed', onDestroy);
         resolve(undefined);
       };
-      
+
       this.once('task:destroyed', onDestroy);
-      
+
       this.forkProcess.send({
         command: 'task:destroy'
       });
@@ -185,23 +188,23 @@ class BackgroundScheduledTask implements ScheduledTask{
       if (!this.forkProcess) {
         return reject(new Error('Cannot execute background task because it hasn\'t been started yet. Please initialize the task using the start() method before attempting to execute it.'));
       }
-      
+
       const timeoutId = setTimeout(() => {
         cleanupListeners();
         reject(new Error('Execution timeout exceeded'));
       }, 5000);
-      
+
       const cleanupListeners = () => {
         clearTimeout(timeoutId);
         this.off('execution:finished', onFinished);
         this.off('execution:failed', onFail);
       };
-      
+
       const onFinished = (context: TaskContext) => {
         cleanupListeners();
         resolve(context.execution?.result);
       };
-      
+
       const onFail = (context: TaskContext) => {
         cleanupListeners();
         reject(context.execution?.error || new Error('Execution failed without specific error'));
@@ -209,7 +212,7 @@ class BackgroundScheduledTask implements ScheduledTask{
 
       this.once('execution:finished', onFinished);
       this.once('execution:failed', onFail);
-      
+
       this.forkProcess.send({
         command: 'task:execute'
       });

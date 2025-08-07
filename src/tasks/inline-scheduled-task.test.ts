@@ -1,6 +1,8 @@
 import { assert } from 'chai';
-import { InlineScheduledTask } from './inline-scheduled-task';
-import { TaskContext } from './scheduled-task';
+
+import { InlineScheduledTask } from './inline-scheduled-task.js';
+
+import type { TaskContext } from './scheduled-task.js';
 
 describe('InlineScheduledTask', function() {
   it('builds with default values', function(){

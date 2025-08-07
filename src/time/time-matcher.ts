@@ -1,8 +1,8 @@
 
-import convertExpression from '../pattern/convertion/index';
-import weekDayNamesConversion from '../pattern/convertion/week-day-names-conversion';
-import { LocalizedTime } from './localized-time';
-import { MatcherWalker } from './matcher-walker';
+import convertExpression from '../pattern/convertion/index.js';
+import weekDayNamesConversion from '../pattern/convertion/week-day-names-conversion.js';
+import { LocalizedTime } from './localized-time.js';
+import { MatcherWalker } from './matcher-walker.js';
 
 function matchValue(allowedValues: number[], value: number){
   return allowedValues.indexOf(value) !== -1;
@@ -15,7 +15,7 @@ export class TimeMatcher{
 
     constructor(pattern:string, timezone?:string){
         this.timezone = timezone;
-        this.pattern = pattern 
+        this.pattern = pattern
         this.expressions = convertExpression(pattern);
     }
 

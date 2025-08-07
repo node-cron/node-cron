@@ -5,30 +5,28 @@
   "author": "Lucas Merencia",
   "license": "ISC",
   "homepage": "https://github.com/merencia/node-cron",
+  "type": "module",
   "main": "./dist/cjs/node-cron.js",
   "module": "./dist/esm/node-cron.js",
-  "type": "commonjs",
+  "types": "./dist/cjs/node-cron.d.ts",
   "exports": {
     ".": {
-      "require": {
-        "types": "./dist/cjs/node-cron.d.ts",
-        "default":  "./dist/cjs/node-cron.js"
-      },
-      "import": {
-      "types": "./dist/esm/node-cron.d.ts",
-        "default":  "./dist/esm/node-cron.js"
-      }
+      "import": "./dist/esm/node-cron.js",
+      "require": "./dist/cjs/node-cron.js"
     }
   },
   "scripts": {
-    "test": "c8 --reporter text --reporter=lcov --exclude '**/*.test.ts' mocha --recursive './src/**/*.test.ts'",
-    "test:nocov": "mocha --recursive **/*.test.ts",
-    "lint": "./node_modules/.bin/eslint ./src",
-    "check": "npm run lint && npm test",
-    "build:esm": "tsc -p tsconfig.esm.json",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
     "build": "npm run build:esm; npm run build:cjs",
-    "prepublishOnly": "npm run build"
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "npm run build:cjs:pre; tsc -p tsconfig.cjs.json; npm run build:cjs:package; npm run build:cjs:post",
+    "build:cjs:pre": "mv src/dirname.ts src/dirname_esm.ts; mv src/dirname_cjs.ts src/dirname.ts",
+    "build:cjs:package": "echo '{\n  \"type\": \"commonjs\"\n}' > dist/cjs/package.json",
+    "build:cjs:post": "mv src/dirname.ts src/dirname_cjs.ts; mv src/dirname_esm.ts src/dirname.ts",
+    "check": "npm run lint && npm test",
+    "lint": "./node_modules/.bin/eslint ./src",
+    "prepack": "npm run build",
+    "test": "c8 --reporter text --reporter=lcov --exclude '**/*.test.ts' mocha --recursive './src/**/*.test.ts'",
+    "test:nocov": "mocha --recursive **/*.test.ts"
   },
   "engines": {
     "node": ">=6.0.0"

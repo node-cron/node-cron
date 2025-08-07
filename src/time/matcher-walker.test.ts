@@ -1,5 +1,6 @@
 import { assert } from 'chai';
-import { MatcherWalker } from './matcher-walker';
+
+import { MatcherWalker } from './matcher-walker.js';
 
 describe('matcher-walker', function(){
   it('get next second', function(){
@@ -73,29 +74,29 @@ describe('matcher-walker', function(){
 
   it('should match next Sunday at 03:43 from Aug 4th 2025', function(){
     const baseDate = new Date(Date.UTC(2025, 7, 4, 0, 0, 0));
-  
+
     const mw = new MatcherWalker("43 3 * * Sun", baseDate, 'Etc/UTC');
-  
+
     assert.isFalse(mw.isMatching())
     const m = mw.matchNext();
     assert.equal(m.toISO(), '2025-08-10T03:43:00.000Z')
   });
-  
+
   it('should match next Sunday in September or January from Aug 4th 2025', function(){
     const baseDate = new Date(Date.UTC(2025, 7, 4, 0, 0, 0));
-  
+
     const mw = new MatcherWalker("* * * January,September Sunday", baseDate, 'Etc/UTC');
-  
+
     assert.isFalse(mw.isMatching())
     const m = mw.matchNext();
     assert.equal(m.toISO(), '2025-09-07T00:00:00.000Z')
   });
-  
+
   it('should match next Sunday in January or March from Aug 4th 2025 (crossing year boundary)', function(){
     const baseDate = new Date(Date.UTC(2025, 7, 4, 0, 0, 0));
-  
+
     const mw = new MatcherWalker("* * * January,March Sunday", baseDate, 'Etc/UTC');
-  
+
     assert.isFalse(mw.isMatching())
     const m = mw.matchNext();
     assert.equal(m.toISO(), '2026-01-04T00:00:00.000Z')

@@ -1,6 +1,7 @@
 import * as chai from 'chai';
 const { assert } = chai;
-import conversion from './index';
+
+import conversion from './index.js';
 
 describe('month-names-conversion', function() {
     it('shuld convert month names', function() {

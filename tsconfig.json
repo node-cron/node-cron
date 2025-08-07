@@ -1,1 +1,22 @@
-{ "extends": "./tsconfig.esm.json" }
+{
+  "compilerOptions": {
+    "declaration": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "nodenext",
+    "noEmit": true,
+    "noImplicitAny": false,
+    "outDir": "dist",
+    "removeComments": true,
+    "rootDir": "src",
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "es2022",
+    "verbatimModuleSyntax": true
+  },
+  "include": [
+    "src"
+  ]
+}

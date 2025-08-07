@@ -1,13 +1,13 @@
-import { ScheduledTask } from "./tasks/scheduled-task";
+import type { ScheduledTask } from "./tasks/scheduled-task.js";
 
-const tasks = new Map<string, ScheduledTask> ();
+const tasks = new Map<string, ScheduledTask>();
 
 export class TaskRegistry {
   add(task: ScheduledTask): void{
     if(this.has(task.id)){
       throw Error(`task ${task.id} already registred!`)
     }
-    
+
     tasks.set(task.id, task);
 
     task.on('task:destroyed', () => {
