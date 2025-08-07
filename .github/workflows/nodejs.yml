@@ -1,35 +1,51 @@
-name: Node.js CI
+name: CI
 
 on:
   push:
-    branches: [main]
+    branches: ["*"]
   pull_request:
     branches: [main]
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
+  lint:
+    name: Static code analysis
+    runs-on: ubuntu-24.04-arm
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Configure node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: 22.x
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
 
-    - name: Installl dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Lint
-      run: npm run lint
+      - name: Lint
+        run: node --run lint
 
-    - name: Tests
-      run: npm run test
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-24.04-arm
 
-    - name: Coveralls
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: node --run test
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
