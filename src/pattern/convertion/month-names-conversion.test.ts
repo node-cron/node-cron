@@ -1,6 +1,7 @@
 import * as chai from 'chai';
 const { expect } = chai;
-import conversion from './month-names-conversion';
+
+import conversion from './month-names-conversion.js';
 
 describe('month-names-conversion', function() {
     it('shuld convert month full names', function() {

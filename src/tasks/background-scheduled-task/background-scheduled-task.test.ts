@@ -1,14 +1,16 @@
+import { EventEmitter } from 'node:events';
+import { createRequire } from 'node:module';
+
 import { assert } from 'chai';
 import sinon from 'sinon';
 
-import BackgroundScheduledTask from "./background-scheduled-task";
+import BackgroundScheduledTask from "./background-scheduled-task.js";
 
-import { EventEmitter } from 'stream';
-
+const require = createRequire(import.meta.url);
 
 describe('BackgroundScheduledTask', function() {
   this.timeout(10000);
-  
+
   let fakeChildProcess: EventEmitter & { send: sinon.SinonStub; kill: sinon.SinonStub };
 
   beforeEach(() => {
@@ -41,12 +43,12 @@ describe('BackgroundScheduledTask', function() {
       });
 
       await task.start();
-  
+
       const nextMinute = new Date();
       nextMinute.setMilliseconds(0);
       nextMinute.setSeconds(0);
       nextMinute.setMinutes(nextMinute.getMinutes() + 1);
-  
+
       assert.equal(task.getNextRun()?.getTime(), nextMinute.getTime());
       task.destroy();
     });
@@ -67,7 +69,7 @@ describe('BackgroundScheduledTask', function() {
 
     it('starts new fork', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-  
+
       fakeChildProcess.send.callsFake(()=>{
         task.emitter.emit('task:started');
       });
@@ -78,7 +80,7 @@ describe('BackgroundScheduledTask', function() {
 
     it('fails on fork failure', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-  
+
       fakeChildProcess.send.callsFake(()=>{
         fakeChildProcess.emit('error', new Error('fake error'));
       });
@@ -93,7 +95,7 @@ describe('BackgroundScheduledTask', function() {
 
     it('fails on fork exception', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-  
+
       fakeChildProcess.send.throws(new Error('fake error'));
 
       try{
@@ -106,11 +108,11 @@ describe('BackgroundScheduledTask', function() {
 
     it('fails on fork exit with code', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-  
+
       fakeChildProcess.send.callsFake(()=>{
         fakeChildProcess.emit('exit', 9);
       });
-      
+
       try{
         await task.start();
         assert.fail('should throw error no start')
@@ -121,11 +123,11 @@ describe('BackgroundScheduledTask', function() {
 
     it('fails on fork exit with signal', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-  
+
       fakeChildProcess.send.callsFake(()=>{
         fakeChildProcess.emit('exit', 'SIGNAL');
       });
-      
+
       try{
         await task.start();
         assert.fail('should throw error no start')
@@ -136,7 +138,7 @@ describe('BackgroundScheduledTask', function() {
 
     it('starts and bypass events', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-  
+
       fakeChildProcess.send.callsFake(async ()=>{
         task.emitter.emit('task:started');
         await wait(100);
@@ -199,7 +201,7 @@ describe('BackgroundScheduledTask', function() {
     it('fails on stop timeout', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
       task.forkProcess = fakeChildProcess as any;
-   
+
       try {
         await task.stop();
         assert.fail("should fail before")
@@ -264,7 +266,7 @@ describe('BackgroundScheduledTask', function() {
       })
 
       await task.start();
-      
+
       const result = await task.execute();
       assert.equal(result, 'task result');
     });
@@ -281,7 +283,7 @@ describe('BackgroundScheduledTask', function() {
       })
 
       await task.start();
-      
+
       try{
       await task.execute();
       } catch(error: any){
@@ -291,13 +293,13 @@ describe('BackgroundScheduledTask', function() {
 
     it('fails on execute timeout', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-      
+
       fakeChildProcess.send.callsFake((obj)=>{
         if(obj.command === 'task:start'){
           task.emitter.emit('task:started');
         }
       })
-   
+
       await task.start();
 
       try {

@@ -52,7 +52,7 @@ export type TaskFn = (context: TaskContext) => any | Promise<any>;
 export interface ScheduledTask {
   id: string,
   name?: string,
-  
+
   start(): void | Promise<void>;
   stop(): void | Promise<void>;
   getStatus(): string | Promise<string>;
@@ -62,5 +62,5 @@ export interface ScheduledTask {
 
   on(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void
   off(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void
-  once(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void 
+  once(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void
 }

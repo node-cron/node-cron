@@ -1,5 +1,6 @@
 import {assert} from 'chai'
-import { TrackedPromise } from './tracked-promise';
+
+import { TrackedPromise } from './tracked-promise.js';
 
 describe('Tracked Promise', function(){
   it('wraps a promise', function(){
@@ -33,7 +34,7 @@ describe('Tracked Promise', function(){
     assert.isTrue(tp.isRejected());
     assert.isDefined(tp.getError());
   });
-  
+
 
   it('allows await', async function(){
     const result = await new TrackedPromise((resolve) => { resolve('promise run') });
@@ -75,7 +76,7 @@ describe('Tracked Promise', function(){
   });
 
   it('sets the state to pending when running', function(){
-    const p = new TrackedPromise(async (resolve) => { 
+    const p = new TrackedPromise(async (resolve) => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       resolve(true);
     });

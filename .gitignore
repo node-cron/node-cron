@@ -44,3 +44,4 @@ testing.js
 todo.txt
 
 /dist/
+*.tgz

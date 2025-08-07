@@ -1,8 +1,9 @@
 import { assert } from 'chai';
 
-import { TaskRegistry } from './task-registry';
-import { InlineScheduledTask } from './tasks/inline-scheduled-task';
-import { ScheduledTask } from './tasks/scheduled-task';
+import { TaskRegistry } from './task-registry.js';
+import { InlineScheduledTask } from './tasks/inline-scheduled-task.js';
+
+import type { ScheduledTask } from './tasks/scheduled-task.js';
 
 describe('TaskRegistry', function(){
   const registry = new TaskRegistry();

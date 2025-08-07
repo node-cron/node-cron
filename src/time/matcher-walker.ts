@@ -1,9 +1,9 @@
 
-import convertExpression from '../pattern/convertion';
-import { LocalizedTime } from './localized-time';
-import { TimeMatcher } from './time-matcher';
+import convertExpression from '../pattern/convertion/index.js';
+import { LocalizedTime } from './localized-time.js';
+import { TimeMatcher } from './time-matcher.js';
 
-import weekDayNamesConversion from '../pattern/convertion/week-day-names-conversion';
+import weekDayNamesConversion from '../pattern/convertion/week-day-names-conversion.js';
 
 export class MatcherWalker{
   cronExpression: string;
@@ -18,7 +18,7 @@ export class MatcherWalker{
     this.baseDate = baseDate;
     this.timeMatcher = new TimeMatcher(cronExpression, timezone);
     this.timezone = timezone;
-    
+
     this.expressions = convertExpression(cronExpression)
   }
 
@@ -33,7 +33,7 @@ export class MatcherWalker{
     const runOnHour = this.expressions[2].indexOf(parts.hour) !== -1;
     const runOnDay = this.expressions[3].indexOf(parts.day) !== -1;
     const runOnMonth = this.expressions[4].indexOf(parts.month) !== -1;
-    
+
     return runOnSecond && runOnMinute && runOnHour && runOnDay && runOnMonth;
   }
 
@@ -82,12 +82,12 @@ export class MatcherWalker{
           return date;
         }
       }
-      
+
       date.set('day', days[0]);
 
       const months = this.expressions[4];
       const nextMonth = availableValue(months, dateParts.month);
-      
+
       if(nextMonth){
         date.set('month', nextMonth);
         if(this.matchIgnoringWeekday(date)){
@@ -104,17 +104,17 @@ export class MatcherWalker{
     const date = findNextDateIgnoringWeekday();
     const weekdays = this.expressions[5];
     const days = this.expressions[3];
-    
+
     // Check if day-of-month is wildcard (contains all possible days 1-31)
     const isDayWildcard = Array.from({ length: 31 }, (_, i) => i + 1).every(day => days.includes(day));
-    
+
     if (isDayWildcard) {
       // When day is wildcard, use OR logic: find next occurrence of weekday OR month
       // Since we already found the right month, just find the next weekday in that month
       let currentWeekday = parseInt(weekDayNamesConversion(date.getParts().weekday));
-      
+
       while(!(weekdays.indexOf(currentWeekday) > -1)){
-        date.set('day', date.getParts().day + 1); 
+        date.set('day', date.getParts().day + 1);
         currentWeekday = parseInt(weekDayNamesConversion(date.getParts().weekday));
       }
     } else {
@@ -122,19 +122,19 @@ export class MatcherWalker{
       // Keep searching until we find a date where the specified day falls on the specified weekday
       const maxAttempts = 10 * 12; // 10 years * 12 months
       let attempts = 0;
-      
+
       while (attempts < maxAttempts) {
         const currentWeekday = parseInt(weekDayNamesConversion(date.getParts().weekday));
-        
+
         if (weekdays.indexOf(currentWeekday) > -1) {
           // Found matching weekday for the specified day
           break;
         }
-        
+
         // Move to next occurrence of the same day in the same month (next year if necessary)
         const currentParts = date.getParts();
         const nextMonth = availableValue(this.expressions[4], currentParts.month);
-        
+
         if (nextMonth) {
           date.set('month', nextMonth);
         } else {
@@ -142,15 +142,15 @@ export class MatcherWalker{
           date.set('year', currentParts.year + 1);
           date.set('month', this.expressions[4][0]);
         }
-        
+
         attempts++;
       }
-      
+
       if (attempts >= maxAttempts) {
         throw new Error('Could not find next matching date within reasonable time range');
       }
     }
-    
+
     return date;
   }
 }

@@ -1,7 +1,7 @@
-import monthNamesConversion from './month-names-conversion';
-import weekDayNamesConversion from './week-day-names-conversion';
-import convertAsterisksToRanges from './asterisk-to-range-conversion';
-import convertRanges from './range-conversion';
+import monthNamesConversion from './month-names-conversion.js';
+import weekDayNamesConversion from './week-day-names-conversion.js';
+import convertAsterisksToRanges from './asterisk-to-range-conversion.js';
+import convertRanges from './range-conversion.js';
 
 export default (() => {
 

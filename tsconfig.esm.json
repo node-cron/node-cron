@@ -1,8 +1,8 @@
 {
-  "extends": "./tsconfig.base.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "outDir": "./dist/esm",
-  }
+    "noEmit": false,
+    "outDir": "./dist/esm"
+  },
+  "exclude": ["src/**/*.test.ts"]
 }

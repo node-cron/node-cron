@@ -1,5 +1,6 @@
 import { assert } from 'chai';
-import { StateMachine } from './state-machine';
+
+import { StateMachine } from './state-machine.js';
 
 describe('StateMachine', function() {
   it('should initialize with default state "stopped"', function() {

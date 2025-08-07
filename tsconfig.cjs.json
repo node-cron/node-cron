@@ -1,8 +1,14 @@
 {
-  "extends": "./tsconfig.base.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "CommonJS",
-    "moduleResolution": "Node",
-    "outDir": "./dist/cjs"
-  }
+    "noEmit": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "./dist/cjs",
+    "verbatimModuleSyntax": false
+  },
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/tasks/background-scheduled-task/dirname_esm.ts"
+  ]
 }

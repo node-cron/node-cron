@@ -1,5 +1,6 @@
 import { assert } from 'chai';
-import { TimeMatcher } from './time-matcher';
+
+import { TimeMatcher } from './time-matcher.js';
 
 describe('TimeMatcher', function() {
     describe('wildcard', function() {
@@ -91,7 +92,7 @@ describe('TimeMatcher', function() {
             assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 6, 0)));
             assert.isFalse(matcher.match(new Date(2018, 0, 1, 0, 7, 0)));
         });
-        
+
         it('should accept multiple values for hour', function() {
             const matcher = new TimeMatcher('0 0 5,6 * * *');
             assert.isTrue(matcher.match(new Date(2018, 0, 1, 5, 0, 0)));
@@ -185,7 +186,7 @@ describe('TimeMatcher', function() {
             assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 6, 0)));
             assert.isFalse(matcher.match(new Date(2018, 0, 1, 0, 7, 0)));
         });
-        
+
         it('should accept step values for hour', function() {
             const matcher = new TimeMatcher('0 0 */2 * * *');
             assert.isTrue(matcher.match(new Date(2018, 0, 1, 2, 0, 0)));

@@ -1,7 +1,9 @@
-import { fileURLToPath } from "url";
-import logger from "../../logger";
-import { InlineScheduledTask } from "../inline-scheduled-task";
-import { ScheduledTask, TaskContext, TaskEvent } from "../scheduled-task";
+import { fileURLToPath } from "node:url";
+
+import logger from "../../logger.js";
+import { InlineScheduledTask } from "../inline-scheduled-task.js";
+
+import type { ScheduledTask, TaskContext, TaskEvent } from "../scheduled-task.js";
 
 export async function startDaemon(message: any): Promise<ScheduledTask> {
     let script;
@@ -14,7 +16,7 @@ export async function startDaemon(message: any): Promise<ScheduledTask> {
      * Because we need esModuleInterop: true on our TS config file, it's almost impossible
      * to determine during runtime whether we are running in CJS or ESM.
      * This try-catch ensures we will be able to import or require in any environment.
-     * 
+     *
      * If both fail, then the path cannot be found.
      */
     try {
@@ -44,7 +46,7 @@ export async function startDaemon(message: any): Promise<ScheduledTask> {
     task.on('execution:maxReached', (context => sendEvent('execution:maxReached', context)));
 
     if (process.send) process.send({ event: 'daemon:started' });
-    
+
     task.start();
     return task;
 }
@@ -80,7 +82,7 @@ function safelySerializeContext(context: TaskContext): TaskContext {
     dateLocalIso: context.dateLocalIso,
     triggeredAt: context.triggeredAt
   };
-  
+
   if (context.task) {
     safeContext.task = {
       id: context.task.id,
@@ -88,7 +90,7 @@ function safelySerializeContext(context: TaskContext): TaskContext {
       status: context.task.getStatus()
     };
   }
-  
+
   if (context.execution) {
     safeContext.execution = {
       id: context.execution.id,

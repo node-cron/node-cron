@@ -1,6 +1,7 @@
 import * as chai from 'chai';
 const { expect } = chai;
-import validate from './pattern-validation';
+
+import validate from './pattern-validation.js';
 
 describe('pattern-validation',  function() {
     describe('validate month',  function() {

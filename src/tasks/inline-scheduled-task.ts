@@ -1,11 +1,13 @@
-import EventEmitter from "events";
-import { Execution, ScheduledTask, TaskContext, TaskEvent, TaskFn, TaskOptions } from "./scheduled-task";
-import { Runner, RunnerOptions } from "../scheduler/runner";
-import { TimeMatcher } from "../time/time-matcher";
-import { createID } from "../create-id";
-import { StateMachine } from "./state-machine";
-import logger from "../logger";
-import { LocalizedTime } from "../time/localized-time";
+import EventEmitter from "node:events";
+import { Runner } from "../scheduler/runner.js";
+import { TimeMatcher } from "../time/time-matcher.js";
+import { createID } from "../create-id.js";
+import { StateMachine } from "./state-machine.js";
+import logger from "../logger.js";
+import { LocalizedTime } from "../time/localized-time.js";
+
+import type { Execution, ScheduledTask, TaskContext, TaskEvent, TaskFn, TaskOptions } from "./scheduled-task.js";
+import type { RunnerOptions } from "../scheduler/runner.js";
 
 class TaskEmitter extends EventEmitter{}
 
@@ -22,7 +24,7 @@ export class InlineScheduledTask implements ScheduledTask {
   constructor(cronExpression: string, taskFn: TaskFn, options?: TaskOptions){
     this.emitter = new TaskEmitter();
     this.cronExpression = cronExpression;
-  
+
     this.id = createID('task', 12);
     this.name = options?.name || this.id;
     this.timezone = options?.timezone;
@@ -65,7 +67,7 @@ export class InlineScheduledTask implements ScheduledTask {
         this.destroy();
       }
     }
-    
+
     this.runner = new Runner(this.timeMatcher, (date, execution) => {
       return taskFn(this.createContext(date, execution));
     }, runnerOptions);
@@ -89,11 +91,11 @@ export class InlineScheduledTask implements ScheduledTask {
       this.runner.start();
       this.stateMachine.changeState('idle');
       this.emitter.emit('task:started', this.createContext(new Date()));
-    } 
+    }
   }
-  
+
   stop(): void {
-    if(this.runner.isStarted()) { 
+    if(this.runner.isStarted()) {
       this.runner.stop();
       this.stateMachine.changeState('stopped');
       this.emitter.emit('task:stopped', this.createContext(new Date()));
@@ -103,7 +105,7 @@ export class InlineScheduledTask implements ScheduledTask {
   getStatus(): string {
     return this.stateMachine.state;
   }
-  
+
   destroy(): void {
     if (this.stateMachine.state === 'destroyed') return;
 
@@ -111,7 +113,7 @@ export class InlineScheduledTask implements ScheduledTask {
     this.stateMachine.changeState('destroyed');
     this.emitter.emit('task:destroyed', this.createContext(new Date()));
   }
-  
+
   execute() {
     return new Promise<any>((resolve, reject) => {
       const onFail = (context: TaskContext) => {

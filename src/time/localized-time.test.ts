@@ -1,5 +1,6 @@
 import { assert } from 'chai';
-import { LocalizedTime } from './localized-time';
+
+import { LocalizedTime } from './localized-time.js';
 
 describe('LocalizedTime', function(){
   it('converts to a timezone', function(){
@@ -35,16 +36,16 @@ describe('LocalizedTime', function(){
   it('returns the data parts', function(){
     const date = new Date(Date.UTC(2025, 3, 30, 9, 8, 5, 78));
     const localTime = new LocalizedTime(date, "Europe/Istanbul");
-    assert.deepEqual(localTime.getParts(), { 
-      day: 30, 
-      month: 4, 
-      year: 2025, 
-      hour: 12, 
-      minute: 8, 
-      second: 5, 
-      milisecond: 78, 
-      weekday: 'Wed', 
-      gmt: 'GMT+03:00' 
+    assert.deepEqual(localTime.getParts(), {
+      day: 30,
+      month: 4,
+      year: 2025,
+      hour: 12,
+      minute: 8,
+      second: 5,
+      milisecond: 78,
+      weekday: 'Wed',
+      gmt: 'GMT+03:00'
     });
   });
 })

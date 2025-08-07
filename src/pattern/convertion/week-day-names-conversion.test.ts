@@ -1,6 +1,7 @@
 import * as chai from 'chai';
 const { expect } = chai;
-import conversion from './week-day-names-conversion';
+
+import conversion from './week-day-names-conversion.js';
 
 describe('week-day-names-conversion', function() {
     it('shuld convert week day names names', function() {
