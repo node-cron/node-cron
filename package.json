@@ -5,18 +5,18 @@
   "author": "Lucas Merencia",
   "license": "ISC",
   "homepage": "https://github.com/merencia/node-cron",
-  "main": "./dist/cjs/node-cron.js",
-  "module": "./dist/esm/node-cron.js",
-  "type": "commonjs",
+  "main": "./dist/node-cron.cjs",
+  "module": "./dist/node-cron.js",
+  "type": "module",
   "exports": {
     ".": {
       "require": {
-        "types": "./dist/cjs/node-cron.d.ts",
-        "default":  "./dist/cjs/node-cron.js"
+        "types": "./dist/node-cron.d.ts",
+        "default": "./dist/node-cron.cjs"
       },
       "import": {
-      "types": "./dist/esm/node-cron.d.ts",
-        "default":  "./dist/esm/node-cron.js"
+        "types": "./dist/node-cron.d.ts",
+        "default": "./dist/node-cron.js"
       }
     }
   },
@@ -25,9 +25,7 @@
     "test:nocov": "mocha --recursive **/*.test.ts",
     "lint": "./node_modules/.bin/eslint ./src",
     "check": "npm run lint && npm test",
-    "build:esm": "tsc -p tsconfig.esm.json",
-    "build:cjs": "tsc -p tsconfig.cjs.json",
-    "build": "npm run build:esm; npm run build:cjs",
+    "build": "npx rollup -c",
     "prepublishOnly": "npm run build"
   },
   "engines": {
@@ -52,6 +50,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.26.0",
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-replace": "^6.0.2",
+    "@rollup/plugin-typescript": "^12.1.2",
     "@tsconfig/recommended": "^1.0.8",
     "@types/chai": "^5.2.1",
     "@types/expect": "^1.20.4",
@@ -67,7 +69,9 @@
     "eslint-plugin-node": "^11.1.0",
     "globals": "^16.1.0",
     "mocha": "^11.1.0",
+    "rollup": "^4.43.0",
     "sinon": "^20.0.0",
+    "tslib": "^2.8.1",
     "tsup": "^8.4.0",
     "tsx": "^4.19.3",
     "typescript": "^5.8.3",
@@ -81,5 +85,6 @@
     "exclude": [
       "src/test-assets/**"
     ]
-  }
+  },
+  "packageManager": "yarn@4.9.2"
 }

@@ -3,13 +3,13 @@ import { fork, ChildProcess} from 'child_process';
 
 import { Execution, ScheduledTask, TaskContext, TaskEvent, TaskOptions } from '../scheduled-task';
 import { createID } from '../../create-id';
-import { EventEmitter } from 'stream';
+import { EventEmitter } from 'events';
 import { StateMachine } from '../state-machine';
 import { LocalizedTime } from '../../time/localized-time';
 import logger from '../../logger';
 import { TimeMatcher } from '../../time/time-matcher';
 
-const daemonPath = resolvePath(__dirname, 'daemon.js');
+const daemonPath = resolvePath(import.meta.dirname, 'daemon.js');
 
 class TaskEmitter extends EventEmitter{}
 

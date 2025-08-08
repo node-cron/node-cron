@@ -87,7 +87,7 @@ export function solvePath(filePath: string): string {
   const stackLines = new Error().stack?.split('\n');
   if(stackLines){
     stackLines?.shift();
-    const callerLine = stackLines?.find((line) => { return line.indexOf(__filename) === -1; });
+    const callerLine = stackLines?.find((line) => { return line.indexOf(import.meta.filename) === -1; });
     const match = callerLine?.match(/(file:\/\/)?(((\/?)(\w:))?([/\\].+)):\d+:\d+/);
    
     if (match) {
