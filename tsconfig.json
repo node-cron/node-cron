@@ -1,1 +1,21 @@
-{ "extends": "./tsconfig.esm.json" }
+{
+  "extends": "@tsconfig/recommended/tsconfig.json",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "declaration": true,
+    "importHelpers": false,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "noImplicitAny": false,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "noEmitOnError": true,
+    "outDir":  "dist"
+  },
+  "exclude": ["**/dist/**", "**/node_modules/**"]
+}
