@@ -1,25 +1,28 @@
 import { assert } from 'chai';
 import sinon from 'sinon';
-
-import BackgroundScheduledTask from "./background-scheduled-task";
-
-import { EventEmitter } from 'stream';
-
+import esmock from 'esmock';
+import { EventEmitter } from 'events';
 
 describe('BackgroundScheduledTask', function() {
   this.timeout(10000);
   
   let fakeChildProcess: EventEmitter & { send: sinon.SinonStub; kill: sinon.SinonStub };
+  let BackgroundScheduledTask: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     fakeChildProcess = Object.assign(new EventEmitter(), {
       send: sinon.stub(),
       kill: sinon.stub(),
       killed: false
     });
 
-    // eslint-disable-next-line
-    sinon.stub(require('child_process'), 'fork').returns(fakeChildProcess as any);
+    // Mock child_process.fork using esmock
+    BackgroundScheduledTask = await esmock('./background-scheduled-task.js', {
+      'child_process': {
+        fork: sinon.stub().returns(fakeChildProcess)
+      }
+    });
+    BackgroundScheduledTask = BackgroundScheduledTask.default || BackgroundScheduledTask;
   });
 
   afterEach(() => {

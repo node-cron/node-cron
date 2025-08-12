@@ -131,7 +131,7 @@ export const getTasks = registry.all;
  */
 export const getTask = registry.get;
 
-export { ScheduledTask } from './tasks/scheduled-task';
+export type { ScheduledTask } from './tasks/scheduled-task';
 export type { TaskFn, TaskContext, TaskOptions } from './tasks/scheduled-task';
 
 export interface NodeCron {

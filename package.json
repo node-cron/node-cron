@@ -67,6 +67,7 @@
     "eslint": "^9.26.0",
     "eslint-plugin-mocha": "^10.5.0",
     "eslint-plugin-node": "^11.1.0",
+    "esmock": "^2.7.1",
     "globals": "^16.1.0",
     "mocha": "^11.1.0",
     "rollup": "^4.43.0",
