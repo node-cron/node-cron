@@ -186,13 +186,7 @@ class BackgroundScheduledTask implements ScheduledTask{
         return reject(new Error('Cannot execute background task because it hasn\'t been started yet. Please initialize the task using the start() method before attempting to execute it.'));
       }
       
-      const timeoutId = setTimeout(() => {
-        cleanupListeners();
-        reject(new Error('Execution timeout exceeded'));
-      }, 5000);
-      
       const cleanupListeners = () => {
-        clearTimeout(timeoutId);
         this.off('execution:finished', onFinished);
         this.off('execution:failed', onFail);
       };
