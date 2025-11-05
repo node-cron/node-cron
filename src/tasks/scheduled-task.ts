@@ -55,7 +55,7 @@ export interface ScheduledTask {
   
   start(): void | Promise<void>;
   stop(): void | Promise<void>;
-  getStatus(): string | Promise<string>;
+  getStatus(): string;
   destroy(): void | Promise<void>;
   execute(): Promise<any>;
   getNextRun(): Date | null;
