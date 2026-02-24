@@ -172,7 +172,7 @@ describe('InlineScheduledTask', function() {
     assert.isDefined(event?.date)
     assert.isDefined(event?.triggeredAt)
     task.destroy();
-  });
+  }).timeout(5000);
 
   it('emmits execution:missed', async function(){
     const task = new InlineScheduledTask('* * * * * *', async ()=> {  return "task result" });

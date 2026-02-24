@@ -120,9 +120,9 @@ export function bind(){
       return task;
     case 'task:execute':
       try {
-        if (task) await task.execute();
+      if (task) await task.execute();
       } catch(error: any){
-        logger.debug('Daemon task:execute falied:', error);
+        logger.debug('Daemon task:execute failed:', error);
       }
       return task;
     }

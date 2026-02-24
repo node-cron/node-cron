@@ -6,6 +6,7 @@ import { EventEmitter } from 'events';
 import { StateMachine } from '../state-machine';
 import { LocalizedTime } from '../../time/localized-time';
 import logger from '../../logger';
+import { shouldLogRuntimeErrors } from '../../utils/environment';
 import { TimeMatcher } from '../../time/time-matcher';
 import { fileURLToPath } from 'url';
 
@@ -85,7 +86,9 @@ class BackgroundScheduledTask implements ScheduledTask{
         this.forkProcess.on('exit', (code, signal) => {
           if (code !== 0 && signal !== 'SIGTERM') {
             const erro = new Error(`node-cron daemon exited with code ${code || signal}`)
-            logger.error(erro);
+            if (shouldLogRuntimeErrors()) {
+              logger.error(erro);
+            }
             clearTimeout(timeout);
             reject(erro)
           }

@@ -3,6 +3,7 @@ import logger from "../logger";
 import { TrackedPromise } from "../promise/tracked-promise";
 import { Execution } from "../tasks/scheduled-task";
 import { TimeMatcher } from "../time/time-matcher";
+import { shouldLogRuntimeErrors } from "../utils/environment";
 
 type OnFn = (date: Date) => void | Promise<void>;
 type OnErrorHookFn = (date: Date, error: Error, execution: Execution) => void | Promise<void>;
@@ -15,7 +16,9 @@ function emptyOnFn(){};
 function emptyHookFn(){ return true };
 
 function defaultOnError(date: Date, error: Error){
-  logger.error('Task failed with error!', error);
+  if (shouldLogRuntimeErrors()) {
+    logger.error('Task failed with error!', error);
+  }
 }
 
 export type RunnerOptions = {

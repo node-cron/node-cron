@@ -6,6 +6,7 @@ import { createID } from "../create-id";
 import { StateMachine } from "./state-machine";
 import logger from "../logger";
 import { LocalizedTime } from "../time/localized-time";
+import { shouldLogRuntimeErrors } from "../utils/environment";
 
 class TaskEmitter extends EventEmitter{}
 
@@ -50,7 +51,9 @@ export class InlineScheduledTask implements ScheduledTask {
         return true;
       },
       onError: (date: Date, error: Error, execution: Execution) => {
-        logger.error(error);
+        if (shouldLogRuntimeErrors()) {
+          logger.error(error);
+        }
         this.emitter.emit('execution:failed', this.createContext(date, execution));
         this.changeState('idle');
       },

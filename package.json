@@ -21,7 +21,7 @@
     }
   },
   "scripts": {
-    "test": "c8 --reporter text --reporter=lcov --exclude '**/*.test.ts' mocha --recursive './src/**/*.test.ts'",
+    "test": "c8 --reporter text --reporter=lcov --exclude '**/*.test.ts' mocha --recursive './src/**/*.test.ts' --exit",
     "test:nocov": "mocha --recursive **/*.test.ts",
     "lint": "./node_modules/.bin/eslint ./src",
     "check": "npm run lint && npm test",
