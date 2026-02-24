@@ -1,9 +1,9 @@
 import { assert } from 'chai';
 import sinon from 'sinon';
 
-import BackgroundScheduledTask from "./background-scheduled-task";
+import BackgroundScheduledTask, { __setForkImplementation, __resetForkImplementation } from "./background-scheduled-task";
 
-import { EventEmitter } from 'stream';
+import { EventEmitter } from 'events';
 
 
 describe('BackgroundScheduledTask', function() {
@@ -18,11 +18,12 @@ describe('BackgroundScheduledTask', function() {
       killed: false
     });
 
-    // eslint-disable-next-line
-    sinon.stub(require('child_process'), 'fork').returns(fakeChildProcess as any);
+    const fakeFork = sinon.stub().returns(fakeChildProcess as any);
+    __setForkImplementation(fakeFork as any);
   });
 
   afterEach(() => {
+    __resetForkImplementation();
     sinon.restore();
   });
 

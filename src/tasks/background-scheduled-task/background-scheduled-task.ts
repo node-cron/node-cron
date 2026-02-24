@@ -1,15 +1,26 @@
-import { resolve as resolvePath } from 'path';
+import { resolve as resolvePath, dirname } from 'path';
 import { fork, ChildProcess} from 'child_process';
-
 import { Execution, ScheduledTask, TaskContext, TaskEvent, TaskOptions } from '../scheduled-task';
 import { createID } from '../../create-id';
-import { EventEmitter } from 'stream';
+import { EventEmitter } from 'events';
 import { StateMachine } from '../state-machine';
 import { LocalizedTime } from '../../time/localized-time';
 import logger from '../../logger';
 import { TimeMatcher } from '../../time/time-matcher';
+import { fileURLToPath } from 'url';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
 const daemonPath = resolvePath(__dirname, 'daemon.js');
+
+let forkImplementation: typeof fork = fork;
+
+export function __setForkImplementation(fn: typeof fork) {
+  forkImplementation = fn;
+}
+
+export function __resetForkImplementation(): void {
+  forkImplementation = fork;
+}
 
 class TaskEmitter extends EventEmitter{}
 
@@ -64,7 +75,7 @@ class BackgroundScheduledTask implements ScheduledTask{
       }, 5000);
       
       try {
-        this.forkProcess = fork(daemonPath);
+        this.forkProcess = forkImplementation(daemonPath);
         
         this.forkProcess.on('error', (err) => {
           clearTimeout(timeout);

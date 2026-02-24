@@ -9,14 +9,14 @@
  */
 
 import { InlineScheduledTask } from "./tasks/inline-scheduled-task";
-import { ScheduledTask, TaskFn, TaskOptions } from "./tasks/scheduled-task";
+import type { ScheduledTask, TaskFn, TaskOptions } from "./tasks/scheduled-task";
 import { TaskRegistry } from "./task-registry";
 
 import validation from "./pattern/validation/pattern-validation";
 import BackgroundScheduledTask from "./tasks/background-scheduled-task/background-scheduled-task";
 
 import path from "path";
-import { pathToFileURL } from "url";
+import { pathToFileURL, fileURLToPath } from "url";
 
 /**
  * The central registry that maintains all scheduled tasks.
@@ -24,6 +24,7 @@ import { pathToFileURL } from "url";
  */
 const registry = new TaskRegistry();
 
+const __filename = fileURLToPath(import.meta.url);
 
 /**
  * Schedules a task to be executed according to the provided cron expression.
@@ -131,8 +132,7 @@ export const getTasks = registry.all;
  */
 export const getTask = registry.get;
 
-export { ScheduledTask } from './tasks/scheduled-task';
-export type { TaskFn, TaskContext, TaskOptions } from './tasks/scheduled-task';
+export type { ScheduledTask, TaskFn, TaskContext, TaskOptions } from './tasks/scheduled-task';
 
 export interface NodeCron {
   schedule: typeof schedule;
