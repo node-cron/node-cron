@@ -125,6 +125,10 @@ function getTimezoneGMT(date: Date, timezone?: string) {
   if (!match) return 'Z';
 
   const sign = match[1];
+  const hoursNum = parseInt(match[2]);
+  const minutesNum = parseInt(match[3] || '0');
+  if (hoursNum === 0 && minutesNum === 0) return 'Z';
+
   const hours = match[2].padStart(2, '0');
   const minutes = (match[3] || '00').padStart(2, '0');
 

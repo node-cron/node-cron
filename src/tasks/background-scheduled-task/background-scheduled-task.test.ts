@@ -3,7 +3,7 @@ import sinon from 'sinon';
 
 import BackgroundScheduledTask from "./background-scheduled-task";
 
-import { EventEmitter } from 'stream';
+import { EventEmitter } from 'events';
 
 
 describe('BackgroundScheduledTask', function() {
