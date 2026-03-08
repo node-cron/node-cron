@@ -237,5 +237,28 @@ describe('TimeMatcher', function() {
         const expected = new Date(Date.UTC(2025, 4, 21, 0, 1, 0))
         assert.deepEqual(nextMatch, expected)
       })
+
+      it('should return a future date near DST spring-forward boundary', ()=>{
+        // 2026-03-07 22:32:42 EST (night before US spring-forward on March 8)
+        const baseDate = new Date('2026-03-08T03:32:42Z');
+
+        const everyMinute = new TimeMatcher('* * * * *');
+        const next1 = everyMinute.getNextMatch(baseDate);
+        assert.isTrue(next1 > baseDate, 'every-minute next match must be in the future');
+
+        const every5 = new TimeMatcher('*/5 * * * *');
+        const next2 = every5.getNextMatch(baseDate);
+        assert.isTrue(next2 > baseDate, 'every-5-min next match must be in the future');
+      })
+
+      it('should return next day for daily schedule across DST boundary with timezone', ()=>{
+        // 2026-03-07 22:32:42 EST — next 7am ET should be ~8.5 hours away, not months
+        const baseDate = new Date('2026-03-08T03:32:42Z');
+        const matcher = new TimeMatcher('0 7 * * *', 'America/New_York');
+        const next = matcher.getNextMatch(baseDate);
+        const hoursAway = (next.getTime() - baseDate.getTime()) / (1000 * 60 * 60);
+        assert.isTrue(next > baseDate, 'next match must be in the future');
+        assert.isTrue(hoursAway < 48, `next 7am should be within 48 hours, got ${hoursAway.toFixed(1)}h`);
+      })
     })
 });
