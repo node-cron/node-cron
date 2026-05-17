@@ -115,7 +115,7 @@ export class InlineScheduledTask implements ScheduledTask {
   execute() {
     return new Promise<any>((resolve, reject) => {
       const onFail = (context: TaskContext) => {
-        this.off('execution:finished', onFail);
+        this.off('execution:finished', onFinished);
         reject(context.execution?.error)
       };
 

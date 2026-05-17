@@ -65,6 +65,14 @@ describe('InlineScheduledTask', function() {
     }
   });
 
+  it('execute() removes execution:finished listener after failure', async function(){
+    const task = new InlineScheduledTask('* * * * * *', async () => {
+      throw new Error('fail');
+    });
+    try { await task.execute(); } catch { /* expected */ }
+    assert.equal(task.emitter.listenerCount('execution:finished'), 0);
+  });
+
   it('emmits task:started', async function(){
     const task = new InlineScheduledTask('* * * * * *', async ()=> { return "task result" });
     const eventCaught = new Promise<TaskContext>(resolve => {
