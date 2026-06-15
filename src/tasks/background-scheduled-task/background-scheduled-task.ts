@@ -3,7 +3,7 @@ import { fork, ChildProcess} from 'child_process';
 
 import { Execution, ScheduledTask, TaskContext, TaskEvent, TaskOptions } from '../scheduled-task';
 import { createID } from '../../create-id';
-import { EventEmitter } from 'stream';
+import { EventEmitter } from 'events';
 import { StateMachine } from '../state-machine';
 import { LocalizedTime } from '../../time/localized-time';
 import logger from '../../logger';

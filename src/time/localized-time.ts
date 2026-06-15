@@ -42,10 +42,23 @@ export class LocalizedTime {
 
   set(field: string, value: number){
     this.parts[field] = value;
-    const newDate = new Date(this.toISO());
+    const isoString = this.toISO();
+    const newDate = new Date(isoString);
     this.timestamp = newDate.getTime();
 
-    this.parts = buildDateParts(newDate, this.timezone)
+    // Rebuild parts from the new timestamp
+    this.parts = buildDateParts(newDate, this.timezone);
+
+    // If the offset changed (DST boundary crossing), the local time fields
+    // may have drifted. Detect this and correct by adjusting the timestamp
+    // to preserve the intended local time.
+    const oldGmt = parseOffsetMinutes(isoString);
+    const newGmt = parseOffsetMinutes(this.toISO());
+    if (oldGmt !== null && newGmt !== null && oldGmt !== newGmt) {
+      const driftMs = (newGmt - oldGmt) * 60000;
+      this.timestamp -= driftMs;
+      this.parts = buildDateParts(new Date(this.timestamp), this.timezone);
+    }
   }
 }
 
@@ -87,15 +100,37 @@ function buildDateParts(date: Date, timezone?: string): DateParts {
 }
 
 
+function parseOffsetMinutes(isoString: string): number | null {
+  if (isoString.endsWith('Z')) return 0;
+  const match = isoString.match(/([+-])(\d{2}):(\d{2})$/);
+  if (!match) return null;
+  const sign = match[1] === '+' ? 1 : -1;
+  return sign * (parseInt(match[2]) * 60 + parseInt(match[3]));
+}
+
 function getTimezoneGMT(date: Date, timezone?: string) {
-  const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
-  const tzDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
-  let offsetInMinutes = (utcDate.getTime() - tzDate.getTime()) / 60000;
-  const sign = offsetInMinutes <= 0 ? '+' : '-';
-  offsetInMinutes = Math.abs(offsetInMinutes);
-  if(offsetInMinutes === 0) return 'Z';
-  const hours = Math.floor(offsetInMinutes / 60).toString().padStart(2, '0');
-  const minutes = Math.floor(offsetInMinutes % 60).toString().padStart(2, '0');
-  
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    timeZoneName: 'shortOffset'
+  });
+  const parts = fmt.formatToParts(date);
+  const tzPart = parts.find(p => p.type === 'timeZoneName');
+  if (!tzPart) return 'Z';
+
+  const tzValue = tzPart.value; // e.g. "GMT-5", "GMT+5:30", "GMT"
+  if (tzValue === 'GMT') return 'Z';
+
+  // Parse the offset from the Intl-provided string
+  const match = tzValue.match(/^GMT([+-])(\d{1,2})(?::(\d{2}))?$/);
+  if (!match) return 'Z';
+
+  const sign = match[1];
+  const hoursNum = parseInt(match[2]);
+  const minutesNum = parseInt(match[3] || '0');
+  if (hoursNum === 0 && minutesNum === 0) return 'Z';
+
+  const hours = match[2].padStart(2, '0');
+  const minutes = (match[3] || '00').padStart(2, '0');
+
   return `GMT${sign}${hours}:${minutes}`;
 }
