@@ -71,6 +71,7 @@ describe('InlineScheduledTask', function() {
     });
     try { await task.execute(); } catch { /* expected */ }
     assert.equal(task.emitter.listenerCount('execution:finished'), 0);
+    task.destroy();
   });
 
   it('emmits task:started', async function(){
