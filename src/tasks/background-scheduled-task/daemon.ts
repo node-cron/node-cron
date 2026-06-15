@@ -1,5 +1,5 @@
 import { fileURLToPath } from "url";
-import logger from "../../logger";
+import logger, { noopLogger } from "../../logger";
 import { InlineScheduledTask } from "../inline-scheduled-task";
 import { ScheduledTask, TaskContext, TaskEvent } from "../scheduled-task";
 
@@ -23,7 +23,9 @@ export async function startDaemon(message: any): Promise<ScheduledTask> {
       script = await import(fileURLToPath(message.path))
     }
 
-    const task = new InlineScheduledTask(message.cron, script.task, message.options);
+    // The inline task in the daemon stays silent; the parent process logs from
+    // the forwarded events using the user's configured logger.
+    const task = new InlineScheduledTask(message.cron, script.task, { ...(message.options || {}), logger: noopLogger });
 
     task.on('task:started', (context => sendEvent('task:started', context)));
 

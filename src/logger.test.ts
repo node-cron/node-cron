@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import sinon from 'sinon';
-import logger from './logger';
+import logger, { Logger, setLogger, resetLogger, noopLogger } from './logger';
 
 describe('Logger', () => {
   let consoleInfoStub: sinon.SinonStub;
@@ -120,6 +120,67 @@ describe('Logger', () => {
       assert.include(loggedMessage, '[NODE-CRON]');
       assert.include(loggedMessage, message);
       assert.strictEqual(loggedError, additionalError);
+    });
+  });
+
+  describe('setLogger / resetLogger', () => {
+    afterEach(() => resetLogger());
+
+    function fakeLogger(): Logger & { calls: Record<string, any[][]> } {
+      const calls: Record<string, any[][]> = { info: [], warn: [], error: [], debug: [] };
+      return {
+        calls,
+        info: (...a: any[]) => { calls.info.push(a); },
+        warn: (...a: any[]) => { calls.warn.push(a); },
+        error: (...a: any[]) => { calls.error.push(a); },
+        debug: (...a: any[]) => { calls.debug.push(a); },
+      };
+    }
+
+    it('routes all calls to a custom logger and not to the console', () => {
+      const custom = fakeLogger();
+      setLogger(custom);
+
+      logger.info('i');
+      logger.warn('w');
+      logger.error('e');
+      logger.debug('d');
+
+      assert.deepEqual(custom.calls.info, [['i']]);
+      assert.deepEqual(custom.calls.warn, [['w']]);
+      assert.equal(custom.calls.error.length, 1);
+      assert.equal(custom.calls.debug.length, 1);
+      assert.isTrue(consoleInfoStub.notCalled);
+      assert.isTrue(consoleWarnStub.notCalled);
+      assert.isTrue(consoleErrorStub.notCalled);
+    });
+
+    it('resetLogger restores the default console logger', () => {
+      setLogger(fakeLogger());
+      resetLogger();
+
+      logger.warn('back to console');
+      assert.isTrue(consoleWarnStub.calledOnce);
+    });
+
+    it('falls back to the default logger when set to a nullish value', () => {
+      setLogger(undefined as any);
+      logger.warn('still works');
+      assert.isTrue(consoleWarnStub.calledOnce);
+    });
+
+    it('noopLogger swallows everything', () => {
+      setLogger(noopLogger);
+
+      logger.info('x');
+      logger.warn('x');
+      logger.error('x');
+      logger.debug('x');
+
+      assert.isTrue(consoleInfoStub.notCalled);
+      assert.isTrue(consoleWarnStub.notCalled);
+      assert.isTrue(consoleErrorStub.notCalled);
+      assert.isTrue(consoleDebugStub.notCalled);
     });
   });
 
