@@ -260,5 +260,36 @@ describe('TimeMatcher', function() {
         assert.isTrue(next > baseDate, 'next match must be in the future');
         assert.isTrue(hoursAway < 48, `next 7am should be within 48 hours, got ${hoursAway.toFixed(1)}h`);
       })
+
+      it('should never return a past date during the spring-forward skipped hour', ()=>{
+        // The local hour 02:00-02:59 does not exist on 2026-03-08 in New York
+        // (clocks jump 02:00 EST -> 03:00 EDT at 07:00Z). A base anywhere in the
+        // hour right before the jump must still yield a future match, not a past one.
+        const expressions = ['* * * * *', '*/5 * * * *', '0 * * * *'];
+        const bases = [
+          '2026-03-08T06:30:00Z',
+          '2026-03-08T06:58:00Z',
+          '2026-03-08T06:59:00Z',
+          '2026-03-08T06:59:30Z',
+        ];
+
+        for (const expression of expressions) {
+          for (const base of bases) {
+            const baseDate = new Date(base);
+            const next = new TimeMatcher(expression, 'America/New_York').getNextMatch(baseDate);
+            assert.isTrue(
+              next > baseDate,
+              `"${expression}" at ${base} must return a future date, got ${next.toISOString()}`
+            );
+          }
+        }
+      })
+
+      it('should return a future date during the fall-back repeated hour', ()=>{
+        // 2026-11-01: clocks fall back 02:00 EDT -> 01:00 EST at 06:00Z.
+        const baseDate = new Date('2026-11-01T05:30:00Z');
+        const next = new TimeMatcher('* * * * *', 'America/New_York').getNextMatch(baseDate);
+        assert.isTrue(next > baseDate, `expected future date, got ${next.toISOString()}`);
+      })
     })
 });

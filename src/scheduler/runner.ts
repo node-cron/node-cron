@@ -139,7 +139,16 @@ export class Runner {
       if(expectedNextExecution && expectedNextExecution.getTime() < currentDate.getTime()){
         while(expectedNextExecution.getTime() < currentDate.getTime()){
           logger.warn(`missed execution at ${expectedNextExecution}! Possible blocking IO or high CPU user at the same process used by node-cron.`);
-          expectedNextExecution = this.timeMatcher.getNextMatch(expectedNextExecution);
+          const nextMatch = this.timeMatcher.getNextMatch(expectedNextExecution);
+          // Defense in depth: getNextMatch must always move forward. If it ever
+          // returns a date that does not advance (e.g. a bug around a DST
+          // boundary), re-base from the current date instead of looping forever.
+          if(nextMatch.getTime() <= expectedNextExecution.getTime()){
+            logger.error(`getNextMatch did not advance past ${expectedNextExecution}; aborting missed-execution catch-up to avoid an infinite loop.`);
+            expectedNextExecution = this.timeMatcher.getNextMatch(currentDate);
+            break;
+          }
+          expectedNextExecution = nextMatch;
           runAsync(this.onMissedExecution, expectedNextExecution, defaultOnError);
         }
       }
