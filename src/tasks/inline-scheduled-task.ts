@@ -1,4 +1,4 @@
-import EventEmitter from "events";
+import { EventEmitter } from "events";
 import { Execution, ScheduledTask, TaskContext, TaskEvent, TaskFn, TaskOptions } from "./scheduled-task";
 import { Runner, RunnerOptions } from "../scheduler/runner";
 import { TimeMatcher } from "../time/time-matcher";
