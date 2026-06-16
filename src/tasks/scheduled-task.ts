@@ -45,7 +45,14 @@ export type TaskOptions = {
    * The warning is also suppressed automatically when an `execution:missed`
    * listener is attached.
    */
-  suppressMissedWarning?: boolean
+  suppressMissedWarning?: boolean,
+  /**
+   * Timeout in milliseconds for `execute()` on background tasks. When set,
+   * `execute()` rejects with "Execution timeout exceeded" if the task has not
+   * reported back in time. Defaults to no timeout (waits for the task to
+   * finish or fail). Has no effect on inline tasks.
+   */
+  executeTimeout?: number
 }
 
 export type Execution = {
