@@ -23,7 +23,7 @@
     "check": "npm run lint && npm test",
     "build": "rollup -c",
     "dev": "rollup -c -w",
-    "prepublishOnly": "npm run build"
+    "prepack": "npm run build"
   },
   "engines": {
     "node": ">=20.11"
