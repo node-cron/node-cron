@@ -1,0 +1,5 @@
+singe time jobs (max runs) ok
+preventOverrun
+error handling, add a onError option
+docs comments
+readme

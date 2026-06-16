@@ -2,19 +2,12 @@
 
 [![npm](https://img.shields.io/npm/l/node-cron.svg)](https://github.com/merencia/node-cron/blob/master/LICENSE.md)
 [![npm](https://img.shields.io/npm/v/node-cron.svg)](https://img.shields.io/npm/v/node-cron.svg)
-[![Coverage Status](https://coveralls.io/repos/github/node-cron/node-cron/badge.svg?branch=master)](https://coveralls.io/github/node-cron/node-cron?branch=master)
-[![Code Climate](https://codeclimate.com/github/node-cron/node-cron/badges/gpa.svg)](https://codeclimate.com/github/merencia/node-cron)
-[![Build Status](https://travis-ci.org/node-cron/node-cron.svg?branch=master)](https://travis-ci.org/merencia/node-cron)
-[![Dependency Status](https://david-dm.org/node-cron/node-cron.svg)](https://david-dm.org/merencia/node-cron)
-[![devDependency Status](https://david-dm.org/node-cron/node-cron/dev-status.svg)](https://david-dm.org/merencia/node-cron#info=devDependencies)
-[![Backers on Open Collective](https://opencollective.com/node-cron/backers/badge.svg)](#backers)
-[![Sponsors on Open Collective](https://opencollective.com/node-cron/sponsors/badge.svg)](#sponsors)
+![NPM Downloads](https://img.shields.io/npm/dm/node-cron)
+[![Coverage Status](https://coveralls.io/repos/github/node-cron/node-cron/badge.svg?branch=main)](https://coveralls.io/github/node-cron/node-cron?branch=main)
 
 The node-cron module is tiny task scheduler in pure JavaScript for node.js based on [GNU crontab](https://www.gnu.org/software/mcron/manual/html_node/Crontab-file.html). This module allows you to schedule task in node.js using full crontab syntax.
 
-**Need a job scheduler with support for worker threads and cron syntax?** Try out the [Bree](https://github.com/breejs/bree) job scheduler!
-
-[![NPM](https://nodei.co/npm/node-cron.png?downloads=true&downloadRank=true&stars=false)](https://nodei.co/npm/node-cron/)
+### [Node-Cron Documentation](http://nodecron.com)
 
 ## Getting Started
 
@@ -75,175 +68,6 @@ This is a quick reference to cron syntax and also shows the options supported by
 | month        | 1-12 (or names)                   |
 | day of week  | 0-7 (or names, 0 or 7 are sunday) |
 
-#### Using multiples values
-
-You may use multiples values separated by comma:
-
-```javascript
-import cron from 'node-cron';
-
-cron.schedule('1,2,4,5 * * * *', () => {
-  console.log('running every minute 1, 2, 4 and 5');
-});
-```
-
-#### Using ranges
-
-You may also define a range of values:
-
-```javascript
-import cron from 'node-cron';
-
-cron.schedule('1-5 * * * *', () => {
-  console.log('running every minute to 1 from 5');
-});
-```
-
-#### Using step values
-
-Step values can be used in conjunction with ranges, following a range with '/' and a number. e.g: `1-10/2` that is the same as `2,4,6,8,10`. Steps are also permitted after an asterisk, so if you want to say “every two minutes”, just use `*/2`.
-
-```javascript
-import cron from 'node-cron';
-
-cron.schedule('*/2 * * * *', () => {
-  console.log('running a task every two minutes');
-});
-```
-
-#### Using names
-
-For month and week day you also may use names or short names. e.g:
-
-```javascript
-import cron from 'node-cron';
-
-cron.schedule('* * * January,September Sunday', () => {
-  console.log('running on Sundays of January and September');
-});
-```
-
-Or with short names:
-
-```javascript
-import cron from 'node-cron';
-
-cron.schedule('* * * Jan,Sep Sun', () => {
-  console.log('running on Sundays of January and September');
-});
-```
-
-## Cron methods
-
-### Schedule
-
-Schedules given task to be executed whenever the cron expression ticks.
-
-Arguments:
-
-- **expression** `string`: Cron expression
-- **function** `Function`: Task to be executed
-- **options** `Object`: Optional configuration for job scheduling.
-
-#### Options
-
- - **scheduled**: A `boolean` to set if the created task is scheduled. Default `true`;
- - **recoverMissedExecutions**: A `boolean` to set if the created task should be able to recover missed executions. Default `false`;
- - **timezone**: The timezone that is used for job scheduling. See [IANA time zone database](https://www.iana.org/time-zones) for valid values, such as `Asia/Shanghai`, `Asia/Kolkata`, `America/Sao_Paulo`.
-
- **Example**:
-
- ```js
-  import cron from 'node-cron';
-
-  cron.schedule('0 1 * * *', () => {
-    console.log('Running a job at 01:00 at America/Sao_Paulo timezone');
-  }, {
-    scheduled: true,
-    timezone: "America/Sao_Paulo"
-  });
- ```
-
-## ScheduledTask methods
-
-### Start
-
-Starts the scheduled task.
-
-```javascript
-import cron from 'node-cron';
-
-const task = cron.schedule('* * * * *', () =>  {
-  console.log('stopped task');
-}, {
-  scheduled: false
-});
-
-task.start();
-```
-
-### Stop
-
-The task won't be executed unless re-started.
-
-```javascript
-import cron from 'node-cron';
-
-const task = cron.schedule('* * * * *', () =>  {
-  console.log('will execute every minute until stopped');
-});
-
-task.stop();
-```
-
-### Validate
-
-Validate that the given string is a valid cron expression.
-
-```javascript
-import cron from 'node-cron';
-
-const valid = cron.validate('59 * * * *');
-const invalid = cron.validate('60 * * * *');
-```
-
-### Naming tasks
-
-You can name your tasks to make it easier to identify them in the logs.
-
-```javascript
-import cron from 'node-cron';
-
-const task = cron.schedule('* * * * *', () =>  {
-  console.log('will execute every minute until stopped');
-}, {
-  name: 'my-task'
-});
-```
-
-### List tasks
-
-You can list all the tasks that are currently running.
-
-```javascript
-import cron from 'node-cron';
-
-const tasks = cron.getTasks();
-
-for (let [key, value] of tasks.entries()) {
-  console.log("key", key)
-  console.log("value", value)
-}
-```
-
-value is an object with the following properties:
-
-- _events
-- _eventsCount
-- _maxListeners
-- options
-- _task
-- etc...
 
 ## Issues
 
