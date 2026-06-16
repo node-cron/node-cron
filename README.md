@@ -125,7 +125,7 @@ v4 is a TypeScript rewrite with a smarter scheduler and a streamlined API (the `
 
 ## Issues
 
-Feel free to submit issues and enhancement requests [here](https://github.com/merencia/node-cron/issues).
+Feel free to submit issues and enhancement requests [here](https://github.com/node-cron/node-cron/issues).
 
 ## Contributing
 
