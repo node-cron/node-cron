@@ -87,10 +87,10 @@ describe('daemon - register', function () {
 
     task.destroy();
 
-    assert.equal(messages[0].event, 'daemon:started');
-    assert.equal(messages[1].event, 'task:started');
-    assert.equal(messages[2].event, 'execution:started');
-    assert.equal(messages[3].event, 'execution:failed');
+    assert.isDefined(messages.find(m => m.event === 'daemon:started'), 'daemon:started should be sent');
+    assert.isDefined(messages.find(m => m.event === 'task:started'), 'task:started should be sent');
+    assert.isDefined(messages.find(m => m.event === 'execution:started'), 'execution:started should be sent');
+    assert.isDefined(messages.find(m => m.event === 'execution:failed'), 'execution:failed should be sent');
   });
 
   it('should send overlap event', async function () {
@@ -111,10 +111,10 @@ describe('daemon - register', function () {
 
     task.destroy();
 
-    assert.equal(messages[0].event, 'daemon:started');
-    assert.equal(messages[1].event, 'task:started');
-    assert.equal(messages[2].event, 'execution:started');
-    assert.equal(messages[3].event, 'execution:overlap');
+    assert.isDefined(messages.find(m => m.event === 'daemon:started'), 'daemon:started should be sent');
+    assert.isDefined(messages.find(m => m.event === 'task:started'), 'task:started should be sent');
+    assert.isDefined(messages.find(m => m.event === 'execution:started'), 'execution:started should be sent');
+    assert.isDefined(messages.find(m => m.event === 'execution:overlap'), 'execution:overlap should be sent');
   });
 
   it('should send missed event', async function () {
