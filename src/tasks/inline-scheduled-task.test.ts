@@ -218,7 +218,64 @@ describe('InlineScheduledTask', function() {
     assert.isDefined(event?.triggeredAt)
     task.destroy();
   });
+
+  it('routes execution errors to the task logger', async function(){
+    const captured = makeLogger();
+    const task = new InlineScheduledTask('* * * * * *', async () => { throw new Error('boom'); }, { logger: captured });
+    try { await task.execute(); } catch { /* execute() rejects on failure */ }
+    assert.equal(captured.errors.length, 1, 'task logger should receive the error');
+    task.destroy();
+  });
+
+  it('warns about missed execution via the task logger when unhandled', async function(){
+    const captured = makeLogger();
+    const task = new InlineScheduledTask('* * * * * *', async () => {}, { logger: captured });
+    task.start();
+    await wait(1000); blockIO(2000); await wait(1200);
+    assert.isTrue(captured.warnings.some(w => w.includes('missed execution')), 'expected a missed-execution warning');
+    task.destroy();
+  });
+
+  it('suppresses the missed-execution warning when execution:missed has a listener', async function(){
+    const captured = makeLogger();
+    const task = new InlineScheduledTask('* * * * * *', async () => {}, { logger: captured });
+    let missedFired = false;
+    task.on('execution:missed', () => { missedFired = true; });
+    task.start();
+    await wait(1000); blockIO(2000); await wait(1200);
+    assert.isTrue(missedFired, 'a missed execution should have occurred');
+    assert.isFalse(captured.warnings.some(w => w.includes('missed execution')), 'warning should be suppressed when handled');
+    task.destroy();
+  });
+
+  it('suppresses the missed-execution warning when suppressMissedWarning is set', async function(){
+    // Same timing as the "when unhandled" test, which reliably produces a missed
+    // execution; the only difference here is the suppressMissedWarning flag.
+    const captured = makeLogger();
+    const task = new InlineScheduledTask('* * * * * *', async () => {}, { logger: captured, suppressMissedWarning: true });
+    task.start();
+    await wait(1000); blockIO(2000); await wait(1200);
+    assert.isFalse(captured.warnings.some(w => w.includes('missed execution')), 'warning should be suppressed by the flag');
+    task.destroy();
+  });
 });
+
+function makeLogger(){
+  const warnings: string[] = [];
+  const errors: any[] = [];
+  return {
+    warnings,
+    errors,
+    info(){},
+    warn(m: string){ warnings.push(m); },
+    error(m: string | Error){ errors.push(m); },
+    debug(){},
+  };
+}
+
+function wait(ms: number){
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 function blockIO(ms: number) {
   const start = Date.now();

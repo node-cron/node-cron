@@ -4,7 +4,7 @@ import { Runner, RunnerOptions } from "../scheduler/runner";
 import { TimeMatcher } from "../time/time-matcher";
 import { createID } from "../create-id";
 import { StateMachine } from "./state-machine";
-import logger from "../logger";
+import logger, { Logger } from "../logger";
 import { LocalizedTime } from "../time/localized-time";
 
 class TaskEmitter extends EventEmitter{}
@@ -18,14 +18,18 @@ export class InlineScheduledTask implements ScheduledTask {
   name: string;
   stateMachine: StateMachine;
   timezone?: string;
+  logger: Logger;
+  suppressMissedWarning: boolean;
 
   constructor(cronExpression: string, taskFn: TaskFn, options?: TaskOptions){
     this.emitter = new TaskEmitter();
     this.cronExpression = cronExpression;
-  
+
     this.id = createID('task', 12);
     this.name = options?.name || this.id;
     this.timezone = options?.timezone;
+    this.logger = options?.logger || logger;
+    this.suppressMissedWarning = options?.suppressMissedWarning || false;
 
     this.timeMatcher = new TimeMatcher(cronExpression, options?.timezone)
     this.stateMachine = new StateMachine();
@@ -35,6 +39,7 @@ export class InlineScheduledTask implements ScheduledTask {
       noOverlap: options?.noOverlap,
       maxExecutions: options?.maxExecutions,
       maxRandomDelay: options?.maxRandomDelay,
+      logger: this.logger,
       beforeRun: (date: Date, execution: Execution) => {
         if(execution.reason === 'scheduled'){
           this.changeState('running');
@@ -50,7 +55,7 @@ export class InlineScheduledTask implements ScheduledTask {
         return true;
       },
       onError: (date: Date, error: Error, execution: Execution) => {
-        logger.error(error);
+        this.logger.error(error);
         this.emitter.emit('execution:failed', this.createContext(date, execution));
         this.changeState('idle');
       },
@@ -58,6 +63,12 @@ export class InlineScheduledTask implements ScheduledTask {
         this.emitter.emit('execution:overlap', this.createContext(date));
       },
       onMissedExecution: (date: Date) => {
+        // Warn only when the caller is not handling the missed execution
+        // themselves (no listener) and has not opted out explicitly.
+        const handled = this.emitter.listenerCount('execution:missed') > 0;
+        if(!this.suppressMissedWarning && !handled){
+          this.logger.warn(`missed execution at ${date}! Possible blocking IO or high CPU user at the same process used by node-cron.`);
+        }
         this.emitter.emit('execution:missed', this.createContext(date));
       },
       onMaxExecutions: (date: Date) => {
