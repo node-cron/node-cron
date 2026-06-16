@@ -59,7 +59,7 @@
     "@typescript-eslint/parser": "^8.32.0",
     "@vitest/coverage-v8": "^4.1.9",
     "chai": "^5.2.0",
-    "eslint": "^9.26.0",
+    "eslint": "^10.5.0",
     "globals": "^16.1.0",
     "rollup": "^4.62.0",
     "rollup-plugin-dts": "^6.4.1",
