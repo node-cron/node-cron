@@ -242,6 +242,33 @@ describe('daemon - register', function () {
     assert.equal(JSON.parse(failedEvent.jsonError).extra, 'extra');
     task.destroy();
   });
+
+  it('forwards the real load error to the parent instead of crashing', async function () {
+    messages = [];
+    const message = {
+      command: 'task:start',
+      path: '/does/not/exist-484-xyz.ts',
+      cron: '* * * * * *',
+      options: {},
+    };
+
+    bind();
+    const onMessage = listeners.find(l => l.event === 'message');
+
+    // The handler must not throw/reject: a failed import is reported, not crashed.
+    let threw = false;
+    try {
+      await onMessage.fn(message);
+    } catch {
+      threw = true;
+    }
+    assert.isFalse(threw, 'daemon should not throw when the task fails to load');
+
+    const errorMessage = messages.find(m => m.event === 'daemon:error');
+    assert.isDefined(errorMessage, 'daemon should send a daemon:error message');
+    assert.isDefined(errorMessage.jsonError, 'the real error should be serialized');
+    assert.match(JSON.parse(errorMessage.jsonError).message, /exist-484-xyz|find|module/i);
+  });
 });
 
 function blockIO(ms: number) {

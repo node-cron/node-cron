@@ -60,7 +60,15 @@ export type TaskOptions = {
    * reported back in time. Defaults to no timeout (waits for the task to
    * finish or fail). Has no effect on inline tasks.
    */
-  executeTimeout?: number
+  executeTimeout?: number,
+  /**
+   * Timeout in milliseconds for a background task's initial start handshake
+   * (forking the daemon and importing the task file). If the task file is large
+   * or transpiled on load, the default may be too short and `start()` rejects
+   * with "Start operation timed out"; increase it in that case. Defaults to
+   * 5000. Has no effect on inline tasks.
+   */
+  startTimeout?: number
 }
 
 export type Execution = {

@@ -11,6 +11,7 @@
 import { InlineScheduledTask } from "./tasks/inline-scheduled-task";
 import { ScheduledTask, TaskFn, TaskOptions } from "./tasks/scheduled-task";
 import { TaskRegistry } from "./task-registry";
+import logger from "./logger";
 
 import validation from "./pattern/validation/pattern-validation";
 import BackgroundScheduledTask from "./tasks/background-scheduled-task/background-scheduled-task";
@@ -44,7 +45,15 @@ const registry = new TaskRegistry();
  */
 export function schedule(expression:string, func: TaskFn | string, options?: TaskOptions): ScheduledTask {
     const task = createTask(expression, func, options);
-    task.start();
+    // Background tasks start asynchronously and can fail (e.g. the task file
+    // cannot be loaded). Route that failure to the logger instead of leaving it
+    // as an unhandled rejection.
+    const started = task.start();
+    if (started && typeof (started as Promise<void>).catch === 'function') {
+      (started as Promise<void>).catch((error: any) => {
+        (options?.logger || logger).error(`Failed to start scheduled task: ${error?.message ?? error}`);
+      });
+    }
     return task;
 }
 

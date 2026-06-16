@@ -165,18 +165,83 @@ describe('BackgroundScheduledTask', function() {
     });
 
     it('fails on start timeout', async function(){
-      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-      fakeChildProcess = Object.assign(new EventEmitter(), {
-        send: sinon.stub(),
-        kill: sinon.stub()
-      });
+      // fakeChildProcess.send is a no-op stub, so the daemon never reports back.
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { startTimeout: 40 });
 
       try {
         await task.start();
         assert.fail("should fail before")
       } catch (error: any){
-        assert.equal(error.message, 'Start operation timed out');
+        assert.match(error.message, /Start operation timed out/);
       }
+    });
+
+    it('honours a custom startTimeout', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { startTimeout: 40 });
+
+      const startedAt = Date.now();
+      try {
+        await task.start();
+        assert.fail("should time out");
+      } catch (error: any){
+        assert.isBelow(Date.now() - startedAt, 1000, 'should reject well before the 5s default');
+        assert.match(error.message, /Start operation timed out/);
+      }
+    });
+
+    it('explains likely causes in the start timeout error', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { startTimeout: 40 });
+
+      try {
+        await task.start();
+        assert.fail("should time out");
+      } catch (error: any){
+        // actionable hint, not just "timed out"
+        assert.match(error.message, /load|import|startTimeout/i);
+      }
+    });
+
+    it('rejects start with the real cause when the daemon reports a load error', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { startTimeout: 200 });
+
+      fakeChildProcess.send.callsFake(()=>{
+        fakeChildProcess.emit('message', {
+          event: 'daemon:error',
+          jsonError: JSON.stringify({ name: 'SyntaxError', message: 'TypeScript enum is not supported in strip-only mode' })
+        });
+      });
+
+      try {
+        await task.start();
+        assert.fail("should reject with the real cause");
+      } catch (error: any){
+        assert.equal(error.message, 'TypeScript enum is not supported in strip-only mode');
+      }
+    });
+
+    it('kills the daemon and clears the fork on a failed start (no orphan)', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { startTimeout: 200 });
+
+      fakeChildProcess.send.callsFake(()=>{
+        fakeChildProcess.emit('message', {
+          event: 'daemon:error',
+          jsonError: JSON.stringify({ name: 'Error', message: 'boom' })
+        });
+      });
+
+      try { await task.start(); } catch { /* expected */ }
+
+      assert.isTrue(fakeChildProcess.kill.called, 'the daemon must be killed so it cannot keep running');
+      assert.isUndefined(task.forkProcess, 'forkProcess must be cleared after a failed start');
+    });
+
+    it('kills the daemon when the start times out (no orphan)', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { startTimeout: 40 });
+
+      try { await task.start(); } catch { /* expected */ }
+
+      assert.isTrue(fakeChildProcess.kill.called, 'a daemon that started late must not be left running');
+      assert.isUndefined(task.forkProcess, 'forkProcess must be cleared after a timed-out start');
     });
   });
 
