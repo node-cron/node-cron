@@ -115,7 +115,7 @@ describe('daemon - register', function () {
     assert.equal(messages[1].event, 'task:started');
     assert.equal(messages[2].event, 'execution:started');
     assert.equal(messages[3].event, 'execution:overlap');
-  }).timeout(5000);
+  });
 
   it('should send missed event', async function () {
     messages = [];
@@ -140,7 +140,7 @@ describe('daemon - register', function () {
 
     const event = messages.find(m => m.event === 'execution:missed')
     assert.isDefined(event);
-  }).timeout(6000);
+  });
 
   it('should handle task:stop command', async function () {
     messages = [];
@@ -216,7 +216,7 @@ describe('daemon - register', function () {
     const finishedEvent = messages.find(m => m.event === 'execution:finished');
     assert.isDefined(finishedEvent, 'execution:finished event should be sent');
     task.destroy();
-  }).timeout(10000);;
+  });;
 
   it('should handle task:execute command with error', async function () {
     const message = {
@@ -241,7 +241,7 @@ describe('daemon - register', function () {
     assert.isDefined(failedEvent.jsonError, 'error should be serialized');
     assert.equal(JSON.parse(failedEvent.jsonError).extra, 'extra');
     task.destroy();
-  }).timeout(10000);
+  });
 });
 
 function blockIO(ms: number) {

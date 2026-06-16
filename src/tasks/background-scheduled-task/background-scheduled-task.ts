@@ -3,13 +3,13 @@ import { fork, ChildProcess} from 'child_process';
 
 import { Execution, ScheduledTask, TaskContext, TaskEvent, TaskOptions } from '../scheduled-task';
 import { createID } from '../../create-id';
-import { EventEmitter } from 'stream';
+import { EventEmitter } from 'events';
 import { StateMachine } from '../state-machine';
 import { LocalizedTime } from '../../time/localized-time';
-import logger from '../../logger';
+import logger, { Logger } from '../../logger';
 import { TimeMatcher } from '../../time/time-matcher';
 
-const daemonPath = resolvePath(__dirname, 'daemon.js');
+const daemonPath = resolvePath(import.meta.dirname, 'daemon.js');
 
 class TaskEmitter extends EventEmitter{}
 
@@ -22,6 +22,8 @@ class BackgroundScheduledTask implements ScheduledTask{
   options?: any;
   forkProcess?: ChildProcess;
   stateMachine: StateMachine;
+  logger: Logger;
+  suppressMissedWarning: boolean;
 
   constructor(cronExpression: string, taskPath: string, options?: TaskOptions){
     this.cronExpression = cronExpression;
@@ -31,6 +33,11 @@ class BackgroundScheduledTask implements ScheduledTask{
     this.name = options?.name || this.id;
     this.emitter = new TaskEmitter();
     this.stateMachine = new StateMachine('stopped');
+    // The logger lives in the parent process: it cannot cross the fork
+    // boundary. The daemon runs with a no-op logger and forwards events, and
+    // this process logs from those events using the configured logger.
+    this.logger = options?.logger || logger;
+    this.suppressMissedWarning = options?.suppressMissedWarning || false;
 
     this.on('task:stopped', () => {
       this.forkProcess?.kill();
@@ -74,7 +81,7 @@ class BackgroundScheduledTask implements ScheduledTask{
         this.forkProcess.on('exit', (code, signal) => {
           if (code !== 0 && signal !== 'SIGTERM') {
             const erro = new Error(`node-cron daemon exited with code ${code || signal}`)
-            logger.error(erro);
+            this.logger.error(erro);
             clearTimeout(timeout);
             reject(erro)
           }
@@ -95,9 +102,10 @@ class BackgroundScheduledTask implements ScheduledTask{
           if (message.context) {
             const execution = message.context?.execution;
             delete execution?.hasError;
-                                         
+
             const context = this.createContext(new Date(message.context.date), execution);
 
+            this.logEvent(message.event, context);
             this.emitter.emit(message.event, context);
           }
         });
@@ -112,7 +120,7 @@ class BackgroundScheduledTask implements ScheduledTask{
           command: 'task:start',
           path: this.taskPath,
           cron: this.cronExpression,
-          options: this.options
+          options: serializableOptions(this.options)
         });
       } catch (error) {
         reject(error);
@@ -228,6 +236,31 @@ class BackgroundScheduledTask implements ScheduledTask{
     this.emitter.once(event, fun);
   }
 
+  // The daemon runs with a no-op logger, so user-facing logging happens here in
+  // the parent, driven by the events the daemon forwards. Mirrors the inline
+  // task's logging policy.
+  private logEvent(event: TaskEvent, context: TaskContext): void {
+    switch(event){
+      case 'execution:missed': {
+        const handled = this.emitter.listenerCount('execution:missed') > 0;
+        if(!this.suppressMissedWarning && !handled){
+          this.logger.warn(`missed execution at ${context.date}! Possible blocking IO or high CPU user at the same process used by node-cron.`);
+        }
+        break;
+      }
+      case 'execution:overlap':
+        if(this.options?.noOverlap){
+          this.logger.warn('task still running, new execution blocked by overlap prevention!');
+        }
+        break;
+      case 'execution:failed':
+        if(context.execution?.error){
+          this.logger.error(context.execution.error);
+        }
+        break;
+    }
+  }
+
   private createContext(executionDate: Date, execution?: Execution): TaskContext{
     const localTime = new LocalizedTime(executionDate, this.options?.timezone)
     const ctx: TaskContext = {
@@ -240,6 +273,18 @@ class BackgroundScheduledTask implements ScheduledTask{
 
     return ctx;
   }
+}
+
+/**
+ * Strips options that cannot cross the process boundary (e.g. a custom
+ * `logger`, which is a function-bearing object). The parent keeps the original
+ * options and does the logging itself.
+ */
+function serializableOptions(options?: TaskOptions): TaskOptions | undefined {
+  if(!options) return options;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { logger: _logger, ...rest } = options;
+  return rest;
 }
 
 function deserializeError(str: string) {

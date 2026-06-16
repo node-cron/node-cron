@@ -1,5 +1,17 @@
 type LogLevel = 'INFO' | 'WARN' | 'ERROR' | 'DEBUG';
 
+/**
+ * Logging interface used internally by node-cron. Provide your own
+ * implementation via `setLogger` (globally) or the `logger` task option
+ * (per task) to route node-cron logs through your application's logger.
+ */
+export interface Logger {
+  info(message: string): void;
+  warn(message: string): void;
+  error(message: string | Error, err?: Error): void;
+  debug(message: string | Error, err?: Error): void;
+}
+
 const levelColors: Record<LogLevel, string> = {
   INFO: '\x1b[36m',   // Cyan
   WARN: '\x1b[33m',   // Yellow
@@ -33,7 +45,10 @@ function log(level: LogLevel, message: string, extra?: any): void {
   }
 }
 
-const logger = {
+/**
+ * The built-in console logger. Used by default unless replaced via `setLogger`.
+ */
+export const defaultLogger: Logger = {
   info(message: string) {
     log('INFO', message);
   },
@@ -54,6 +69,53 @@ const logger = {
       log('DEBUG', message, err);
     }
   },
+};
+
+/**
+ * A logger that discards every message. Useful to silence node-cron entirely
+ * and used internally by background tasks so logging happens in the parent
+ * process (where the user's logger lives).
+ */
+export const noopLogger: Logger = {
+  info() {},
+  warn() {},
+  error() {},
+  debug() {},
+};
+
+let activeLogger: Logger = defaultLogger;
+
+/**
+ * Replaces the global logger used by node-cron. Pass `noopLogger` to silence
+ * all output, or your own implementation to integrate with your app's logging.
+ */
+export function setLogger(logger: Logger): void {
+  activeLogger = logger ?? defaultLogger;
+}
+
+/**
+ * Restores the built-in console logger.
+ */
+export function resetLogger(): void {
+  activeLogger = defaultLogger;
+}
+
+/**
+ * Returns the currently active global logger.
+ */
+export function getLogger(): Logger {
+  return activeLogger;
+}
+
+/**
+ * Default export. Delegates to the active global logger so existing internal
+ * call sites pick up `setLogger` overrides automatically.
+ */
+const logger: Logger = {
+  info: (message) => activeLogger.info(message),
+  warn: (message) => activeLogger.warn(message),
+  error: (message, err) => activeLogger.error(message, err),
+  debug: (message, err) => activeLogger.debug(message, err),
 };
 
 export default logger;

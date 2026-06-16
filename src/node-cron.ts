@@ -14,6 +14,7 @@ import { TaskRegistry } from "./task-registry";
 
 import validation from "./pattern/validation/pattern-validation";
 import BackgroundScheduledTask from "./tasks/background-scheduled-task/background-scheduled-task";
+import { setLogger } from "./logger";
 
 import path from "path";
 import { pathToFileURL } from "url";
@@ -87,7 +88,7 @@ export function solvePath(filePath: string): string {
   const stackLines = new Error().stack?.split('\n');
   if(stackLines){
     stackLines?.shift();
-    const callerLine = stackLines?.find((line) => { return line.indexOf(__filename) === -1; });
+    const callerLine = stackLines?.find((line) => { return line.indexOf(import.meta.filename) === -1; });
     const match = callerLine?.match(/(file:\/\/)?(((\/?)(\w:))?([/\\].+)):\d+:\d+/);
    
     if (match) {
@@ -131,8 +132,10 @@ export const getTasks = registry.all;
  */
 export const getTask = registry.get;
 
-export { ScheduledTask } from './tasks/scheduled-task';
-export type { TaskFn, TaskContext, TaskOptions } from './tasks/scheduled-task';
+export { setLogger } from './logger';
+
+export type { ScheduledTask, TaskFn, TaskContext, TaskOptions } from './tasks/scheduled-task';
+export type { Logger } from './logger';
 
 export interface NodeCron {
   schedule: typeof schedule;
@@ -140,6 +143,7 @@ export interface NodeCron {
   validate: typeof validate;
   getTasks: typeof getTasks;
   getTask: typeof getTask;
+  setLogger: typeof setLogger;
 }
 
 export const nodeCron: NodeCron = {
@@ -148,6 +152,7 @@ export const nodeCron: NodeCron = {
   validate,
   getTasks,
   getTask,
+  setLogger,
 };
 
 /**

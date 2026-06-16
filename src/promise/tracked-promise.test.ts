@@ -49,28 +49,25 @@ describe('Tracked Promise', function(){
     }
   });
 
-  it('allows use then', function(done){
-    new TrackedPromise((resolve) => { resolve('promise run') }).then(result => {
+  it('allows use then', function(){
+    return new TrackedPromise((resolve) => { resolve('promise run') }).then(result => {
       assert.equal(result, 'promise run');
-      done();
     })
   })
 
-  it('allows use catch', function(done){
-    new TrackedPromise((resolve, reject) => { reject(new Error('promise error')) }).catch(error => {
+  it('allows use catch', function(){
+    return new TrackedPromise((resolve, reject) => { reject(new Error('promise error')) }).catch(error => {
       assert.equal(error.message, 'promise error');
-      done();
     });
   });
 
-  it('allows use finally', function(done){
-    new TrackedPromise((resolve) => { resolve('promise run') }).finally(() => {
-      done();
-    });
+  it('allows use finally', function(){
+    return new TrackedPromise((resolve) => { resolve('promise run') }).finally(() => {});
   });
 
   it('sets the state to rejected on fail', function(){
     const p = new TrackedPromise((resolve, reject) => { reject(new Error('promise error')) });
+    p.catch(() => {});
     assert.equal(p.getState(), 'rejected')
   });
 

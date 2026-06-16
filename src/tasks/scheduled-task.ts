@@ -1,3 +1,4 @@
+import { Logger } from "../logger";
 
 /**
  * Represents an event triggered by a cron job.
@@ -32,7 +33,19 @@ export type TaskOptions = {
   name?: string,
   noOverlap?: boolean,
   maxExecutions?: number,
-  maxRandomDelay?: number
+  maxRandomDelay?: number,
+  /**
+   * Custom logger for this task. Overrides the global logger set via
+   * `setLogger`. Note: not supported for background tasks (it cannot cross
+   * the process boundary); use `setLogger` for those.
+   */
+  logger?: Logger,
+  /**
+   * When true, suppresses the "missed execution" warning for this task.
+   * The warning is also suppressed automatically when an `execution:missed`
+   * listener is attached.
+   */
+  suppressMissedWarning?: boolean
 }
 
 export type Execution = {
@@ -55,7 +68,7 @@ export interface ScheduledTask {
   
   start(): void | Promise<void>;
   stop(): void | Promise<void>;
-  getStatus(): string | Promise<string>;
+  getStatus(): string;
   destroy(): void | Promise<void>;
   execute(): Promise<any>;
   getNextRun(): Date | null;

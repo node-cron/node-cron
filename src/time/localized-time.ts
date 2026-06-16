@@ -42,11 +42,69 @@ export class LocalizedTime {
 
   set(field: string, value: number){
     this.parts[field] = value;
-    const newDate = new Date(this.toISO());
-    this.timestamp = newDate.getTime();
 
-    this.parts = buildDateParts(newDate, this.timezone)
+    // Convert the intended local wall-clock back to an absolute instant. This
+    // must be DST-aware: the timezone offset valid for the requested wall-clock
+    // is not necessarily the one currently stored in this.parts.gmt, and around
+    // a transition it can change. Doing this naively (building an ISO string
+    // with the *old* offset) shifts the local time by the DST delta, which used
+    // to make getNextMatch overshoot to the next year or return a past date.
+    this.timestamp = localTimeToTimestamp(this.parts, this.timezone);
+    this.parts = buildDateParts(new Date(this.timestamp), this.timezone);
   }
+}
+
+/**
+ * Returns the timezone offset, in minutes, for the given instant
+ * (local - UTC). e.g. New York in winter (EST) returns -300.
+ */
+function getOffsetMinutes(date: Date, timezone?: string): number {
+  const offset = parseOffsetMinutes(getTimezoneGMT(date, timezone).replace(/^GMT/, '') || 'Z');
+  return offset ?? 0;
+}
+
+/**
+ * Returns true if the given instant, read back in the timezone, matches the
+ * requested local wall-clock down to the second.
+ */
+function readsBackTo(timestamp: number, parts: DateParts, timezone?: string): boolean {
+  const p = buildDateParts(new Date(timestamp), timezone);
+  return p.year === parts.year && p.month === parts.month && p.day === parts.day
+      && p.hour === parts.hour && p.minute === parts.minute && p.second === parts.second;
+}
+
+/**
+ * Converts a set of local wall-clock fields to the absolute timestamp that
+ * reads back as those fields in the given timezone.
+ *
+ * It guesses the instant by treating the wall-clock as if it were UTC, then
+ * corrects with the offset actually in effect. Away from DST transitions the
+ * first correction is exact. Near a transition both the pre- and post-shift
+ * offsets are considered and the one that genuinely reads back to the
+ * requested wall-clock wins. For a non-existent local time (the spring-forward
+ * gap) neither reads back, so we resolve forward to the later instant instead
+ * of drifting backwards into the gap (which used to yield a past date).
+ */
+function localTimeToTimestamp(parts: DateParts, timezone?: string): number {
+  const guess = Date.UTC(
+    parts.year, parts.month - 1, parts.day,
+    parts.hour, parts.minute, parts.second, parts.milisecond
+  );
+
+  const firstOffset = getOffsetMinutes(new Date(guess), timezone);
+  const candidate1 = guess - firstOffset * 60000;
+
+  const secondOffset = getOffsetMinutes(new Date(candidate1), timezone);
+  if (secondOffset === firstOffset) {
+    return candidate1;
+  }
+
+  const candidate2 = guess - secondOffset * 60000;
+  if (readsBackTo(candidate1, parts, timezone)) return candidate1;
+  if (readsBackTo(candidate2, parts, timezone)) return candidate2;
+
+  // Non-existent local time (spring-forward gap): resolve forward.
+  return Math.max(candidate1, candidate2);
 }
 
 function buildDateParts(date: Date, timezone?: string): DateParts {
@@ -87,15 +145,37 @@ function buildDateParts(date: Date, timezone?: string): DateParts {
 }
 
 
+function parseOffsetMinutes(isoString: string): number | null {
+  if (isoString.endsWith('Z')) return 0;
+  const match = isoString.match(/([+-])(\d{2}):(\d{2})$/);
+  if (!match) return null;
+  const sign = match[1] === '+' ? 1 : -1;
+  return sign * (parseInt(match[2]) * 60 + parseInt(match[3]));
+}
+
 function getTimezoneGMT(date: Date, timezone?: string) {
-  const utcDate = new Date(date.toLocaleString('en-US', { timeZone: 'UTC' }));
-  const tzDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
-  let offsetInMinutes = (utcDate.getTime() - tzDate.getTime()) / 60000;
-  const sign = offsetInMinutes <= 0 ? '+' : '-';
-  offsetInMinutes = Math.abs(offsetInMinutes);
-  if(offsetInMinutes === 0) return 'Z';
-  const hours = Math.floor(offsetInMinutes / 60).toString().padStart(2, '0');
-  const minutes = Math.floor(offsetInMinutes % 60).toString().padStart(2, '0');
-  
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: timezone,
+    timeZoneName: 'shortOffset'
+  });
+  const parts = fmt.formatToParts(date);
+  const tzPart = parts.find(p => p.type === 'timeZoneName');
+  if (!tzPart) return 'Z';
+
+  const tzValue = tzPart.value; // e.g. "GMT-5", "GMT+5:30", "GMT"
+  if (tzValue === 'GMT') return 'Z';
+
+  // Parse the offset from the Intl-provided string
+  const match = tzValue.match(/^GMT([+-])(\d{1,2})(?::(\d{2}))?$/);
+  if (!match) return 'Z';
+
+  const sign = match[1];
+  const hoursNum = parseInt(match[2]);
+  const minutesNum = parseInt(match[3] || '0');
+  if (hoursNum === 0 && minutesNum === 0) return 'Z';
+
+  const hours = match[2].padStart(2, '0');
+  const minutes = (match[3] || '00').padStart(2, '0');
+
   return `GMT${sign}${hours}:${minutes}`;
 }

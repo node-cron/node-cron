@@ -1,5 +1,5 @@
 import { createID } from "../create-id";
-import logger from "../logger";
+import logger, { Logger } from "../logger";
 import { TrackedPromise } from "../promise/tracked-promise";
 import { Execution } from "../tasks/scheduled-task";
 import { TimeMatcher } from "../time/time-matcher";
@@ -14,15 +14,12 @@ type OnMatch = (date: Date, execution: Execution) => any | Promise<any>;
 function emptyOnFn(){};
 function emptyHookFn(){ return true };
 
-function defaultOnError(date: Date, error: Error){
-  logger.error('Task failed with error!', error);
-}
-
 export type RunnerOptions = {
   noOverlap?: boolean,
   timezone?: string,
   maxExecutions?: number,
   maxRandomDelay?: number,
+  logger?: Logger,
   onMissedExecution?: OnFn,
   onOverlap?: OnFn,
   onError?: OnErrorHookFn
@@ -42,6 +39,7 @@ export class Runner {
   running: boolean;
 
   heartBeatTimeout?: NodeJS.Timeout;
+  logger: Logger;
   onMissedExecution: OnFn;
   onOverlap: OnFn;
   onError: OnErrorHookFn;
@@ -55,11 +53,12 @@ export class Runner {
       this.noOverlap = options == undefined || options.noOverlap === undefined ? false : options.noOverlap;
       this.maxExecutions = options?.maxExecutions;
       this.maxRandomDelay = options?.maxRandomDelay || 0;
+      this.logger = options?.logger || logger;
 
       this.onMissedExecution = options?.onMissedExecution || emptyOnFn;
       this.onOverlap = options?.onOverlap || emptyOnFn;
 
-      this.onError = options?.onError || defaultOnError;
+      this.onError = options?.onError || ((date: Date, error: Error) => this.logger.error('Task failed with error!', error));
       this.onFinished = options?.onFinished || emptyHookFn;
       this.beforeRun = options?.beforeRun || emptyHookFn;
 
@@ -68,7 +67,11 @@ export class Runner {
       this.runCount = 0;
       this.running = false;
   }
-  
+
+  private onErrorFallback = (date: Date, error: Error) => {
+    this.logger.error('Task failed with error!', error);
+  }
+
   start() {
     this.running = true;
     let lastExecution: TrackedPromise<any>;
@@ -138,17 +141,28 @@ export class Runner {
       // blocking IO detection
       if(expectedNextExecution && expectedNextExecution.getTime() < currentDate.getTime()){
         while(expectedNextExecution.getTime() < currentDate.getTime()){
-          logger.warn(`missed execution at ${expectedNextExecution}! Possible blocking IO or high CPU user at the same process used by node-cron.`);
-          expectedNextExecution = this.timeMatcher.getNextMatch(expectedNextExecution);
-          runAsync(this.onMissedExecution, expectedNextExecution, defaultOnError);
+          const nextMatch = this.timeMatcher.getNextMatch(expectedNextExecution);
+          // Defense in depth: getNextMatch must always move forward. If it ever
+          // returns a date that does not advance (e.g. a bug around a DST
+          // boundary), re-base from the current date instead of looping forever.
+          if(nextMatch.getTime() <= expectedNextExecution.getTime()){
+            this.logger.error(`getNextMatch did not advance past ${expectedNextExecution}; aborting missed-execution catch-up to avoid an infinite loop.`);
+            expectedNextExecution = this.timeMatcher.getNextMatch(currentDate);
+            break;
+          }
+          expectedNextExecution = nextMatch;
+          // The "missed execution" warning is emitted by the task's
+          // onMissedExecution handler so it can honour listener-based and
+          // explicit suppression and use the task's logger.
+          runAsync(this.onMissedExecution, expectedNextExecution, this.onErrorFallback);
         }
       }
 
       // overlap prevention
       if(lastExecution && lastExecution.getState() === 'pending'){
-        runAsync(this.onOverlap, currentDate, defaultOnError);
+        runAsync(this.onOverlap, currentDate, this.onErrorFallback);
         if(this.noOverlap){
-          logger.warn('task still running, new execution blocked by overlap prevention!');
+          this.logger.warn('task still running, new execution blocked by overlap prevention!');
           expectedNextExecution = this.timeMatcher.getNextMatch(currentDate);
           scheduleNextHeartBeat(currentDate);
           return;
