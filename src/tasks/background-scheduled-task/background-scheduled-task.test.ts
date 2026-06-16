@@ -293,15 +293,17 @@ describe('BackgroundScheduledTask', function() {
       }
     });
 
-    it('fails on execute timeout', async function(){
-      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-      
+    it('fails on execute when executeTimeout is exceeded', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { executeTimeout: 50 });
+
+      // Only acknowledges start; never reports the execution back, so the
+      // configured timeout is what ends execute().
       fakeChildProcess.send.callsFake((obj)=>{
         if(obj.command === 'task:start'){
           task.emitter.emit('task:started');
         }
       })
-   
+
       await task.start();
 
       try {
@@ -310,6 +312,25 @@ describe('BackgroundScheduledTask', function() {
       } catch (error: any){
         assert.equal(error.message, 'Execution timeout exceeded');
       }
+    });
+
+    it('does not impose a timeout by default', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+
+      // Report the result only after a delay; with no executeTimeout, execute()
+      // must wait for it rather than rejecting.
+      fakeChildProcess.send.callsFake((obj)=>{
+        if(obj.command === 'task:execute'){
+          setTimeout(() => task.emitter.emit('execution:finished', {execution: { result: "late result"}}), 50);
+        } else {
+          task.emitter.emit('task:started');
+        }
+      })
+
+      await task.start();
+
+      const result = await task.execute();
+      assert.equal(result, 'late result');
     });
   });
 });
