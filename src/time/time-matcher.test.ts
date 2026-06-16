@@ -323,5 +323,20 @@ describe('TimeMatcher', function() {
         const next = new TimeMatcher('0 0 31 * *', 'Etc/UTC').getNextMatch(new Date('2026-04-15T00:00:00Z'));
         assert.equal(next.toISOString(), '2026-05-31T00:00:00.000Z');
       })
+
+      it('should throw for an expression that can never match', ()=>{
+        // Feb 31 does not exist, so there is no next run.
+        assert.throws(
+          () => new TimeMatcher('0 0 31 2 *', 'Etc/UTC').getNextMatch(new Date('2026-01-01T00:00:00Z')),
+          'Could not find next matching date within reasonable time range'
+        );
+      })
+
+      it('should return the first occurrence of a time in the fall-back repeated hour', ()=>{
+        // 2026-11-01 New York: 01:00-01:59 happen twice (02:00 EDT -> 01:00 EST at 06:00Z).
+        // 01:30 daily resolves to the first occurrence (EDT), strictly after the base.
+        const next = new TimeMatcher('30 1 * * *', 'America/New_York').getNextMatch(new Date('2026-11-01T04:00:00Z'));
+        assert.equal(next.toISOString(), '2026-11-01T05:30:00.000Z');
+      })
     })
 });

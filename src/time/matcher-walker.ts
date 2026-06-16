@@ -2,9 +2,10 @@ import convertExpression from '../pattern/convertion';
 import { LocalizedTime, localTimeToTimestamp } from './localized-time';
 import { TimeMatcher } from './time-matcher';
 
-// Upper bound on the calendar search before giving up (roughly ten years of
-// days). Reaching it means the expression can never match (e.g. `0 0 31 2 *`).
-const MAX_DAYS = 366 * 10;
+// Upper bound on the calendar search before giving up. A century is far beyond
+// any real recurrence (the calendar repeats within 28 years) and the loop is
+// cheap, so reaching it means the expression can never match (e.g. `0 0 31 2 *`).
+const MAX_DAYS = 366 * 100;
 
 export class MatcherWalker {
   cronExpression: string;
@@ -13,12 +14,25 @@ export class MatcherWalker {
   timeMatcher: TimeMatcher;
   timezone?: string;
 
+  private readonly seconds: number[];
+  private readonly minutes: number[];
+  private readonly hours: number[];
+  private readonly days: number[];
+  private readonly months: number[];
+
   constructor(cronExpression: string, baseDate: Date, timezone?: string) {
     this.cronExpression = cronExpression;
     this.baseDate = baseDate;
     this.timeMatcher = new TimeMatcher(cronExpression, timezone);
     this.timezone = timezone;
     this.expressions = convertExpression(cronExpression);
+
+    // Sorted once; the time fields are iterated in ascending order per day.
+    this.seconds = sortedAsc(this.expressions[0]);
+    this.minutes = sortedAsc(this.expressions[1]);
+    this.hours = sortedAsc(this.expressions[2]);
+    this.days = this.expressions[3];
+    this.months = this.expressions[4];
   }
 
   isMatching() {
@@ -38,8 +52,8 @@ export class MatcherWalker {
    * non-existent local times (the DST spring-forward gap) by construction.
    */
   matchNext(): LocalizedTime {
-    const months = this.expressions[4];
-    const days = this.expressions[3];
+    const months = this.months;
+    const days = this.days;
 
     const baseMs = Math.floor(this.baseDate.getTime() / 1000) * 1000;
     const baseParts = new LocalizedTime(new Date(baseMs), this.timezone).getParts();
@@ -77,9 +91,7 @@ export class MatcherWalker {
     lowerBound: { hour: number; minute: number; second: number } | null,
     baseMs: number,
   ): number | null {
-    const seconds = sortedAsc(this.expressions[0]);
-    const minutes = sortedAsc(this.expressions[1]);
-    const hours = sortedAsc(this.expressions[2]);
+    const { seconds, minutes, hours } = this;
 
     for (const hour of hours) {
       if (lowerBound && hour < lowerBound.hour) continue;
