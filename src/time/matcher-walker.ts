@@ -10,10 +10,11 @@ const MAX_DAYS = 366 * 100;
 export class MatcherWalker {
   cronExpression: string;
   baseDate: Date;
-  expressions: number[][];
   timeMatcher: TimeMatcher;
   timezone?: string;
 
+  // Time fields are sorted so they can be iterated in ascending order; day and
+  // month are only membership-tested, so their order does not matter.
   private readonly seconds: number[];
   private readonly minutes: number[];
   private readonly hours: number[];
@@ -25,14 +26,13 @@ export class MatcherWalker {
     this.baseDate = baseDate;
     this.timeMatcher = new TimeMatcher(cronExpression, timezone);
     this.timezone = timezone;
-    this.expressions = convertExpression(cronExpression);
 
-    // Sorted once; the time fields are iterated in ascending order per day.
-    this.seconds = sortedAsc(this.expressions[0]);
-    this.minutes = sortedAsc(this.expressions[1]);
-    this.hours = sortedAsc(this.expressions[2]);
-    this.days = this.expressions[3];
-    this.months = this.expressions[4];
+    const expressions = convertExpression(cronExpression);
+    this.seconds = sortedAsc(expressions[0]);
+    this.minutes = sortedAsc(expressions[1]);
+    this.hours = sortedAsc(expressions[2]);
+    this.days = expressions[3];
+    this.months = expressions[4];
   }
 
   isMatching() {
@@ -94,18 +94,12 @@ export class MatcherWalker {
     const { seconds, minutes, hours } = this;
 
     for (const hour of hours) {
+      // On the base day, whole earlier hours can be skipped cheaply.
       if (lowerBound && hour < lowerBound.hour) continue;
       for (const minute of minutes) {
-        if (lowerBound && hour === lowerBound.hour && minute < lowerBound.minute) continue;
         for (const second of seconds) {
-          if (
-            lowerBound &&
-            hour === lowerBound.hour &&
-            minute === lowerBound.minute &&
-            second <= lowerBound.second
-          ) {
-            continue;
-          }
+          // Skip times of day at or before the base instant on the base day.
+          if (lowerBound && !isLaterInDay(hour, minute, second, lowerBound)) continue;
 
           const ts = localTimeToTimestamp(
             { year, month, day, hour, minute, second, milisecond: 0 },
@@ -133,4 +127,14 @@ function nextDay(year: number, month: number, day: number): { year: number; mont
 
 function sortedAsc(values: number[]): number[] {
   return [...values].sort((a, b) => a - b);
+}
+
+// True when (hour, minute, second) is strictly later in the day than the bound.
+function isLaterInDay(
+  hour: number,
+  minute: number,
+  second: number,
+  bound: { hour: number; minute: number; second: number },
+): boolean {
+  return hour * 3600 + minute * 60 + second > bound.hour * 3600 + bound.minute * 60 + bound.second;
 }
