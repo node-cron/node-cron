@@ -1,8 +1,40 @@
 import { assert }  from 'chai';
+import { fork } from 'child_process';
+import { EventEmitter } from 'events';
 import cron, { solvePath } from './node-cron';
 import { InlineScheduledTask } from './tasks/inline-scheduled-task';
 
+// Background tasks fork a daemon process; the daemon artifact only exists in the
+// built output, so fork() is mocked with a fake child that replays the task
+// lifecycle events. The real fork path is covered against the build.
+vi.mock('child_process', () => ({ fork: vi.fn() }));
+
+function makeFakeChild() {
+  const child: any = new EventEmitter();
+  child.killed = false;
+  child.kill = () => { child.killed = true; };
+  child.send = (msg: any) => {
+    const event =
+      msg.command === 'task:start' ? 'task:started' :
+      msg.command === 'task:stop' ? 'task:stopped' :
+      msg.command === 'task:destroy' ? 'task:destroyed' : undefined;
+    if (event) {
+      queueMicrotask(() => child.emit('message', { event, context: { date: new Date().toISOString() } }));
+    }
+    return true;
+  };
+  return child;
+}
+
 describe('node-cron', function() {
+    beforeEach(() => {
+      vi.mocked(fork).mockImplementation(() => makeFakeChild() as any);
+    });
+
+    afterEach(() => {
+      vi.mocked(fork).mockReset();
+    });
+
     describe('schedule', function() {
         it('should schedule a task', async function() {
             let executed = 0;
@@ -14,7 +46,7 @@ describe('node-cron', function() {
 
             assert.equal(1, executed);
             task.stop();
-        }).timeout(10000);
+        });
 
         it('should schedule an inline task with name', function() {
             const task = cron.schedule(
@@ -29,7 +61,7 @@ describe('node-cron', function() {
             assert.equal(task.name, 'Dummy Task');
 
             task.stop();
-        }).timeout(10000);
+        });
 
         it('should schedule a task with America/Sao_Paulo timezone', async function() {
           let localIso: string = '';
@@ -43,7 +75,7 @@ describe('node-cron', function() {
 
             assert.isTrue(localIso.endsWith('-03:00'));
             task.stop();
-        }).timeout(10000);
+        });
         
         it('should schedule a task with Europe/Istanbul timezone', async function() {
           let localIso: string = '';
@@ -56,7 +88,7 @@ describe('node-cron', function() {
             console.log(localIso)
             assert.isTrue(localIso.endsWith('+03:00'));
             task.stop();
-        }).timeout(10000);
+        });
 
         it('should schedule a task with noOverlap option', function() {
             const task = cron.schedule(
@@ -71,7 +103,7 @@ describe('node-cron', function() {
             assert.isTrue(task.runner.noOverlap);
 
             task.stop();
-        }).timeout(10000);
+        });
 
         it('should schedule a task with maxExecutions option', function() {
             const task = cron.schedule(
@@ -86,7 +118,7 @@ describe('node-cron', function() {
             assert.equal(task.runner.maxExecutions, 5);
 
             task.stop();
-        }).timeout(10000);
+        });
         
         it('should schedule a background task', async function() {
             const task = cron.schedule('* * * * *', '../test-assets/dummy-task.js');
@@ -94,7 +126,7 @@ describe('node-cron', function() {
             assert.isNotNull(task);
             assert.isDefined(task);
             await task.destroy();
-        }).timeout(10000);
+        });
     });
     
     describe('validate', function() {

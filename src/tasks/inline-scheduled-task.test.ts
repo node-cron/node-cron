@@ -200,7 +200,7 @@ describe('InlineScheduledTask', function() {
     assert.isDefined(event?.date)
     assert.isDefined(event?.triggeredAt)
     task.destroy();
-  }).timeout(5000);
+  });
 
   it('emmits execution:maxReached', async function(){
     const task = new InlineScheduledTask('* * * * * *', async ()=> {  return "task result" }, { maxExecutions: 1 });
@@ -217,7 +217,7 @@ describe('InlineScheduledTask', function() {
     assert.isDefined(event?.date)
     assert.isDefined(event?.triggeredAt)
     task.destroy();
-  }).timeout(5000);
+  });
 
   it('routes execution errors to the task logger', async function(){
     const captured = makeLogger();
@@ -234,7 +234,7 @@ describe('InlineScheduledTask', function() {
     await wait(1000); blockIO(2000); await wait(1200);
     assert.isTrue(captured.warnings.some(w => w.includes('missed execution')), 'expected a missed-execution warning');
     task.destroy();
-  }).timeout(6000);
+  });
 
   it('suppresses the missed-execution warning when execution:missed has a listener', async function(){
     const captured = makeLogger();
@@ -246,7 +246,7 @@ describe('InlineScheduledTask', function() {
     assert.isTrue(missedFired, 'a missed execution should have occurred');
     assert.isFalse(captured.warnings.some(w => w.includes('missed execution')), 'warning should be suppressed when handled');
     task.destroy();
-  }).timeout(6000);
+  });
 
   it('suppresses the missed-execution warning when suppressMissedWarning is set', async function(){
     // Same timing as the "when unhandled" test, which reliably produces a missed
@@ -257,7 +257,7 @@ describe('InlineScheduledTask', function() {
     await wait(1000); blockIO(2000); await wait(1200);
     assert.isFalse(captured.warnings.some(w => w.includes('missed execution')), 'warning should be suppressed by the flag');
     task.destroy();
-  }).timeout(6000);
+  });
 });
 
 function makeLogger(){

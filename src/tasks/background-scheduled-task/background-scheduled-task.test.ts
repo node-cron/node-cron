@@ -1,14 +1,17 @@
 import { assert } from 'chai';
+import { fork } from 'child_process';
 import sinon from 'sinon';
 
 import BackgroundScheduledTask from "./background-scheduled-task";
 
 import { EventEmitter } from 'events';
 
+// fork() is imported via ESM by the production code, so it is mocked at the
+// module level (require-based stubbing does not affect the ESM binding).
+vi.mock('child_process', () => ({ fork: vi.fn() }));
 
 describe('BackgroundScheduledTask', function() {
-  this.timeout(10000);
-  
+
   let fakeChildProcess: EventEmitter & { send: sinon.SinonStub; kill: sinon.SinonStub };
 
   beforeEach(() => {
@@ -18,12 +21,12 @@ describe('BackgroundScheduledTask', function() {
       killed: false
     });
 
-    // eslint-disable-next-line
-    sinon.stub(require('child_process'), 'fork').returns(fakeChildProcess as any);
+    vi.mocked(fork).mockReturnValue(fakeChildProcess as any);
   });
 
   afterEach(() => {
     sinon.restore();
+    vi.mocked(fork).mockReset();
   });
 
   it('creates a new background task', function(){
@@ -36,19 +39,20 @@ describe('BackgroundScheduledTask', function() {
   describe('getNextRun', function(){
     it('returns next run', async function(){
       const task = new BackgroundScheduledTask('* * * * *', './test-assets/dummy-task.js');
-      fakeChildProcess.send.callsFake(()=>{
-        task.emitter.emit('task:started');
+      fakeChildProcess.send.callsFake((msg: any)=>{
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+        else task.emitter.emit('task:started');
       });
 
       await task.start();
-  
+
       const nextMinute = new Date();
       nextMinute.setMilliseconds(0);
       nextMinute.setSeconds(0);
       nextMinute.setMinutes(nextMinute.getMinutes() + 1);
-  
+
       assert.equal(task.getNextRun()?.getTime(), nextMinute.getTime());
-      task.destroy();
+      await task.destroy();
     });
   });
 
