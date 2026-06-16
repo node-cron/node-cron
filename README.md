@@ -1,35 +1,25 @@
 # Node Cron
 
-[![npm](https://img.shields.io/npm/l/node-cron.svg)](https://github.com/merencia/node-cron/blob/master/LICENSE.md)
+[![npm](https://img.shields.io/npm/l/node-cron.svg)](https://github.com/node-cron/node-cron/blob/master/LICENSE.md)
 [![npm](https://img.shields.io/npm/v/node-cron.svg)](https://img.shields.io/npm/v/node-cron.svg)
 ![NPM Downloads](https://img.shields.io/npm/dm/node-cron)
 [![Coverage Status](https://coveralls.io/repos/github/node-cron/node-cron/badge.svg?branch=main)](https://coveralls.io/github/node-cron/node-cron?branch=main)
 
-The node-cron module is tiny task scheduler in pure JavaScript for node.js based on [GNU crontab](https://www.gnu.org/software/mcron/manual/html_node/Crontab-file.html). This module allows you to schedule task in node.js using full crontab syntax.
+node-cron is a tiny, zero-dependency task scheduler for Node.js, written in TypeScript and based on [GNU crontab](https://www.gnu.org/software/mcron/manual/html_node/Crontab-file.html). It lets you schedule tasks using full cron syntax, and scale them up to timezones, background processes, lifecycle events, and custom logging when you need to.
 
-### [Node-Cron Documentation](http://nodecron.com)
+### 📚 Full documentation: [nodecron.com](https://nodecron.com)
 
 ## Getting Started
 
 Install node-cron using npm:
 
 ```console
-npm install --save node-cron
+npm install node-cron
 ```
 
 Import node-cron and schedule a task:
 
-- commonjs
-
-```javascript
-const cron = require('node-cron');
-
-cron.schedule('* * * * *', () => {
-  console.log('running a task every minute');
-});
-```
-
-- es6 (module)
+- ES Modules
 
 ```javascript
 import cron from 'node-cron';
@@ -39,11 +29,30 @@ cron.schedule('* * * * *', () => {
 });
 ```
 
+- CommonJS
+
+```javascript
+const cron = require('node-cron');
+
+cron.schedule('* * * * *', () => {
+  console.log('running a task every minute');
+});
+```
+
+`schedule` returns a `ScheduledTask` you can control at runtime:
+
+```javascript
+const task = cron.schedule('* * * * *', () => {});
+
+task.stop();    // pause
+task.start();   // resume
+task.destroy(); // remove permanently
+task.getStatus(); // 'stopped' | 'idle' | 'running' | 'destroyed'
+```
+
+Need a task that doesn't start immediately? Use `cron.createTask(...)` and call `task.start()` yourself.
+
 ## Cron Syntax
-
-This is a quick reference to cron syntax and also shows the options supported by node-cron.
-
-### Allowed fields
 
 ```
  # ┌────────────── second (optional)
@@ -53,25 +62,70 @@ This is a quick reference to cron syntax and also shows the options supported by
  # │ │ │ │ ┌────── month
  # │ │ │ │ │ ┌──── day of week
  # │ │ │ │ │ │
- # │ │ │ │ │ │
  # * * * * * *
 ```
 
-### Allowed values
-
 | field        | value                             |
 | ------------ | --------------------------------- |
-| second       | 0-59                              |
+| second       | 0-59 (optional)                   |
 | minute       | 0-59                              |
 | hour         | 0-23                              |
 | day of month | 1-31                              |
 | month        | 1-12 (or names)                   |
 | day of week  | 0-7 (or names, 0 or 7 are sunday) |
 
+See the [Cron Syntax guide](https://nodecron.com/cron-syntax) for ranges, steps, lists, and named months/weekdays.
+
+## Options
+
+Pass an options object as the third argument to tune behavior:
+
+```javascript
+cron.schedule('0 3 * * *', task, {
+  name: 'nightly-backup',     // human-readable identifier
+  timezone: 'America/Sao_Paulo',
+  noOverlap: true,            // skip a run if the previous one is still going
+  maxExecutions: 10,          // destroy the task after N runs
+  maxRandomDelay: 30000,      // jitter (ms) added before each run
+});
+```
+
+See [Scheduling Options](https://nodecron.com/scheduling-options) for the full list.
+
+## Events
+
+Tasks emit lifecycle events you can subscribe to with `.on()`, `.once()`, and `.off()`:
+
+```javascript
+const task = cron.schedule('* * * * *', async () => doWork());
+
+task.on('execution:finished', (ctx) => console.log('result:', ctx.execution?.result));
+task.on('execution:failed', (ctx) => console.error('failed:', ctx.execution?.error));
+```
+
+Available events: `task:started`, `task:stopped`, `task:destroyed`, `execution:started`, `execution:finished`, `execution:failed`, `execution:missed`, `execution:overlap`, `execution:maxReached`. See [Events & Observability](https://nodecron.com/event-listening).
+
+## Background Tasks
+
+Pass a file path instead of a function to run a job in an isolated forked process, ideal for heavy work that would otherwise block the event loop:
+
+```javascript
+// tasks/backup.js
+export function task() { /* ... */ }
+
+// app.js
+cron.schedule('0 3 * * *', './tasks/backup.js');
+```
+
+See [Background Tasks](https://nodecron.com/background-tasks).
+
+## Migrating from v3
+
+v4 is a TypeScript rewrite with a smarter scheduler and a streamlined API (the `scheduled` and `runOnInit` options were removed; event names changed). See the [Migration Guide](https://nodecron.com/migrating-from-v3).
 
 ## Issues
 
-Feel free to submit issues and enhancement requests [here](https://github.com/merencia/node-cron/issues).
+Feel free to submit issues and enhancement requests [here](https://github.com/node-cron/node-cron/issues).
 
 ## Contributing
 
@@ -114,4 +168,4 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
 
 ## License
 
-node-cron is under [ISC License](https://github.com/merencia/node-cron/blob/master/LICENSE.md).
+node-cron is under [ISC License](https://github.com/node-cron/node-cron/blob/master/LICENSE.md).
