@@ -291,5 +291,37 @@ describe('TimeMatcher', function() {
         const next = new TimeMatcher('* * * * *', 'America/New_York').getNextMatch(baseDate);
         assert.isTrue(next > baseDate, `expected future date, got ${next.toISOString()}`);
       })
+
+      it('should skip the day when the scheduled time falls in the spring-forward gap', ()=>{
+        // 2026-03-08 New York: 02:00-02:59 do not exist. "30 2 * * *" cannot run
+        // that day, so the next run is 02:30 the following day, not next year.
+        const next = new TimeMatcher('30 2 * * *', 'America/New_York').getNextMatch(new Date('2026-03-08T06:30:00Z'));
+        assert.equal(next.toISOString(), '2026-03-09T06:30:00.000Z');
+      })
+
+      it('should return the next occurrence for weekday-constrained schedules without overshooting', ()=>{
+        // base 2026-06-15 (Mon). Each weekday should resolve to its next
+        // occurrence within a week, never years ahead.
+        const base = new Date('2026-06-15T18:47:58Z');
+        const expected: Record<string, string> = {
+          '0 18 * * 3': '2026-06-17T22:00:00.000Z', // Wed
+          '0 18 * * 4': '2026-06-18T22:00:00.000Z', // Thu
+          '0 18 * * 0': '2026-06-21T22:00:00.000Z', // Sun
+        };
+        for (const [expr, want] of Object.entries(expected)) {
+          const next = new TimeMatcher(expr, 'America/New_York').getNextMatch(base);
+          assert.equal(next.toISOString(), want, `expr ${expr}`);
+        }
+      })
+
+      it('should jump across years for a Feb 29 schedule', ()=>{
+        const next = new TimeMatcher('0 0 29 2 *', 'Etc/UTC').getNextMatch(new Date('2026-03-01T00:00:00Z'));
+        assert.equal(next.toISOString(), '2028-02-29T00:00:00.000Z');
+      })
+
+      it('should skip months that do not have day 31', ()=>{
+        const next = new TimeMatcher('0 0 31 * *', 'Etc/UTC').getNextMatch(new Date('2026-04-15T00:00:00Z'));
+        assert.equal(next.toISOString(), '2026-05-31T00:00:00.000Z');
+      })
     })
 });

@@ -1,11 +1,14 @@
-type DateParts = {
-  day: number
-  month: number
+export type WallClock = {
   year: number
+  month: number
+  day: number
   hour: number
   minute: number
   second: number
   milisecond: number
+}
+
+type DateParts = WallClock & {
   weekday: string
   gmt: string
 }
@@ -67,7 +70,7 @@ function getOffsetMinutes(date: Date, timezone?: string): number {
  * Returns true if the given instant, read back in the timezone, matches the
  * requested local wall-clock down to the second.
  */
-function readsBackTo(timestamp: number, parts: DateParts, timezone?: string): boolean {
+function readsBackTo(timestamp: number, parts: WallClock, timezone?: string): boolean {
   const p = buildDateParts(new Date(timestamp), timezone);
   return p.year === parts.year && p.month === parts.month && p.day === parts.day
       && p.hour === parts.hour && p.minute === parts.minute && p.second === parts.second;
@@ -85,7 +88,7 @@ function readsBackTo(timestamp: number, parts: DateParts, timezone?: string): bo
  * gap) neither reads back, so we resolve forward to the later instant instead
  * of drifting backwards into the gap (which used to yield a past date).
  */
-function localTimeToTimestamp(parts: DateParts, timezone?: string): number {
+export function localTimeToTimestamp(parts: WallClock, timezone?: string): number {
   const guess = Date.UTC(
     parts.year, parts.month - 1, parts.day,
     parts.hour, parts.minute, parts.second, parts.milisecond
