@@ -54,7 +54,10 @@ function isInvalidHour(expression) {
  * @returns {boolean}
  */
 function isInvalidDayOfMonth(expression) {
-    return !isValidExpression(expression, 1, 31);
+    // 'L' (last day of the month) is a valid token in this field only; the
+    // remaining values must still be valid day numbers.
+    const days = expression.filter((value) => value !== 'L');
+    return !isValidExpression(days, 1, 31);
 }
 
 /**
