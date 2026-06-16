@@ -1,6 +1,6 @@
 # Node Cron
 
-[![npm](https://img.shields.io/npm/l/node-cron.svg)](https://github.com/merencia/node-cron/blob/master/LICENSE.md)
+[![npm](https://img.shields.io/npm/l/node-cron.svg)](https://github.com/node-cron/node-cron/blob/master/LICENSE.md)
 [![npm](https://img.shields.io/npm/v/node-cron.svg)](https://img.shields.io/npm/v/node-cron.svg)
 ![NPM Downloads](https://img.shields.io/npm/dm/node-cron)
 [![Coverage Status](https://coveralls.io/repos/github/node-cron/node-cron/badge.svg?branch=main)](https://coveralls.io/github/node-cron/node-cron?branch=main)
@@ -168,4 +168,4 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
 
 ## License
 
-node-cron is under [ISC License](https://github.com/merencia/node-cron/blob/master/LICENSE.md).
+node-cron is under [ISC License](https://github.com/node-cron/node-cron/blob/master/LICENSE.md).
