@@ -42,19 +42,6 @@ export class LocalizedTime {
   getParts(): DateParts {
     return this.parts;
   }
-
-  set(field: string, value: number){
-    this.parts[field] = value;
-
-    // Convert the intended local wall-clock back to an absolute instant. This
-    // must be DST-aware: the timezone offset valid for the requested wall-clock
-    // is not necessarily the one currently stored in this.parts.gmt, and around
-    // a transition it can change. Doing this naively (building an ISO string
-    // with the *old* offset) shifts the local time by the DST delta, which used
-    // to make getNextMatch overshoot to the next year or return a past date.
-    this.timestamp = localTimeToTimestamp(this.parts, this.timezone);
-    this.parts = buildDateParts(new Date(this.timestamp), this.timezone);
-  }
 }
 
 /**
