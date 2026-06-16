@@ -4,24 +4,7 @@ import { InlineScheduledTask } from "../inline-scheduled-task";
 import { ScheduledTask, TaskContext, TaskEvent } from "../scheduled-task";
 
 export async function startDaemon(message: any): Promise<ScheduledTask> {
-    let script;
-    /* HACK: this hack was added because CJS vs ESM issues in combination with Windows vs Linux issues:
-     *
-     * 1. On CJS, require should always receive a path
-     * 2. On ESM + Windows, import should always receive a file URL
-     * 3. On ESM + Linux, import can receive either a URL or a Path
-     *
-     * Because we need esModuleInterop: true on our TS config file, it's almost impossible
-     * to determine during runtime whether we are running in CJS or ESM.
-     * This try-catch ensures we will be able to import or require in any environment.
-     * 
-     * If both fail, then the path cannot be found.
-     */
-    try {
-      script = await import(message.path);
-    } catch {
-      script = await import(fileURLToPath(message.path))
-    }
+    const script = await importTaskModule(message.path);
 
     // The inline task in the daemon stays silent; the parent process logs from
     // the forwarded events using the user's configured logger.
@@ -46,9 +29,33 @@ export async function startDaemon(message: any): Promise<ScheduledTask> {
     task.on('execution:maxReached', (context => sendEvent('execution:maxReached', context)));
 
     if (process.send) process.send({ event: 'daemon:started' });
-    
+
     task.start();
     return task;
+}
+
+/* Loading the task file is the one step that legitimately fails at runtime
+ * (missing file, a runtime that cannot run the file, unsupported TS syntax in
+ * strip-only mode, etc.). We must surface the real reason rather than crash.
+ *
+ * HACK: CJS vs ESM combined with Windows vs Linux path/URL rules:
+ *   1. On CJS, require should always receive a path
+ *   2. On ESM + Windows, import should always receive a file URL
+ *   3. On ESM + Linux, import can receive either a URL or a path
+ * We cannot reliably tell at runtime which we are in, so we try the path first
+ * and fall back to a file URL. If both fail we throw the FIRST error, which is
+ * the meaningful one (the fallback usually fails with an unrelated URL error).
+ */
+async function importTaskModule(path: string) {
+  try {
+    return await import(path);
+  } catch (firstError) {
+    try {
+      return await import(fileURLToPath(path));
+    } catch {
+      throw firstError;
+    }
+  }
 }
 
 function sendEvent(event: TaskEvent, context: TaskContext) {
@@ -112,7 +119,13 @@ export function bind(){
   process.on('message', async (message: any) => {
     switch(message.command){
     case 'task:start':
-        task = await startDaemon(message);
+        try {
+          task = await startDaemon(message);
+        } catch (error: any) {
+          // Report the failure to the parent so it can reject start() with the
+          // real cause, instead of crashing the daemon with an opaque exit.
+          if (process.send) process.send({ event: 'daemon:error', jsonError: serializeError(error) });
+        }
         return task;
     case 'task:stop':
       if(task) task.stop();

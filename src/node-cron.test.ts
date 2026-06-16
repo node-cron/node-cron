@@ -127,6 +127,36 @@ describe('node-cron', function() {
             assert.isDefined(task);
             await task.destroy();
         });
+
+        it('logs a background task start failure instead of throwing unhandled', async function() {
+            const errors: any[] = [];
+            const fakeLogger: any = { error: (...a: any[]) => errors.push(a), warn(){}, info(){}, debug(){} };
+
+            vi.mocked(fork).mockImplementation(() => {
+              const child: any = new EventEmitter();
+              child.killed = false;
+              child.kill = () => { child.killed = true; };
+              child.send = () => {
+                queueMicrotask(() => child.emit('message', {
+                  event: 'daemon:error',
+                  jsonError: JSON.stringify({ name: 'Error', message: 'load failed in child' })
+                }));
+                return true;
+              };
+              return child;
+            });
+
+            // schedule() auto-starts and does not return the promise; the failure
+            // must be routed to the logger, not surface as an unhandled rejection.
+            const task = cron.schedule('* * * * *', '../test-assets/dummy-task.js', { logger: fakeLogger });
+            await wait(200);
+
+            assert.isTrue(
+              errors.some(e => JSON.stringify(e).includes('load failed in child')),
+              'the start failure should be logged via the configured logger'
+            );
+            await task.destroy();
+        });
     });
     
     describe('validate', function() {

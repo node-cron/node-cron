@@ -65,29 +65,49 @@ class BackgroundScheduledTask implements ScheduledTask{
       if (this.forkProcess) {
         return resolve(undefined);
       }
-      
+
+      const startTimeout = this.options?.startTimeout ?? 5000;
+
+      // Any failure to start must also tear down the daemon. Otherwise a daemon
+      // that loads slowly (past the timeout) stays alive and keeps running the
+      // schedule on its own, leading to orphaned/duplicate executions.
+      const failStart = (error: Error) => {
+        clearTimeout(timeout);
+        this.forkProcess?.kill();
+        this.forkProcess = undefined;
+        reject(error);
+      };
+
       const timeout = setTimeout(() => {
-        reject(new Error('Start operation timed out'));
-      }, 5000);
-      
+        failStart(new Error(
+          `Start operation timed out after ${startTimeout}ms. The background task file may have failed to load or taken too long to import; ` +
+          `verify it runs on its own and consider increasing the \`startTimeout\` option.`
+        ));
+      }, startTimeout);
+
       try {
         this.forkProcess = fork(daemonPath);
-        
+
         this.forkProcess.on('error', (err) => {
-          clearTimeout(timeout);
-          reject(new Error(`Error on daemon: ${err.message}`));
+          failStart(new Error(`Error on daemon: ${err.message}`));
         });
-        
+
         this.forkProcess.on('exit', (code, signal) => {
           if (code !== 0 && signal !== 'SIGTERM') {
             const erro = new Error(`node-cron daemon exited with code ${code || signal}`)
             this.logger.error(erro);
-            clearTimeout(timeout);
-            reject(erro)
+            failStart(erro);
           }
         });
-        
+
         this.forkProcess.on('message', (message: any) => {
+          if (message.event === 'daemon:error') {
+            // The daemon could not load/start the task file. Reject with the
+            // real cause so the user sees what actually went wrong.
+            failStart(message.jsonError ? deserializeError(message.jsonError) : new Error('Background task failed to start'));
+            return;
+          }
+
           if (message.jsonError) {
             if (message.context?.execution) {
               message.context.execution.error = deserializeError(message.jsonError);
@@ -123,7 +143,7 @@ class BackgroundScheduledTask implements ScheduledTask{
           options: serializableOptions(this.options)
         });
       } catch (error) {
-        reject(error);
+        failStart(error as Error);
       }
     });
   }
