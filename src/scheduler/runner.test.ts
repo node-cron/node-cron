@@ -20,7 +20,7 @@ describe('scheduler/runner', function(){
     runner.stop()
     assert.isTrue(runner.runCount >= 1);
 
-  }).timeout(3000);
+  });
 
   it('allows handle failed', async function(){
     const timeMatcher = new TimeMatcher('* * * * * *');
@@ -39,7 +39,7 @@ describe('scheduler/runner', function(){
 
     const result = await errorCaught;
     assert.equal(result.message, 'fail!');
-  }).timeout(3000);
+  });
 
   it('allows handle task finished', async function(){
     const timeMatcher = new TimeMatcher('* * * * * *');
@@ -59,7 +59,7 @@ describe('scheduler/runner', function(){
 
     const result = await resultCaught;
     assert.equal(result, 'task finished');
-  }).timeout(3000);
+  });
 
   it('allows handle before execute', async function(){
     const timeMatcher = new TimeMatcher('* * * * * *');
@@ -124,7 +124,7 @@ describe('scheduler/runner', function(){
 
     const error = await errorCaught;
     assert.equal(error.message, 'task failed')
-  }).timeout(3000);
+  });
 
   it('before execute prevents run', async function(){
     const timeMatcher = new TimeMatcher('* * * * * *');
@@ -162,7 +162,7 @@ describe('scheduler/runner', function(){
 
     const error = await errorCaught;
     assert.equal(error.message, 'task failed')
-  }).timeout(3000);
+  });
 
   it('does not break if onError was not set',  async function(){
     const preError = logger.error;
@@ -179,7 +179,7 @@ describe('scheduler/runner', function(){
       }
       runner.start();
     });
-  }).timeout(3000);
+  });
 
   it('returns next run',  async function(){
     const timeMatcher = new TimeMatcher('* * * * *');
@@ -193,26 +193,27 @@ describe('scheduler/runner', function(){
 
     runner.stop()
 
-  }).timeout(3000);
+  });
 
-  it('prevents overlap', function(done){
-    const timeMatcher = new TimeMatcher('* * * * * *');
+  it('prevents overlap', function(){
+    return new Promise<void>((resolve, reject) => {
+      const timeMatcher = new TimeMatcher('* * * * * *');
 
-    const onOverlap = (date: Date) => {
-      try{
-        runner.stop();
-        assert.isDefined(date);
-        assert.equal(runner.runCount, 1);
-        done();
-      } catch(error){
-        done(error);
+      const onOverlap = (date: Date) => {
+        try{
+          runner.stop();
+          assert.isDefined(date);
+          assert.equal(runner.runCount, 1);
+          resolve();
+        } catch(error){
+          reject(error);
+        }
       }
-    }
 
-    const runner = createRunner(timeMatcher, 1200, { noOverlap: true, onOverlap: onOverlap });
-    runner.start();
-
-  }).timeout(5000);
+      const runner = createRunner(timeMatcher, 1200, { noOverlap: true, onOverlap: onOverlap });
+      runner.start();
+    });
+  });
 
   it('prevents overlap without setting an onOverlap function', async function(){
     const timeMatcher = new TimeMatcher('* * * * * *');
@@ -223,7 +224,7 @@ describe('scheduler/runner', function(){
     assert.equal(runner.runCount, 1);
 
     runner.stop();
-  }).timeout(5000);
+  });
 
   it('when prevents overlap function failing', async function(){
     const timeMatcher = new TimeMatcher('* * * * * *');
@@ -232,7 +233,7 @@ describe('scheduler/runner', function(){
     await new Promise(resolve => { setTimeout(resolve, 2000)});
     runner.stop();
 
-  }).timeout(5000);
+  });
 
 
   it('detects blocking IO', async function(){
@@ -254,7 +255,7 @@ describe('scheduler/runner', function(){
     assert.isNotNull(missedDate);
     assert.equal(missedCount, 1)
 
-  }).timeout(10000);
+  });
 
   it('sets a max delay on heartbeat', function(){
     const timeMatcher = new TimeMatcher('0 0 1 1 *');
@@ -266,7 +267,7 @@ describe('scheduler/runner', function(){
     assert.equal(timeout._idleTimeout, 86400000);
 
     runner.stop();
-  }).timeout(5000);
+  });
 
 });
 

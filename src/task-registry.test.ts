@@ -33,6 +33,12 @@ describe('TaskRegistry', function(){
     assert.isFalse(registry.has(task.id));
   });
 
+  it('does nothing when removing a task that is not registered', function(){
+    const task = createTask();
+    assert.doesNotThrow(() => registry.remove(task));
+    assert.isFalse(registry.has(task.id));
+  });
+
   it('removes a task when task is destroyed', function(){
     const task = createTask();
     registry.add(task);
