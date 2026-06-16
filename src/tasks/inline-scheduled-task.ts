@@ -39,6 +39,7 @@ export class InlineScheduledTask implements ScheduledTask {
       noOverlap: options?.noOverlap,
       maxExecutions: options?.maxExecutions,
       maxRandomDelay: options?.maxRandomDelay,
+      missedExecutionTolerance: options?.missedExecutionTolerance,
       logger: this.logger,
       beforeRun: (date: Date, execution: Execution) => {
         if(execution.reason === 'scheduled'){

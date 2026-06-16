@@ -3,6 +3,15 @@ import logger, { Logger } from "../logger";
 import { TrackedPromise } from "../promise/tracked-promise";
 import { Execution } from "../tasks/scheduled-task";
 import { TimeMatcher } from "../time/time-matcher";
+import { planBeat } from "./plan-beat";
+
+/**
+ * How late, in milliseconds, a heartbeat may wake and still run the slot it was
+ * armed for instead of reporting it missed. Long setTimeout delays drift, so a
+ * small grace keeps daily/weekly schedules from being skipped. Always bounded
+ * by the gap to the next slot (see planBeat).
+ */
+const DEFAULT_MISSED_EXECUTION_TOLERANCE = 1000;
 
 type OnFn = (date: Date) => void | Promise<void>;
 type OnErrorHookFn = (date: Date, error: Error, execution: Execution) => void | Promise<void>;
@@ -19,6 +28,7 @@ export type RunnerOptions = {
   timezone?: string,
   maxExecutions?: number,
   maxRandomDelay?: number,
+  missedExecutionTolerance?: number,
   logger?: Logger,
   onMissedExecution?: OnFn,
   onOverlap?: OnFn,
@@ -34,6 +44,7 @@ export class Runner {
   noOverlap: boolean;
   maxExecutions?: number;
   maxRandomDelay: number;
+  missedExecutionTolerance: number;
   runCount: number;
 
   running: boolean;
@@ -53,6 +64,7 @@ export class Runner {
       this.noOverlap = options == undefined || options.noOverlap === undefined ? false : options.noOverlap;
       this.maxExecutions = options?.maxExecutions;
       this.maxRandomDelay = options?.maxRandomDelay || 0;
+      this.missedExecutionTolerance = options?.missedExecutionTolerance ?? DEFAULT_MISSED_EXECUTION_TOLERANCE;
       this.logger = options?.logger || logger;
 
       this.onMissedExecution = options?.onMissedExecution || emptyOnFn;
@@ -75,12 +87,13 @@ export class Runner {
   start() {
     this.running = true;
     let lastExecution: TrackedPromise<any>;
-    let expectedNextExecution: Date;
+    // The slot the current heartbeat is armed for.
+    let expectedNextExecution: Date = this.timeMatcher.getNextMatch(nowWithoutMs());
 
-    const scheduleNextHeartBeat = (currentDate: Date) => {
+    const armHeartBeat = () => {
       if (this.running) {
-          clearTimeout(this.heartBeatTimeout);
-          this.heartBeatTimeout = setTimeout(heartBeat, getDelay(this.timeMatcher, currentDate));
+        clearTimeout(this.heartBeatTimeout);
+        this.heartBeatTimeout = setTimeout(heartBeat, getDelay(expectedNextExecution));
       }
     };
 
@@ -90,7 +103,7 @@ export class Runner {
           id: createID('exec'),
           reason: 'scheduled'
         }
-        
+
         const shouldExecute = await this.beforeRun(date, execution);
         const randomDelay = Math.floor(Math.random() * this.maxRandomDelay);
 
@@ -104,7 +117,7 @@ export class Runner {
               execution.finishedAt = new Date();
               execution.result = result;
               this.onFinished(date, execution);
-  
+
               if( this.maxExecutions && this.runCount >= this.maxExecutions){
                 this.onMaxExecutions(date);
                 this.stop();
@@ -117,70 +130,58 @@ export class Runner {
 
             resolve(true);
           }, randomDelay);
+        } else {
+          resolve(true);
         }
       })
     }
 
-    const checkAndRun = (date: Date): TrackedPromise<any> => {
-      return new TrackedPromise(async (resolve, reject) => {
-      try {
-        if(this.timeMatcher.match(date)){
-          await runTask(date);
-        }
-        resolve(true);
-       } catch(err) {
-         reject(err)
-       }
-      });
-    }
-
     const heartBeat = async () => {
-      // get next is ignoring millisecond setting to zero to get a closer time here.
-      const currentDate = nowWithoutMs()
+      // ignore milliseconds so the comparison against the matched slot is exact.
+      const currentDate = nowWithoutMs();
 
-      // blocking IO detection
-      if(expectedNextExecution && expectedNextExecution.getTime() < currentDate.getTime()){
-        while(expectedNextExecution.getTime() < currentDate.getTime()){
-          const nextMatch = this.timeMatcher.getNextMatch(expectedNextExecution);
-          // Defense in depth: getNextMatch must always move forward. If it ever
-          // returns a date that does not advance (e.g. a bug around a DST
-          // boundary), re-base from the current date instead of looping forever.
-          if(nextMatch.getTime() <= expectedNextExecution.getTime()){
-            this.logger.error(`getNextMatch did not advance past ${expectedNextExecution}; aborting missed-execution catch-up to avoid an infinite loop.`);
-            expectedNextExecution = this.timeMatcher.getNextMatch(currentDate);
-            break;
+      const plan = planBeat(
+        expectedNextExecution,
+        currentDate,
+        this.missedExecutionTolerance,
+        (date: Date) => this.timeMatcher.getNextMatch(date)
+      );
+
+      expectedNextExecution = plan.next;
+
+      // Report every superseded slot. The "missed execution" warning is emitted
+      // by the task's onMissedExecution handler so it can honour listener-based
+      // and explicit suppression and use the task's logger.
+      for (const missedSlot of plan.missed) {
+        runAsync(this.onMissedExecution, missedSlot, this.onErrorFallback);
+      }
+
+      if (plan.run) {
+        // overlap prevention
+        if (lastExecution && lastExecution.getState() === 'pending') {
+          runAsync(this.onOverlap, plan.run, this.onErrorFallback);
+          if (this.noOverlap) {
+            this.logger.warn('task still running, new execution blocked by overlap prevention!');
+            armHeartBeat();
+            return;
           }
-          expectedNextExecution = nextMatch;
-          // The "missed execution" warning is emitted by the task's
-          // onMissedExecution handler so it can honour listener-based and
-          // explicit suppression and use the task's logger.
-          runAsync(this.onMissedExecution, expectedNextExecution, this.onErrorFallback);
         }
+
+        const slot = plan.run;
+        lastExecution = new TrackedPromise(async (resolve, reject) => {
+          try {
+            await runTask(slot);
+            resolve(true);
+          } catch (err) {
+            reject(err);
+          }
+        });
       }
 
-      // overlap prevention
-      if(lastExecution && lastExecution.getState() === 'pending'){
-        runAsync(this.onOverlap, currentDate, this.onErrorFallback);
-        if(this.noOverlap){
-          this.logger.warn('task still running, new execution blocked by overlap prevention!');
-          expectedNextExecution = this.timeMatcher.getNextMatch(currentDate);
-          scheduleNextHeartBeat(currentDate);
-          return;
-        }
-      }
-
-      // execute the task
-      lastExecution = checkAndRun(currentDate);
-
-      expectedNextExecution = this.timeMatcher.getNextMatch(currentDate);
-
-      // schedule the next run
-      scheduleNextHeartBeat(currentDate);
+      armHeartBeat();
     }
-    
-    this.heartBeatTimeout = setTimeout(()=>{
-      heartBeat();
-    }, getDelay(this.timeMatcher, nowWithoutMs()));
+
+    armHeartBeat();
   }
 
   nextRun(){
@@ -235,9 +236,8 @@ async function runAsync(fn: OnFn, date: Date, onError: OnErrorFn){
   }
 }
 
-function getDelay(timeMatcher: TimeMatcher, currentDate: Date) {
+function getDelay(nextRun: Date) {
   const maxDelay = 86400000;
-  const nextRun = timeMatcher.getNextMatch(currentDate);
   // must use now for calculating the delay, it avoids miliseconds addition to the timeout.
   const now = new Date();
   const delay = nextRun.getTime() - now.getTime();

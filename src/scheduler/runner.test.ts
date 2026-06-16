@@ -5,6 +5,16 @@ import { TimeMatcher } from '../time/time-matcher';
 import logger from '../logger';
 
 describe('scheduler/runner', function(){
+  it('defaults the missed-execution tolerance to 1000ms', function(){
+    const runner = createRunner(new TimeMatcher('* * * * * *'), 200);
+    assert.equal(runner.missedExecutionTolerance, 1000);
+  });
+
+  it('honours a custom missed-execution tolerance', function(){
+    const runner = createRunner(new TimeMatcher('* * * * * *'), 200, { missedExecutionTolerance: 0 });
+    assert.equal(runner.missedExecutionTolerance, 0);
+  });
+
   it('starts running',  async function(){
     const timeMatcher = new TimeMatcher('* * * * * *');
     const runner = createRunner(timeMatcher, 200);

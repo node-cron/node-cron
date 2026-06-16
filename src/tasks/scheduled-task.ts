@@ -47,6 +47,14 @@ export type TaskOptions = {
    */
   suppressMissedWarning?: boolean,
   /**
+   * How late, in milliseconds, a scheduled execution may wake and still run
+   * instead of being reported as missed. Long timers drift (OS sleep, GC,
+   * throttling, clock skew), which on daily/weekly schedules can skip the run
+   * entirely. The tolerance is always capped to the gap to the next execution,
+   * so it can never run a slot twice. Defaults to 1000.
+   */
+  missedExecutionTolerance?: number,
+  /**
    * Timeout in milliseconds for `execute()` on background tasks. When set,
    * `execute()` rejects with "Execution timeout exceeded" if the task has not
    * reported back in time. Defaults to no timeout (waits for the task to
