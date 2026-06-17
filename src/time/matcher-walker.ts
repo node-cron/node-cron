@@ -1,11 +1,7 @@
 import convertExpression from '../pattern/convertion';
-import weekDayNamesConversion from '../pattern/convertion/week-day-names-conversion';
 import { LocalizedTime, localTimeToTimestamp } from './localized-time';
 import { TimeMatcher } from './time-matcher';
 import { matchesDayOfMonth, DayOfMonthField } from './day-of-month';
-
-// Intl 'short' weekday names, indexed by Date.getUTCDay() (0 = Sunday).
-const SHORT_WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 // Upper bound on the calendar search before giving up. A century is far beyond
 // any real recurrence (the calendar repeats within 28 years) and the loop is
@@ -133,12 +129,13 @@ export class MatcherWalker {
 
   /**
    * Whether the calendar day matches the weekday field. A given Y/M/D has the
-   * same weekday in every timezone, so this is computed arithmetically and
-   * mirrors the conversion match() uses, making it a safe pre-filter.
+   * same weekday in every timezone, so it is computed arithmetically.
+   * `getUTCDay()` and the converted weekday field share the same 0-6 (Sunday=0)
+   * space, so this matches what match() computes, making it a safe pre-filter.
    */
   private matchesWeekday(year: number, month: number, day: number): boolean {
-    const weekdayName = SHORT_WEEKDAYS[new Date(Date.UTC(year, month - 1, day)).getUTCDay()];
-    return this.weekdays.indexOf(parseInt(weekDayNamesConversion(weekdayName))) !== -1;
+    const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
+    return this.weekdays.indexOf(weekday) !== -1;
   }
 }
 
