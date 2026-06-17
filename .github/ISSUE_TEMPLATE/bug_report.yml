@@ -1,0 +1,66 @@
+name: Bug report
+description: Report something that isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report! A minimal reproduction is the single most helpful
+        thing you can provide. Please do **not** report security issues here —
+        see [SECURITY.md](https://github.com/node-cron/node-cron/blob/main/SECURITY.md).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: input
+    id: cron-version
+    attributes:
+      label: node-cron version
+      placeholder: e.g. 4.3.0
+    validations:
+      required: true
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version
+      placeholder: e.g. 22.5.0
+    validations:
+      required: true
+  - type: dropdown
+    id: how-run
+    attributes:
+      label: How do you run your app?
+      description: This matters a lot for background tasks (the daemon is a forked plain-node process).
+      options:
+        - Plain node (.js)
+        - node with native TypeScript (Node >= 23.6, .ts)
+        - tsx
+        - ts-node
+        - A bundler (webpack, esbuild, Vite, etc.)
+        - Other (describe below)
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: e.g. Ubuntu 24.04, macOS 15, Windows 11, Docker (node:22-alpine)
+  - type: input
+    id: expression
+    attributes:
+      label: Cron expression and timezone
+      placeholder: e.g. "0 30 2 * * *", timezone "America/New_York"
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: The smallest snippet that reproduces the issue. A link to a repo is even better.
+      render: javascript
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / error output
+      render: shell
