@@ -47,7 +47,7 @@ describe('utcOffset', function () {
       // Across the US spring-forward, a real America/New_York would shift; a
       // fixed UTC-3 must stay exactly 24h apart every day.
       const m = new TimeMatcher('30 14 * * *', undefined, -180);
-      let d = new Date('2025-03-08T00:00:00Z');
+      const d = new Date('2025-03-08T00:00:00Z');
       const a = m.getNextMatch(d);
       const b = m.getNextMatch(a);
       assert.equal(a.toISOString(), '2025-03-08T17:30:00.000Z');
