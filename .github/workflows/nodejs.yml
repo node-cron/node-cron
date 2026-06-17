@@ -30,6 +30,9 @@ jobs:
     name: Unit tests
     runs-on: ubuntu-24.04-arm
 
+    env:
+      TZ: UTC
+
     strategy:
       matrix:
         node-version: ["20", "22", "24"]
@@ -54,3 +57,27 @@ jobs:
         uses: coverallsapp/github-action@master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  timezone-independence:
+    name: Timezone independence
+    runs-on: ubuntu-24.04-arm
+
+    # The suite must pass identically under a non-UTC, DST-observing system
+    # timezone: a task uses its explicit timezone, never the system's.
+    env:
+      TZ: America/Sao_Paulo
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test
