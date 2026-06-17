@@ -1,6 +1,6 @@
 
-import convertExpression from '../pattern/convertion/index';
-import weekDayNamesConversion from '../pattern/convertion/week-day-names-conversion';
+import convertExpression from '../pattern/conversion/index';
+import weekDayNamesConversion from '../pattern/conversion/week-day-names-conversion';
 import { LocalizedTime } from './localized-time';
 import { MatcherWalker } from './matcher-walker';
 import { matchesDayOfMonth } from './day-of-month';

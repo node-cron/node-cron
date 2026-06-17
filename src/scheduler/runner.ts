@@ -238,7 +238,7 @@ async function runAsync(fn: OnFn, date: Date, onError: OnErrorFn){
 
 function getDelay(nextRun: Date) {
   const maxDelay = 86400000;
-  // must use now for calculating the delay, it avoids miliseconds addition to the timeout.
+  // must use now for calculating the delay, it avoids milliseconds addition to the timeout.
   const now = new Date();
   const delay = nextRun.getTime() - now.getTime();
 
