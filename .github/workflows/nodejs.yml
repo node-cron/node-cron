@@ -47,7 +47,7 @@ jobs:
         run: npm ci
 
       - name: Run unit tests
-        run: node --run test
+        run: npm test
 
       - name: Coveralls
         if: matrix.node-version == '22'
