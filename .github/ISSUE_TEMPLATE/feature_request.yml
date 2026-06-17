@@ -1,0 +1,28 @@
+name: Feature request
+description: Suggest an idea for node-cron
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        node-cron aims to stay small and focused (schedule functions with cron
+        expressions, zero dependencies). Distributed queues, persistence and
+        retry-with-dead-letter are intentionally out of scope — those belong to
+        tools like BullMQ.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the use case, not just the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API
+      description: If you have one in mind, show the smallest API that would solve it.
+      render: javascript
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
