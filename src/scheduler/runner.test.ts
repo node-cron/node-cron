@@ -199,7 +199,14 @@ describe('scheduler/runner', function(){
     runner.start();
 
     const nextRun = runner.nextRun();
-    assert.equal(nextRun.getMinutes(), now.getMinutes() + 1);
+    // The next run is the next minute boundary: seconds/ms zeroed, and within
+    // one minute of now. (Asserting `getMinutes() + 1` breaks at the :59 -> :00
+    // rollover, where the next minute is 0, not 60.)
+    assert.equal(nextRun.getSeconds(), 0);
+    assert.equal(nextRun.getMilliseconds(), 0);
+    const diff = nextRun.getTime() - now.getTime();
+    assert.isAbove(diff, 0);
+    assert.isAtMost(diff, 60000);
 
     runner.stop()
 
