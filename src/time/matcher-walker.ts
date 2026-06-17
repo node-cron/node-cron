@@ -1,6 +1,7 @@
 import convertExpression from '../pattern/convertion';
 import { LocalizedTime, localTimeToTimestamp } from './localized-time';
 import { TimeMatcher } from './time-matcher';
+import { matchesDayOfMonth, DayOfMonthField } from './day-of-month';
 
 // Upper bound on the calendar search before giving up. A century is far beyond
 // any real recurrence (the calendar repeats within 28 years) and the loop is
@@ -18,7 +19,7 @@ export class MatcherWalker {
   private readonly seconds: number[];
   private readonly minutes: number[];
   private readonly hours: number[];
-  private readonly days: number[];
+  private readonly days: DayOfMonthField;
   private readonly months: number[];
 
   constructor(cronExpression: string, baseDate: Date, timezone?: string) {
@@ -61,7 +62,7 @@ export class MatcherWalker {
     let { year, month, day } = baseParts;
 
     for (let i = 0; i < MAX_DAYS; i++) {
-      if (months.includes(month) && days.includes(day)) {
+      if (months.includes(month) && matchesDayOfMonth(days, year, month, day)) {
         // On the base day the result must be strictly after the base instant;
         // on later days any matching time of day qualifies.
         const lowerBound = i === 0 ? baseParts : null;

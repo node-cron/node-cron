@@ -21,7 +21,15 @@ export default (() => {
         for (let i=0; i < expressions.length; i++){
             const numbers = expressions[i].split(',');
             for (let j=0; j<numbers.length; j++){
-                numbers[j] = parseInt(numbers[j]);
+                // Keep the `L` (last day of month) token as a literal; it has no
+                // fixed numeric value. It is only meaningful in the day-of-month
+                // field, where validation accepts it; elsewhere it stays a token
+                // that no value matches and that validation rejects.
+                if (/^l$/i.test(String(numbers[j]).trim())) {
+                    numbers[j] = 'L';
+                } else {
+                    numbers[j] = parseInt(numbers[j]);
+                }
             }
             expressions[i] = numbers;
         }

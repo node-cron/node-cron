@@ -339,4 +339,48 @@ describe('TimeMatcher', function() {
         assert.equal(next.toISOString(), '2026-11-01T05:30:00.000Z');
       })
     })
+
+    describe('last day of month (L)', function() {
+      it('matches the last day of each month', function() {
+        const matcher = new TimeMatcher('0 0 12 L * *');
+        assert.isTrue(matcher.match(new Date(2025, 0, 31, 12, 0, 0)));  // Jan 31
+        assert.isTrue(matcher.match(new Date(2025, 1, 28, 12, 0, 0)));  // Feb 28 (common year)
+        assert.isTrue(matcher.match(new Date(2024, 1, 29, 12, 0, 0)));  // Feb 29 (leap year)
+        assert.isTrue(matcher.match(new Date(2025, 3, 30, 12, 0, 0)));  // Apr 30
+      });
+
+      it('does not match a non-last day', function() {
+        const matcher = new TimeMatcher('0 0 12 L * *');
+        assert.isFalse(matcher.match(new Date(2025, 0, 30, 12, 0, 0)));  // Jan 30
+        assert.isFalse(matcher.match(new Date(2025, 1, 27, 12, 0, 0)));  // Feb 27
+        assert.isFalse(matcher.match(new Date(2024, 1, 28, 12, 0, 0)));  // Feb 28 in a leap year
+      });
+
+      it('accepts a lowercase l', function() {
+        const matcher = new TimeMatcher('0 0 12 l * *');
+        assert.isTrue(matcher.match(new Date(2025, 0, 31, 12, 0, 0)));
+      });
+
+      it('supports L combined with explicit days', function() {
+        const matcher = new TimeMatcher('0 0 12 15,L * *');
+        assert.isTrue(matcher.match(new Date(2025, 0, 15, 12, 0, 0)));
+        assert.isTrue(matcher.match(new Date(2025, 0, 31, 12, 0, 0)));
+        assert.isFalse(matcher.match(new Date(2025, 0, 20, 12, 0, 0)));
+      });
+
+      it('getNextMatch finds the last day of the current month', function() {
+        const next = new TimeMatcher('0 0 12 L * *', 'Etc/UTC').getNextMatch(new Date('2025-01-10T00:00:00Z'));
+        assert.equal(next.toISOString(), '2025-01-31T12:00:00.000Z');
+      });
+
+      it('getNextMatch rolls over to the next month-end', function() {
+        const next = new TimeMatcher('0 0 12 L * *', 'Etc/UTC').getNextMatch(new Date('2025-02-01T00:00:00Z'));
+        assert.equal(next.toISOString(), '2025-02-28T12:00:00.000Z');
+      });
+
+      it('getNextMatch resolves Feb 29 on a leap year', function() {
+        const next = new TimeMatcher('0 0 12 L * *', 'Etc/UTC').getNextMatch(new Date('2024-02-01T00:00:00Z'));
+        assert.equal(next.toISOString(), '2024-02-29T12:00:00.000Z');
+      });
+    })
 });
