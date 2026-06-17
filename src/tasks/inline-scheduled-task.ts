@@ -90,6 +90,38 @@ export class InlineScheduledTask implements ScheduledTask {
     return null;
   }
 
+  getNextRuns(count: number): Date[] {
+    const runs: Date[] = [];
+    let from = new Date();
+    for (let i = 0; i < count; i++) {
+      from = this.timeMatcher.getNextMatch(from);
+      runs.push(from);
+    }
+    return runs;
+  }
+
+  match(date: Date): boolean {
+    return this.timeMatcher.match(date);
+  }
+
+  msToNext(): number | null {
+    const next = this.getNextRun();
+    return next ? next.getTime() - Date.now() : null;
+  }
+
+  isBusy(): boolean {
+    return this.getStatus() === 'running';
+  }
+
+  runsLeft(): number | undefined {
+    if (this.runner.maxExecutions == null) return undefined;
+    return Math.max(0, this.runner.maxExecutions - this.runner.runCount);
+  }
+
+  getPattern(): string {
+    return this.cronExpression;
+  }
+
   private changeState(state){
     if(this.runner.isStarted()){
       this.stateMachine.changeState(state);

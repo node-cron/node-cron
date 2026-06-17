@@ -28,6 +28,8 @@ class BackgroundScheduledTask implements ScheduledTask{
   stateMachine: StateMachine;
   logger: Logger;
   suppressMissedWarning: boolean;
+  timeMatcher: TimeMatcher;
+  runCount: number;
 
   constructor(cronExpression: string, taskPath: string, options?: TaskOptions){
     this.cronExpression = cronExpression;
@@ -37,6 +39,11 @@ class BackgroundScheduledTask implements ScheduledTask{
     this.name = options?.name || this.id;
     this.emitter = new TaskEmitter();
     this.stateMachine = new StateMachine('stopped');
+    // The execution count lives in the daemon; mirror it here from the forwarded
+    // events so runsLeft() works across the process boundary.
+    this.timeMatcher = new TimeMatcher(cronExpression, options?.timezone);
+    this.runCount = 0;
+    this.on('execution:started', () => { this.runCount++; });
     // The logger lives in the parent process: it cannot cross the fork
     // boundary. The daemon runs with a no-op logger and forwards events, and
     // this process logs from those events using the configured logger.
@@ -58,10 +65,41 @@ class BackgroundScheduledTask implements ScheduledTask{
 
   getNextRun(): Date | null {
     if ( this.stateMachine.state !== 'stopped'){
-      const timeMatcher = new TimeMatcher(this.cronExpression, this.options?.timezone);
-      return timeMatcher.getNextMatch(new Date());
+      return this.timeMatcher.getNextMatch(new Date());
     }
     return null;
+  }
+
+  getNextRuns(count: number): Date[] {
+    const runs: Date[] = [];
+    let from = new Date();
+    for (let i = 0; i < count; i++) {
+      from = this.timeMatcher.getNextMatch(from);
+      runs.push(from);
+    }
+    return runs;
+  }
+
+  match(date: Date): boolean {
+    return this.timeMatcher.match(date);
+  }
+
+  msToNext(): number | null {
+    const next = this.getNextRun();
+    return next ? next.getTime() - Date.now() : null;
+  }
+
+  isBusy(): boolean {
+    return this.getStatus() === 'running';
+  }
+
+  runsLeft(): number | undefined {
+    if (this.options?.maxExecutions == null) return undefined;
+    return Math.max(0, this.options.maxExecutions - this.runCount);
+  }
+
+  getPattern(): string {
+    return this.cronExpression;
   }
 
   start(): Promise<void> {
