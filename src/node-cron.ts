@@ -13,7 +13,7 @@ import { ScheduledTask, TaskFn, TaskOptions } from "./tasks/scheduled-task";
 import { TaskRegistry } from "./task-registry";
 import logger from "./logger";
 
-import validation from "./pattern/validation/pattern-validation";
+import validation, { parse as parseExpression, validateDetailed as validateDetailedExpression } from "./pattern/validation/pattern-validation";
 import BackgroundScheduledTask from "./tasks/background-scheduled-task/background-scheduled-task";
 import { setLogger } from "./logger";
 
@@ -132,6 +132,23 @@ export function validate(expression: string): boolean {
 }
 
 /**
+ * Validates a cron expression and returns a structured result with every
+ * problem (field name, offending value and reason), instead of a plain boolean.
+ * Useful for tooling, editors and richer error messages.
+ *
+ * @param expression - The cron expression to validate
+ */
+export const validateDetailed = validateDetailedExpression;
+
+/**
+ * Parses a cron expression into its decomposed fields, or throws an Error with
+ * a useful message (which field, which value) for the first problem found.
+ *
+ * @param expression - The cron expression to parse
+ */
+export const parse = parseExpression;
+
+/**
  * Retrieves all scheduled tasks from the registry.
  * 
  * @returns A map of scheduled tasks
@@ -150,11 +167,14 @@ export { setLogger } from './logger';
 
 export type { ScheduledTask, TaskFn, TaskContext, TaskOptions } from './tasks/scheduled-task';
 export type { Logger } from './logger';
+export type { ParsedFields, DetailedValidation, CronFieldError } from './pattern/validation/pattern-validation';
 
 export interface NodeCron {
   schedule: typeof schedule;
   createTask: typeof createTask;
   validate: typeof validate;
+  validateDetailed: typeof validateDetailed;
+  parse: typeof parse;
   getTasks: typeof getTasks;
   getTask: typeof getTask;
   setLogger: typeof setLogger;
@@ -164,6 +184,8 @@ export const nodeCron: NodeCron = {
   schedule,
   createTask,
   validate,
+  validateDetailed,
+  parse,
   getTasks,
   getTask,
   setLogger,

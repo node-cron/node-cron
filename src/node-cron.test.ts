@@ -165,7 +165,28 @@ describe('node-cron', function() {
         });
         
         it('should fail with a invalid pattern', function() {
-            assert.isFalse(cron.validate('62 * * * * *')); 
+            assert.isFalse(cron.validate('62 * * * * *'));
+        });
+    });
+
+    describe('validateDetailed', function() {
+        it('returns a structured result', function() {
+            const ok = cron.validateDetailed('0 30 9 * * *');
+            assert.isTrue(ok.valid);
+            assert.deepEqual(ok.fields?.minute, [30]);
+
+            const bad = cron.validateDetailed('62 * * * * *');
+            assert.isFalse(bad.valid);
+            assert.equal(bad.errors[0].field, 'second');
+        });
+    });
+
+    describe('parse', function() {
+        it('returns decomposed fields', function() {
+            assert.deepEqual(cron.parse('0 30 9 * * *').hour, [9]);
+        });
+        it('throws on an invalid expression', function() {
+            assert.throws(() => cron.parse('62 * * * * *'));
         });
     });
 
