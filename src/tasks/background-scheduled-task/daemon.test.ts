@@ -1,5 +1,6 @@
 import { assert } from 'chai';
 import { bind } from './daemon';
+import { IpcLockProvider } from '../../lock/ipc-lock-provider';
 
 describe('daemon - register', function () {
   let messages: any[] = [];
@@ -30,6 +31,22 @@ describe('daemon - register', function () {
     
     assert.isDefined(task);
     assert.equal(task.name, 'dummy-task');
+    task.destroy();
+  });
+
+  it('wires an IPC lock provider when the task uses lock', async function () {
+    const message = {
+      command: 'task:start',
+      path: '../../../test-assets/dummy-task.js',
+      cron: '* * * * * *',
+      options: { name: 'locked-task', lock: true },
+    };
+
+    bind();
+    const onMessage = listeners.find(l => l.event === 'message');
+    const task: any = await onMessage.fn(message);
+
+    assert.instanceOf(task.runner.lockProvider, IpcLockProvider);
     task.destroy();
   });
 

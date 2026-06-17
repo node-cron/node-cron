@@ -447,6 +447,100 @@ describe('BackgroundScheduledTask', function() {
       await task.destroy();
     });
   });
+
+  describe('distributed lock over IPC', function () {
+    function makeProvider(behavior: { acquireReturns?: boolean; acquireThrows?: boolean } = {}) {
+      const calls = { acquire: [] as { key: string; ttl: number }[], release: [] as string[] };
+      return {
+        calls,
+        async acquire(key: string, ttl: number) {
+          calls.acquire.push({ key, ttl });
+          if (behavior.acquireThrows) throw new Error('redis down');
+          return behavior.acquireReturns ?? true;
+        },
+        async release(key: string) { calls.release.push(key); },
+      };
+    }
+
+    async function startLockedTask(provider: any) {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { name: 'job', lock: true, lockProvider: provider });
+      fakeChildProcess.send.callsFake((msg: any) => {
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+        else if (msg.command === 'task:start') task.emitter.emit('task:started');
+      });
+      await task.start();
+      return task;
+    }
+
+    const replyOf = () => fakeChildProcess.send.getCalls().map(c => c.args[0]).find((a: any) => a?.type === 'lock:result');
+
+    it('runs the provider and replies acquired:true on lock:acquire', async function () {
+      const provider = makeProvider();
+      const task = await startLockedTask(provider);
+
+      fakeChildProcess.emit('message', { type: 'lock:acquire', key: 'job:t', ttlMs: 5000, reqId: 'r1' });
+      await wait(10);
+
+      assert.deepEqual(provider.calls.acquire, [{ key: 'job:t', ttl: 5000 }]);
+      const reply = replyOf();
+      assert.equal(reply.reqId, 'r1');
+      assert.isTrue(reply.acquired);
+      assert.isUndefined(reply.error);
+      await task.destroy();
+    });
+
+    it('replies acquired:false when the lock is held elsewhere', async function () {
+      const provider = makeProvider({ acquireReturns: false });
+      const task = await startLockedTask(provider);
+
+      fakeChildProcess.emit('message', { type: 'lock:acquire', key: 'job:t', ttlMs: 5000, reqId: 'r2' });
+      await wait(10);
+
+      assert.isFalse(replyOf().acquired);
+      await task.destroy();
+    });
+
+    it('reports a provider error so the daemon fails closed', async function () {
+      const provider = makeProvider({ acquireThrows: true });
+      const task = await startLockedTask(provider);
+
+      fakeChildProcess.emit('message', { type: 'lock:acquire', key: 'job:t', ttlMs: 5000, reqId: 'r3' });
+      await wait(10);
+
+      const reply = replyOf();
+      assert.isFalse(reply.acquired);
+      assert.match(reply.error, /redis down/);
+      await task.destroy();
+    });
+
+    it('releases via the provider on lock:release', async function () {
+      const provider = makeProvider();
+      const task = await startLockedTask(provider);
+
+      fakeChildProcess.emit('message', { type: 'lock:release', key: 'job:t' });
+      await wait(10);
+
+      assert.deepEqual(provider.calls.release, ['job:t']);
+      await task.destroy();
+    });
+
+    it('replies acquired:false when no provider is resolved', async function () {
+      // lock:true but no global/per-task provider: the request still gets a safe
+      // (fail-closed) reply instead of hanging the daemon.
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { name: 'job', lock: true });
+      fakeChildProcess.send.callsFake((msg: any) => {
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+        else if (msg.command === 'task:start') task.emitter.emit('task:started');
+      });
+      await task.start();
+
+      fakeChildProcess.emit('message', { type: 'lock:acquire', key: 'job:t', ttlMs: 5000, reqId: 'r4' });
+      await wait(10);
+
+      assert.isFalse(replyOf().acquired);
+      await task.destroy();
+    });
+  });
 });
 
 

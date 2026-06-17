@@ -1,4 +1,5 @@
 import { Logger } from "../logger";
+import { LockProvider } from "../lock/lock-provider";
 
 /**
  * Represents an event triggered by a cron job.
@@ -37,13 +38,21 @@ export type TaskOptions = {
   noOverlap?: boolean,
   /**
    * Run this task on a single instance per fire across a fleet, using the lock
-   * provider set with `setLockProvider`. Requires a `name` (the lock key is
-   * `name:fireTime`) and is not supported for background tasks. The losing
-   * instances emit `execution:lockHeld`; the winner emits `execution:locked`
-   * then `execution:unlocked`. Guarantee: no concurrent run across instances
-   * (effectively once when clocks are in sync) — not a hard exactly-once.
+   * provider set with `setLockProvider` (or the per-task `lockProvider`).
+   * Requires a `name` (the lock key is `name:fireTime`). Works for both inline
+   * and background tasks; for background tasks the daemon coordinates with the
+   * parent over IPC, so the provider only needs to be set in the parent. The
+   * losing instances emit `execution:lockHeld`; the winner emits
+   * `execution:locked` then `execution:unlocked`. Guarantee: no concurrent run
+   * across instances (effectively once when clocks are in sync) — not a hard
+   * exactly-once.
    */
   lock?: boolean,
+  /**
+   * Lock provider for this task, overriding the process-wide one set via
+   * `setLockProvider`. Only used when `lock` is true.
+   */
+  lockProvider?: LockProvider,
   /**
    * Safety expiry (ms) for the distributed lock, in case the holder crashes
    * without releasing. Must be larger than the task's run time, or the lock can

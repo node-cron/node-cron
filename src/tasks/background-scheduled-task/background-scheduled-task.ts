@@ -9,6 +9,7 @@ import { StateMachine } from '../state-machine';
 import { LocalizedTime } from '../../time/localized-time';
 import logger, { Logger } from '../../logger';
 import { TimeMatcher } from '../../time/time-matcher';
+import { LockProvider, getLockProvider } from '../../lock/lock-provider';
 
 // fileURLToPath(import.meta.url) works on every ESM-capable Node (unlike
 // import.meta.dirname, which requires >= 20.11). The CJS build rewrites it to
@@ -30,6 +31,9 @@ class BackgroundScheduledTask implements ScheduledTask{
   suppressMissedWarning: boolean;
   timeMatcher: TimeMatcher;
   runCount: number;
+  // The lock provider lives here in the parent (it cannot cross the fork). The
+  // daemon asks for the lock over IPC and this process runs the real provider.
+  lockProvider?: LockProvider;
 
   constructor(cronExpression: string, taskPath: string, options?: TaskOptions){
     this.cronExpression = cronExpression;
@@ -49,6 +53,7 @@ class BackgroundScheduledTask implements ScheduledTask{
     // this process logs from those events using the configured logger.
     this.logger = options?.logger || logger;
     this.suppressMissedWarning = options?.suppressMissedWarning || false;
+    this.lockProvider = options?.lock ? (options?.lockProvider ?? getLockProvider()) : undefined;
 
     this.on('task:stopped', () => {
       this.forkProcess?.kill();
@@ -143,6 +148,18 @@ class BackgroundScheduledTask implements ScheduledTask{
         });
 
         this.forkProcess.on('message', (message: any) => {
+          // Distributed lock over IPC: the daemon asks, the parent runs the
+          // real provider and replies. Cross-fleet coordination is in the
+          // shared backend (e.g. Redis); IPC only bridges child to its parent.
+          if (message.type === 'lock:acquire') {
+            void this.handleLockAcquire(message);
+            return;
+          }
+          if (message.type === 'lock:release') {
+            this.lockProvider?.release(message.key).catch((err) => this.logger.error('Lock release failed', err));
+            return;
+          }
+
           if (message.event === 'daemon:error') {
             // The daemon could not load/start the task file. Reject with the
             // real cause so the user sees what actually went wrong.
@@ -292,6 +309,20 @@ class BackgroundScheduledTask implements ScheduledTask{
     });
   }
 
+  // Handles a lock:acquire request from the daemon: run the real provider and
+  // reply. A provider error is reported back (via `error`) so the daemon's
+  // runner fails closed and skips the run, mirroring the inline path.
+  private async handleLockAcquire(message: { key: string; ttlMs: number; reqId: string }): Promise<void> {
+    let acquired = false;
+    let error: string | undefined;
+    try {
+      acquired = this.lockProvider ? await this.lockProvider.acquire(message.key, message.ttlMs) : false;
+    } catch (err: any) {
+      error = err?.message ?? String(err);
+    }
+    this.forkProcess?.send({ type: 'lock:result', reqId: message.reqId, acquired, error });
+  }
+
   on(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void {
     this.emitter.on(event, fun);
   }
@@ -344,14 +375,15 @@ class BackgroundScheduledTask implements ScheduledTask{
 }
 
 /**
- * Strips options that cannot cross the process boundary (e.g. a custom
- * `logger`, which is a function-bearing object). The parent keeps the original
- * options and does the logging itself.
+ * Strips options that cannot cross the process boundary (function-bearing
+ * objects: a custom `logger` and the `lockProvider`). The parent keeps the
+ * original options; it does the logging itself and runs the lock provider on
+ * the daemon's behalf over IPC.
  */
 function serializableOptions(options?: TaskOptions): TaskOptions | undefined {
   if(!options) return options;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { logger: _logger, ...rest } = options;
+  const { logger: _logger, lockProvider: _lockProvider, ...rest } = options;
   return rest;
 }
 

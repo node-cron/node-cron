@@ -105,6 +105,20 @@ describe('distributed lock', function () {
     assert.equal(provider.calls.acquire[0].ttl, 5000);
   });
 
+  it('uses a per-task lockProvider over the global one', async function () {
+    const global = makeProvider();
+    const perTask = makeProvider();
+    setLockProvider(global as any);
+    const task = new InlineScheduledTask('* * * * * *', () => {}, { name: 'job', lock: true, lockProvider: perTask as any });
+
+    task.start();
+    await wait(1200);
+    task.stop();
+
+    assert.isAbove(perTask.calls.acquire.length, 0);
+    assert.equal(global.calls.acquire.length, 0);
+  });
+
   describe('createTask validation', function () {
     afterEach(() => setLockProvider(undefined));
 
@@ -117,11 +131,14 @@ describe('distributed lock', function () {
       assert.throws(() => cron.createTask('* * * * *', () => {}, { name: 'x', lock: true }), /requires a lock provider/);
     });
 
-    it('throws when lock is set on a background task', function () {
+    it('accepts a per-task lockProvider without a global one', function () {
+      assert.doesNotThrow(() => cron.createTask('* * * * *', () => {}, { name: 'x', lock: true, lockProvider: makeProvider() as any }));
+    });
+
+    it('allows lock on a background task when a provider is set', function () {
       setLockProvider(makeProvider() as any);
-      assert.throws(
-        () => cron.createTask('* * * * *', '../test-assets/dummy-task.js', { name: 'x', lock: true }),
-        /not supported for background/
+      assert.doesNotThrow(() =>
+        cron.createTask('* * * * *', '../test-assets/dummy-task.js', { name: 'x', lock: true })
       );
     });
   });

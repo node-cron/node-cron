@@ -77,9 +77,10 @@ export class InlineScheduledTask implements ScheduledTask {
         this.emitter.emit('execution:maxReached', this.createContext(date));
         this.destroy();
       },
-      // Distributed lock: only wired when this task opted in (`lock: true`); the
-      // provider is the process-wide one set via setLockProvider.
-      lockProvider: options?.lock ? getLockProvider() : undefined,
+      // Distributed lock: only wired when this task opted in (`lock: true`).
+      // A per-task provider takes precedence over the process-wide one set via
+      // setLockProvider (in a daemon this is the IPC bridge to the parent).
+      lockProvider: options?.lock ? (options?.lockProvider ?? getLockProvider()) : undefined,
       lockKeyPrefix: this.name,
       lockTtl: options?.lockTtl,
       onLocked: (date: Date) => {

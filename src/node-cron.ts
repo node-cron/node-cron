@@ -74,11 +74,9 @@ export function schedule(expression:string, func: TaskFn | string, options?: Tas
  */
 export function createTask(expression: string, func: TaskFn | string, options?: TaskOptions): ScheduledTask {
     if (options?.lock) {
-      if (typeof func === 'string')
-        throw new Error('`lock` is not supported for background tasks.');
       if (!options.name)
         throw new Error('`lock` requires a `name` (it forms the lock key shared across instances).');
-      if (!getLockProvider())
+      if (!(options.lockProvider ?? getLockProvider()))
         throw new Error('`lock` requires a lock provider — call cron.setLockProvider(...) before scheduling.');
     }
 
