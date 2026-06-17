@@ -69,8 +69,8 @@ function randomDate(rng: () => number): Date {
   return new Date(start + Math.floor(rng() * (end - start)));
 }
 
-describe('DST fuzz (spec 3.6)', function () {
-  it('FZ-1: getNextMatch always returns a timestamp strictly after the reference', function () {
+describe('getNextMatch fuzzing', function () {
+  it('getNextMatch always returns a timestamp strictly after the reference', function () {
     const rng = mulberry32(SEED);
     let matched = 0;
     for (let i = 0; i < 3000; i++) {
@@ -95,7 +95,7 @@ describe('DST fuzz (spec 3.6)', function () {
     assert.isAbove(matched, 2500, 'most fuzzed expressions should be satisfiable');
   });
 
-  it('FZ-2: 10,000 chained getNextMatch stay strictly monotonic across DST', function () {
+  it('10,000 chained getNextMatch stay strictly monotonic across DST', function () {
     const matcher = new TimeMatcher('* * * * *', 'America/New_York');
     let prev = new Date('2025-01-01T00:00:00Z'); // crosses both 2025 transitions
     for (let i = 0; i < 10000; i++) {
@@ -106,7 +106,7 @@ describe('DST fuzz (spec 3.6)', function () {
     }
   });
 
-  it('FZ-4: a dense expression with a day-of-month + weekday constraint resolves fast', function () {
+  it('a dense expression with a day-of-month + weekday constraint resolves fast', function () {
     // Regression: `* * * 15 * 1` (the 15th only when it is a Monday) used to
     // scan all 86,400 times of day on every non-Monday 15th (~5 minutes). The
     // weekday pre-check in the walker skips those days outright.
@@ -117,7 +117,7 @@ describe('DST fuzz (spec 3.6)', function () {
     assert.isBelow(Date.now() - start, 1000, 'must skip weekday-mismatched days instead of scanning each one');
   });
 
-  it('FZ-3: impossible expressions throw in finite time (<= the walk bound)', function () {
+  it('impossible expressions throw in finite time (<= the walk bound)', function () {
     for (const expr of ['0 0 31 2 *', '0 0 30 2 *', '0 0 31 4 *', '0 0 31 6 *']) {
       const start = Date.now();
       assert.throws(
