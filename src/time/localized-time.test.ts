@@ -42,7 +42,7 @@ describe('LocalizedTime', function(){
       hour: 12, 
       minute: 8, 
       second: 5, 
-      milisecond: 78, 
+      millisecond: 78, 
       weekday: 'Wed', 
       gmt: 'GMT+03:00'
     });
@@ -52,7 +52,7 @@ describe('LocalizedTime', function(){
 describe('localTimeToTimestamp', function(){
   it('resolves a wall-clock outside any DST transition', function(){
     const ts = localTimeToTimestamp(
-      { year: 2026, month: 1, day: 15, hour: 10, minute: 30, second: 0, milisecond: 0 },
+      { year: 2026, month: 1, day: 15, hour: 10, minute: 30, second: 0, millisecond: 0 },
       'America/New_York'
     );
     assert.equal(new Date(ts).toISOString(), '2026-01-15T15:30:00.000Z');
@@ -61,7 +61,7 @@ describe('localTimeToTimestamp', function(){
   it('resolves a non-existent spring-forward wall-clock forward', function(){
     // 2026-03-08 02:30 does not exist in America/New_York (clocks jump 02:00 -> 03:00).
     const ts = localTimeToTimestamp(
-      { year: 2026, month: 3, day: 8, hour: 2, minute: 30, second: 0, milisecond: 0 },
+      { year: 2026, month: 3, day: 8, hour: 2, minute: 30, second: 0, millisecond: 0 },
       'America/New_York'
     );
     assert.equal(new Date(ts).toISOString(), '2026-03-08T07:30:00.000Z');
@@ -70,7 +70,7 @@ describe('localTimeToTimestamp', function(){
   it('resolves an ambiguous fall-back wall-clock to the first occurrence', function(){
     // 2026-11-01 01:30 happens twice in America/New_York (clocks fall back 02:00 -> 01:00).
     const ts = localTimeToTimestamp(
-      { year: 2026, month: 11, day: 1, hour: 1, minute: 30, second: 0, milisecond: 0 },
+      { year: 2026, month: 11, day: 1, hour: 1, minute: 30, second: 0, millisecond: 0 },
       'America/New_York'
     );
     assert.equal(new Date(ts).toISOString(), '2026-11-01T05:30:00.000Z');

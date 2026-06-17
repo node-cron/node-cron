@@ -22,7 +22,7 @@ describe('TaskRegistry', function(){
     registry.add(task);
     assert.throws(()=>{
       registry.add(task);
-    }, `task ${task.id} already registred!`)
+    }, `task ${task.id} already registered!`)
   });
 
   it('removes a task', function(){

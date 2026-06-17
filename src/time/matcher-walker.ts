@@ -1,4 +1,4 @@
-import convertExpression from '../pattern/convertion';
+import convertExpression from '../pattern/conversion';
 import { LocalizedTime, localTimeToTimestamp } from './localized-time';
 import { TimeMatcher } from './time-matcher';
 import { matchesDayOfMonth, DayOfMonthField } from './day-of-month';
@@ -110,7 +110,7 @@ export class MatcherWalker {
           if (lowerBound && !isLaterInDay(hour, minute, second, lowerBound)) continue;
 
           const ts = localTimeToTimestamp(
-            { year, month, day, hour, minute, second, milisecond: 0 },
+            { year, month, day, hour, minute, second, millisecond: 0 },
             this.timezone,
           );
 

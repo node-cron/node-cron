@@ -5,7 +5,7 @@ export type WallClock = {
   hour: number
   minute: number
   second: number
-  milisecond: number
+  millisecond: number
 }
 
 type DateParts = WallClock & {
@@ -35,7 +35,7 @@ export class LocalizedTime {
     const pad = (n: number) => String(n).padStart(2, '0');
     return `${this.parts.year}-${pad(this.parts.month)}-${pad(this.parts.day)}`
          + `T${pad(this.parts.hour)}:${pad(this.parts.minute)}:${pad(this.parts.second)}`
-         + `.${String(this.parts.milisecond).padStart(3, '0')}`
+         + `.${String(this.parts.millisecond).padStart(3, '0')}`
          + offset;
   }
 
@@ -78,7 +78,7 @@ function readsBackTo(timestamp: number, parts: WallClock, timezone?: string): bo
 export function localTimeToTimestamp(parts: WallClock, timezone?: string): number {
   const guess = Date.UTC(
     parts.year, parts.month - 1, parts.day,
-    parts.hour, parts.minute, parts.second, parts.milisecond
+    parts.hour, parts.minute, parts.second, parts.millisecond
   );
 
   const firstOffset = getOffsetMinutes(new Date(guess), timezone);
@@ -128,7 +128,7 @@ function buildDateParts(date: Date, timezone?: string): DateParts {
     hour: parts.hour === '24' ? 0 : parseInt(parts.hour),
     minute: parseInt(parts.minute),
     second: parseInt(parts.second),
-    milisecond: date.getMilliseconds(),
+    millisecond: date.getMilliseconds(),
     weekday: parts.weekday,
     gmt: getTimezoneGMT(date, timezone)
   }

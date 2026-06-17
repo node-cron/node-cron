@@ -5,7 +5,7 @@ const tasks = new Map<string, ScheduledTask> ();
 export class TaskRegistry {
   add(task: ScheduledTask): void{
     if(this.has(task.id)){
-      throw Error(`task ${task.id} already registred!`)
+      throw Error(`task ${task.id} already registered!`)
     }
     
     tasks.set(task.id, task);

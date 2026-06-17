@@ -1,4 +1,4 @@
-import convertExpression from '../convertion/index';
+import convertExpression from '../conversion/index';
 
 const validationRegex = /^(?:\d+|\*|\*\/\d+)$/;
 
