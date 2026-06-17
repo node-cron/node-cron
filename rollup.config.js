@@ -46,8 +46,7 @@ const cjsReplace = () =>
     preventAssignment: true,
     delimiters: ["", ""],
     values: {
-      "import.meta.dirname": "__dirname",
-      "import.meta.filename": "__filename",
+      "fileURLToPath(import.meta.url)": "__filename",
       "'daemon.js'": "'daemon.cjs'",
     },
   });

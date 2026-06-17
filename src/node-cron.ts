@@ -18,7 +18,12 @@ import BackgroundScheduledTask from "./tasks/background-scheduled-task/backgroun
 import { setLogger } from "./logger";
 
 import path from "path";
-import { pathToFileURL } from "url";
+import { pathToFileURL, fileURLToPath } from "url";
+
+// fileURLToPath(import.meta.url) works on every ESM-capable Node (unlike
+// import.meta.filename, which requires >= 20.11). The CJS build rewrites it to
+// __filename.
+const moduleFilename = fileURLToPath(import.meta.url);
 
 /**
  * The central registry that maintains all scheduled tasks.
@@ -97,7 +102,7 @@ export function solvePath(filePath: string): string {
   const stackLines = new Error().stack?.split('\n');
   if(stackLines){
     stackLines?.shift();
-    const callerLine = stackLines?.find((line) => { return line.indexOf(import.meta.filename) === -1; });
+    const callerLine = stackLines?.find((line) => { return line.indexOf(moduleFilename) === -1; });
     const match = callerLine?.match(/(file:\/\/)?(((\/?)(\w:))?([/\\].+)):\d+:\d+/);
    
     if (match) {

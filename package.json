@@ -26,7 +26,7 @@
     "prepack": "npm run build"
   },
   "engines": {
-    "node": ">=20.11"
+    "node": ">=20"
   },
   "files": [
     "dist/"
