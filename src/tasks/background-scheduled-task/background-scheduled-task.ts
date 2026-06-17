@@ -1,4 +1,5 @@
-import { resolve as resolvePath } from 'path';
+import { dirname, resolve as resolvePath } from 'path';
+import { fileURLToPath } from 'url';
 import { fork, ChildProcess} from 'child_process';
 
 import { Execution, ScheduledTask, TaskContext, TaskEvent, TaskOptions } from '../scheduled-task';
@@ -9,7 +10,10 @@ import { LocalizedTime } from '../../time/localized-time';
 import logger, { Logger } from '../../logger';
 import { TimeMatcher } from '../../time/time-matcher';
 
-const daemonPath = resolvePath(import.meta.dirname, 'daemon.js');
+// fileURLToPath(import.meta.url) works on every ESM-capable Node (unlike
+// import.meta.dirname, which requires >= 20.11). The CJS build rewrites it to
+// __filename.
+const daemonPath = resolvePath(dirname(fileURLToPath(import.meta.url)), 'daemon.js');
 
 class TaskEmitter extends EventEmitter{}
 
