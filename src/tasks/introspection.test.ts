@@ -1,8 +1,6 @@
 import { assert } from 'chai';
 import { InlineScheduledTask } from './inline-scheduled-task';
 
-const wait = (ms: number) => new Promise(r => setTimeout(r, ms));
-
 describe('task introspection', function () {
   describe('getPattern', function () {
     it('returns the original cron expression', function () {
@@ -60,10 +58,19 @@ describe('task introspection', function () {
     });
 
     it('is true while an execution is in progress', async function () {
-      const task = new InlineScheduledTask('* * * * * *', async () => { await wait(700); });
+      // Gate the handler so the assertion is deterministic: wait for a run to
+      // actually start (via the event), check, then release it — no reliance on
+      // sampling at the right millisecond.
+      let release!: () => void;
+      const gate = new Promise<void>((r) => { release = r; });
+      const task = new InlineScheduledTask('* * * * * *', async () => { await gate; });
+      const started = new Promise<void>((r) => task.on('execution:started', () => r()));
+
       task.start();
-      await wait(1100); // let one run start
+      await started;
       assert.isTrue(task.isBusy());
+
+      release();
       task.stop();
     });
   });
