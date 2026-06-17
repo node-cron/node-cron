@@ -4,6 +4,7 @@ import { TrackedPromise } from "../promise/tracked-promise";
 import { Execution } from "../tasks/scheduled-task";
 import { TimeMatcher } from "../time/time-matcher";
 import { planBeat } from "./plan-beat";
+import { LockProvider } from "../lock/lock-provider";
 
 /**
  * How late, in milliseconds, a heartbeat may wake and still run the slot it was
@@ -36,7 +37,17 @@ export type RunnerOptions = {
   onFinished?: OnHookFn;
   beforeRun?: OnHookFn
   onMaxExecutions?: OnFn
+  // Distributed lock (single instance per fire across a fleet). Active only
+  // when a lockProvider is set; the key is `${lockKeyPrefix}:${fireTime}`.
+  lockProvider?: LockProvider
+  lockKeyPrefix?: string
+  lockTtl?: number
+  onLocked?: OnFn
+  onUnlocked?: OnFn
+  onLockHeld?: OnFn
 }
+
+const DEFAULT_LOCK_TTL = 30000;
 
 export class Runner {
   timeMatcher: TimeMatcher;
@@ -58,6 +69,13 @@ export class Runner {
   onFinished: OnHookFn;
   onMaxExecutions: OnFn;
 
+  lockProvider?: LockProvider;
+  lockKeyPrefix: string;
+  lockTtl: number;
+  onLocked: OnFn;
+  onUnlocked: OnFn;
+  onLockHeld: OnFn;
+
   constructor(timeMatcher: TimeMatcher, onMatch: OnMatch, options?: RunnerOptions){
       this.timeMatcher = timeMatcher;
       this.onMatch = onMatch;
@@ -76,12 +94,57 @@ export class Runner {
 
       this.onMaxExecutions = options?.onMaxExecutions || emptyOnFn;
 
+      this.lockProvider = options?.lockProvider;
+      this.lockKeyPrefix = options?.lockKeyPrefix || '';
+      this.lockTtl = options?.lockTtl ?? DEFAULT_LOCK_TTL;
+      this.onLocked = options?.onLocked || emptyOnFn;
+      this.onUnlocked = options?.onUnlocked || emptyOnFn;
+      this.onLockHeld = options?.onLockHeld || emptyOnFn;
+
       this.runCount = 0;
       this.running = false;
   }
 
   private onErrorFallback = (date: Date, error: Error) => {
     this.logger.error('Task failed with error!', error);
+  }
+
+  /**
+   * Runs `run` under the distributed lock when a provider is configured. The
+   * winner emits `locked` then `unlocked` (after release); a loser emits
+   * `lockHeld` and skips. Fail-closed: if acquire throws, the run is skipped.
+   */
+  private async runLocked(slot: Date, run: () => Promise<any>): Promise<void> {
+    if (!this.lockProvider) {
+      await run();
+      return;
+    }
+
+    const key = `${this.lockKeyPrefix}:${slot.toISOString()}`;
+    let acquired: boolean;
+    try {
+      acquired = await this.lockProvider.acquire(key, this.lockTtl);
+    } catch (err: any) {
+      this.logger.error('Lock acquire failed; skipping execution (fail-closed)', err);
+      return;
+    }
+
+    if (!acquired) {
+      runAsync(this.onLockHeld, slot, this.onErrorFallback);
+      return;
+    }
+
+    runAsync(this.onLocked, slot, this.onErrorFallback);
+    try {
+      await run();
+    } finally {
+      try {
+        await this.lockProvider.release(key);
+      } catch (err: any) {
+        this.logger.error('Lock release failed', err);
+      }
+      runAsync(this.onUnlocked, slot, this.onErrorFallback);
+    }
   }
 
   start() {
@@ -170,7 +233,7 @@ export class Runner {
         const slot = plan.run;
         lastExecution = new TrackedPromise(async (resolve, reject) => {
           try {
-            await runTask(slot);
+            await this.runLocked(slot, () => runTask(slot));
             resolve(true);
           } catch (err) {
             reject(err);

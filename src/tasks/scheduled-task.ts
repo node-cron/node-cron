@@ -27,11 +27,29 @@ export type TaskEvent =
   | 'execution:missed'
   | 'execution:overlap'
   | 'execution:maxReached'
+  | 'execution:locked'
+  | 'execution:unlocked'
+  | 'execution:lockHeld'
 
 export type TaskOptions = {
   timezone?: string,
   name?: string,
   noOverlap?: boolean,
+  /**
+   * Run this task on a single instance per fire across a fleet, using the lock
+   * provider set with `setLockProvider`. Requires a `name` (the lock key is
+   * `name:fireTime`) and is not supported for background tasks. The losing
+   * instances emit `execution:lockHeld`; the winner emits `execution:locked`
+   * then `execution:unlocked`. Guarantee: no concurrent run across instances
+   * (effectively once when clocks are in sync) — not a hard exactly-once.
+   */
+  lock?: boolean,
+  /**
+   * Safety expiry (ms) for the distributed lock, in case the holder crashes
+   * without releasing. Must be larger than the task's run time, or the lock can
+   * expire mid-run. Defaults to 30000.
+   */
+  lockTtl?: number,
   maxExecutions?: number,
   maxRandomDelay?: number,
   /**

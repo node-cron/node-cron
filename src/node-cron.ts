@@ -16,6 +16,7 @@ import logger from "./logger";
 import validation, { parse as parseExpression, validateDetailed as validateDetailedExpression } from "./pattern/validation/pattern-validation";
 import BackgroundScheduledTask from "./tasks/background-scheduled-task/background-scheduled-task";
 import { setLogger } from "./logger";
+import { setLockProvider, getLockProvider } from "./lock/lock-provider";
 
 import path from "path";
 import { pathToFileURL, fileURLToPath } from "url";
@@ -72,6 +73,15 @@ export function schedule(expression:string, func: TaskFn | string, options?: Tas
  * @private
  */
 export function createTask(expression: string, func: TaskFn | string, options?: TaskOptions): ScheduledTask {
+    if (options?.lock) {
+      if (typeof func === 'string')
+        throw new Error('`lock` is not supported for background tasks.');
+      if (!options.name)
+        throw new Error('`lock` requires a `name` (it forms the lock key shared across instances).');
+      if (!getLockProvider())
+        throw new Error('`lock` requires a lock provider — call cron.setLockProvider(...) before scheduling.');
+    }
+
     let task: ScheduledTask;
     if(func instanceof Function){
       task = new InlineScheduledTask(expression, func, options);
@@ -164,10 +174,12 @@ export const getTasks = registry.all;
 export const getTask = registry.get;
 
 export { setLogger } from './logger';
+export { setLockProvider } from './lock/lock-provider';
 
 export type { ScheduledTask, TaskFn, TaskContext, TaskOptions } from './tasks/scheduled-task';
 export type { Logger } from './logger';
 export type { ParsedFields, DetailedValidation, CronFieldError } from './pattern/validation/pattern-validation';
+export type { LockProvider } from './lock/lock-provider';
 
 export interface NodeCron {
   schedule: typeof schedule;
@@ -178,6 +190,7 @@ export interface NodeCron {
   getTasks: typeof getTasks;
   getTask: typeof getTask;
   setLogger: typeof setLogger;
+  setLockProvider: typeof setLockProvider;
 }
 
 export const nodeCron: NodeCron = {
@@ -189,6 +202,7 @@ export const nodeCron: NodeCron = {
   getTasks,
   getTask,
   setLogger,
+  setLockProvider,
 };
 
 /**

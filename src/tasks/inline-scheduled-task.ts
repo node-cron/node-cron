@@ -6,6 +6,7 @@ import { createID } from "../create-id";
 import { StateMachine } from "./state-machine";
 import logger, { Logger } from "../logger";
 import { LocalizedTime } from "../time/localized-time";
+import { getLockProvider } from "../lock/lock-provider";
 
 class TaskEmitter extends EventEmitter{}
 
@@ -75,6 +76,20 @@ export class InlineScheduledTask implements ScheduledTask {
       onMaxExecutions: (date: Date) => {
         this.emitter.emit('execution:maxReached', this.createContext(date));
         this.destroy();
+      },
+      // Distributed lock: only wired when this task opted in (`lock: true`); the
+      // provider is the process-wide one set via setLockProvider.
+      lockProvider: options?.lock ? getLockProvider() : undefined,
+      lockKeyPrefix: this.name,
+      lockTtl: options?.lockTtl,
+      onLocked: (date: Date) => {
+        this.emitter.emit('execution:locked', this.createContext(date));
+      },
+      onUnlocked: (date: Date) => {
+        this.emitter.emit('execution:unlocked', this.createContext(date));
+      },
+      onLockHeld: (date: Date) => {
+        this.emitter.emit('execution:lockHeld', this.createContext(date));
       }
     }
     
