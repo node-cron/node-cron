@@ -426,6 +426,26 @@ describe('BackgroundScheduledTask', function() {
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
       assert.isUndefined(task.runsLeft());
     });
+
+    it('isBusy is false when not executing', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      assert.isFalse(task.isBusy());
+    });
+
+    it('msToNext is null when stopped and a positive number once started', async function(){
+      const task = new BackgroundScheduledTask('* * * * *', './test-assets/dummy-task.js', { timezone: 'Etc/UTC' });
+      assert.isNull(task.msToNext());
+
+      fakeChildProcess.send.callsFake((msg: any)=>{
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+        else task.emitter.emit('task:started');
+      });
+      await task.start();
+      const ms = task.msToNext();
+      assert.isNotNull(ms);
+      assert.isAbove(ms as number, 0);
+      await task.destroy();
+    });
   });
 });
 
