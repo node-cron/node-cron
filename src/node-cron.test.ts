@@ -239,6 +239,18 @@ describe('node-cron', function() {
         assert.isDefined(task.id);
         assert.equal(task.getStatus(), 'stopped');
       });
+
+      it('accepts a utcOffset', function(){
+        const task = cron.createTask('* * * * *', () => {}, { utcOffset: -180 }) as InlineScheduledTask;
+        assert.equal(task.utcOffset, -180);
+      });
+
+      it('rejects timezone and utcOffset together', function(){
+        assert.throws(
+          () => cron.createTask('* * * * *', () => {}, { timezone: 'UTC', utcOffset: 0 }),
+          'Provide either `timezone` or `utcOffset`, not both.'
+        );
+      });
     })
 
      describe('solvePath', function(){

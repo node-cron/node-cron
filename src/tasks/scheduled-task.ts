@@ -30,6 +30,12 @@ export type TaskEvent =
 
 export type TaskOptions = {
   timezone?: string,
+  /**
+   * A fixed UTC offset in minutes (negative = west of UTC, e.g. `-180` for
+   * UTC-3, `330` for UTC+5:30). An alternative to `timezone` for a constant
+   * offset with no DST. Mutually exclusive with `timezone`.
+   */
+  utcOffset?: number,
   name?: string,
   noOverlap?: boolean,
   maxExecutions?: number,

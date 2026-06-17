@@ -18,6 +18,7 @@ export class InlineScheduledTask implements ScheduledTask {
   name: string;
   stateMachine: StateMachine;
   timezone?: string;
+  utcOffset?: number;
   logger: Logger;
   suppressMissedWarning: boolean;
 
@@ -28,10 +29,11 @@ export class InlineScheduledTask implements ScheduledTask {
     this.id = createID('task', 12);
     this.name = options?.name || this.id;
     this.timezone = options?.timezone;
+    this.utcOffset = options?.utcOffset;
     this.logger = options?.logger || logger;
     this.suppressMissedWarning = options?.suppressMissedWarning || false;
 
-    this.timeMatcher = new TimeMatcher(cronExpression, options?.timezone)
+    this.timeMatcher = new TimeMatcher(cronExpression, options?.timezone, options?.utcOffset)
     this.stateMachine = new StateMachine();
 
     const runnerOptions: RunnerOptions = {
@@ -156,7 +158,7 @@ export class InlineScheduledTask implements ScheduledTask {
   }
 
   private createContext(executionDate: Date, execution?: Execution): TaskContext{
-    const localTime = new LocalizedTime(executionDate, this.timezone)
+    const localTime = new LocalizedTime(executionDate, this.timezone, this.utcOffset)
     const ctx: TaskContext = {
       date: localTime.toDate(),
       dateLocalIso: localTime.toISO(),

@@ -58,7 +58,7 @@ class BackgroundScheduledTask implements ScheduledTask{
 
   getNextRun(): Date | null {
     if ( this.stateMachine.state !== 'stopped'){
-      const timeMatcher = new TimeMatcher(this.cronExpression, this.options?.timezone);
+      const timeMatcher = new TimeMatcher(this.cronExpression, this.options?.timezone, this.options?.utcOffset);
       return timeMatcher.getNextMatch(new Date());
     }
     return null;
@@ -292,7 +292,7 @@ class BackgroundScheduledTask implements ScheduledTask{
   }
 
   private createContext(executionDate: Date, execution?: Execution): TaskContext{
-    const localTime = new LocalizedTime(executionDate, this.options?.timezone)
+    const localTime = new LocalizedTime(executionDate, this.options?.timezone, this.options?.utcOffset)
     const ctx: TaskContext = {
       date: localTime.toDate(),
       dateLocalIso: localTime.toISO(),

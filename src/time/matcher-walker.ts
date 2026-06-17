@@ -13,6 +13,7 @@ export class MatcherWalker {
   baseDate: Date;
   timeMatcher: TimeMatcher;
   timezone?: string;
+  utcOffset?: number;
 
   // Time fields are sorted so they can be iterated in ascending order; day and
   // month are only membership-tested, so their order does not matter.
@@ -22,11 +23,12 @@ export class MatcherWalker {
   private readonly days: DayOfMonthField;
   private readonly months: number[];
 
-  constructor(cronExpression: string, baseDate: Date, timezone?: string) {
+  constructor(cronExpression: string, baseDate: Date, timezone?: string, utcOffset?: number) {
     this.cronExpression = cronExpression;
     this.baseDate = baseDate;
-    this.timeMatcher = new TimeMatcher(cronExpression, timezone);
+    this.timeMatcher = new TimeMatcher(cronExpression, timezone, utcOffset);
     this.timezone = timezone;
+    this.utcOffset = utcOffset;
 
     const expressions = convertExpression(cronExpression);
     this.seconds = sortedAsc(expressions[0]);
@@ -57,7 +59,7 @@ export class MatcherWalker {
     const days = this.days;
 
     const baseMs = Math.floor(this.baseDate.getTime() / 1000) * 1000;
-    const baseParts = new LocalizedTime(new Date(baseMs), this.timezone).getParts();
+    const baseParts = new LocalizedTime(new Date(baseMs), this.timezone, this.utcOffset).getParts();
 
     let { year, month, day } = baseParts;
 
@@ -68,7 +70,7 @@ export class MatcherWalker {
         const lowerBound = i === 0 ? baseParts : null;
         const found = this.firstTimeOnDay(year, month, day, lowerBound, baseMs);
         if (found !== null) {
-          return new LocalizedTime(new Date(found), this.timezone);
+          return new LocalizedTime(new Date(found), this.timezone, this.utcOffset);
         }
       }
 
@@ -105,6 +107,7 @@ export class MatcherWalker {
           const ts = localTimeToTimestamp(
             { year, month, day, hour, minute, second, milisecond: 0 },
             this.timezone,
+            this.utcOffset,
           );
 
           // The real matcher confirms every field on the actual instant. A

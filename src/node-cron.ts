@@ -72,6 +72,10 @@ export function schedule(expression:string, func: TaskFn | string, options?: Tas
  * @private
  */
 export function createTask(expression: string, func: TaskFn | string, options?: TaskOptions): ScheduledTask {
+    if (options?.timezone != null && options?.utcOffset != null) {
+      throw new Error('Provide either `timezone` or `utcOffset`, not both.');
+    }
+
     let task: ScheduledTask;
     if(func instanceof Function){
       task = new InlineScheduledTask(expression, func, options);

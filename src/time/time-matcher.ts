@@ -11,17 +11,19 @@ function matchValue(allowedValues: number[], value: number){
 
 export class TimeMatcher{
     timezone?: string;
+    utcOffset?: number;
     pattern: string;
     expressions: any[];
 
-    constructor(pattern:string, timezone?:string){
+    constructor(pattern:string, timezone?:string, utcOffset?:number){
         this.timezone = timezone;
-        this.pattern = pattern 
+        this.utcOffset = utcOffset;
+        this.pattern = pattern
         this.expressions = convertExpression(pattern);
     }
 
     match(date: Date){
-        const localizedTime = new LocalizedTime(date, this.timezone)
+        const localizedTime = new LocalizedTime(date, this.timezone, this.utcOffset)
         const parts = localizedTime.getParts();
         const runOnSecond = matchValue(this.expressions[0], parts.second);
         const runOnMinute = matchValue(this.expressions[1], parts.minute);
@@ -34,7 +36,7 @@ export class TimeMatcher{
     }
 
     getNextMatch(date: Date){
-      const walker = new MatcherWalker(this.pattern, date, this.timezone);
+      const walker = new MatcherWalker(this.pattern, date, this.timezone, this.utcOffset);
       const next = walker.matchNext();
       return next.toDate();
     }

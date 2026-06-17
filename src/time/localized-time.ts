@@ -17,11 +17,13 @@ export class LocalizedTime {
   timestamp: number
   parts: DateParts
   timezone?: string | undefined
+  utcOffset?: number | undefined
 
-  constructor(date: Date, timezone?: string){
+  constructor(date: Date, timezone?: string, utcOffset?: number){
     this.timestamp = date.getTime();
     this.timezone = timezone;
-    this.parts = buildDateParts(date, timezone);
+    this.utcOffset = utcOffset;
+    this.parts = buildDateParts(date, timezone, utcOffset);
   }
 
   toDate(): Date{
@@ -75,11 +77,18 @@ function readsBackTo(timestamp: number, parts: WallClock, timezone?: string): bo
  * gap) neither reads back, so we resolve forward to the later instant instead
  * of drifting backwards into the gap (which used to yield a past date).
  */
-export function localTimeToTimestamp(parts: WallClock, timezone?: string): number {
+export function localTimeToTimestamp(parts: WallClock, timezone?: string, utcOffset?: number): number {
   const guess = Date.UTC(
     parts.year, parts.month - 1, parts.day,
     parts.hour, parts.minute, parts.second, parts.milisecond
   );
+
+  // A fixed offset has no transitions: the wall-clock maps to exactly one
+  // instant, with no spring-forward gap or fall-back ambiguity. Pure arithmetic,
+  // no Intl.
+  if (utcOffset !== undefined) {
+    return guess - utcOffset * 60000;
+  }
 
   const firstOffset = getOffsetMinutes(new Date(guess), timezone);
   const candidate1 = guess - firstOffset * 60000;
@@ -97,7 +106,36 @@ export function localTimeToTimestamp(parts: WallClock, timezone?: string): numbe
   return Math.max(candidate1, candidate2);
 }
 
-function buildDateParts(date: Date, timezone?: string): DateParts {
+const SHORT_WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/** Formats a fixed offset (minutes) the same way getTimezoneGMT does. */
+function offsetToGmt(minutes: number): string {
+  if (minutes === 0) return 'Z';
+  const sign = minutes > 0 ? '+' : '-';
+  const abs = Math.abs(minutes);
+  const hours = String(Math.floor(abs / 60)).padStart(2, '0');
+  const mins = String(abs % 60).padStart(2, '0');
+  return `GMT${sign}${hours}:${mins}`;
+}
+
+function buildDateParts(date: Date, timezone?: string, utcOffset?: number): DateParts {
+  // Fixed offset: read the wall-clock arithmetically by shifting the instant,
+  // no Intl, no DST.
+  if (utcOffset !== undefined) {
+    const shifted = new Date(date.getTime() + utcOffset * 60000);
+    return {
+      year: shifted.getUTCFullYear(),
+      month: shifted.getUTCMonth() + 1,
+      day: shifted.getUTCDate(),
+      hour: shifted.getUTCHours(),
+      minute: shifted.getUTCMinutes(),
+      second: shifted.getUTCSeconds(),
+      milisecond: shifted.getUTCMilliseconds(),
+      weekday: SHORT_WEEKDAYS[shifted.getUTCDay()],
+      gmt: offsetToGmt(utcOffset),
+    };
+  }
+
   const dftOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: '2-digit',
