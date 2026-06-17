@@ -9,7 +9,7 @@ import { StateMachine } from '../state-machine';
 import { LocalizedTime } from '../../time/localized-time';
 import logger, { Logger } from '../../logger';
 import { TimeMatcher } from '../../time/time-matcher';
-import { LockProvider, getLockProvider } from '../../lock/lock-provider';
+import { RunCoordinator, SkipReason, resolveRunCoordinator } from '../../coordinator/run-coordinator';
 
 // fileURLToPath(import.meta.url) works on every ESM-capable Node (unlike
 // import.meta.dirname, which requires >= 20.11). The CJS build rewrites it to
@@ -31,9 +31,9 @@ class BackgroundScheduledTask implements ScheduledTask{
   suppressMissedWarning: boolean;
   timeMatcher: TimeMatcher;
   runCount: number;
-  // The lock provider lives here in the parent (it cannot cross the fork). The
-  // daemon asks for the lock over IPC and this process runs the real provider.
-  lockProvider?: LockProvider;
+  // The run coordinator lives here in the parent (it cannot cross the fork). The
+  // daemon asks over IPC and this process runs the real coordinator.
+  runCoordinator?: RunCoordinator;
 
   constructor(cronExpression: string, taskPath: string, options?: TaskOptions){
     this.cronExpression = cronExpression;
@@ -53,7 +53,7 @@ class BackgroundScheduledTask implements ScheduledTask{
     // this process logs from those events using the configured logger.
     this.logger = options?.logger || logger;
     this.suppressMissedWarning = options?.suppressMissedWarning || false;
-    this.lockProvider = options?.lock ? (options?.lockProvider ?? getLockProvider()) : undefined;
+    this.runCoordinator = options?.distributed ? resolveRunCoordinator(options?.runCoordinator) : undefined;
 
     this.on('task:stopped', () => {
       this.forkProcess?.kill();
@@ -148,15 +148,15 @@ class BackgroundScheduledTask implements ScheduledTask{
         });
 
         this.forkProcess.on('message', (message: any) => {
-          // Distributed lock over IPC: the daemon asks, the parent runs the
-          // real provider and replies. Cross-fleet coordination is in the
+          // Run coordination over IPC: the daemon asks, the parent runs the
+          // real coordinator and replies. Cross-fleet coordination is in the
           // shared backend (e.g. Redis); IPC only bridges child to its parent.
-          if (message.type === 'lock:acquire') {
-            void this.handleLockAcquire(message);
+          if (message.type === 'coordinator:shouldRun') {
+            void this.handleShouldRun(message);
             return;
           }
-          if (message.type === 'lock:release') {
-            this.lockProvider?.release(message.key).catch((err) => this.logger.error('Lock release failed', err));
+          if (message.type === 'coordinator:complete') {
+            this.runCoordinator?.onComplete?.(message.key)?.catch?.((err: any) => this.logger.error('Run coordinator onComplete failed', err));
             return;
           }
 
@@ -182,7 +182,7 @@ class BackgroundScheduledTask implements ScheduledTask{
             const execution = message.context?.execution;
             delete execution?.hasError;
 
-            const context = this.createContext(new Date(message.context.date), execution);
+            const context = this.createContext(new Date(message.context.date), execution, message.context.reason);
 
             this.logEvent(message.event, context);
             this.emitter.emit(message.event, context);
@@ -309,18 +309,18 @@ class BackgroundScheduledTask implements ScheduledTask{
     });
   }
 
-  // Handles a lock:acquire request from the daemon: run the real provider and
-  // reply. A provider error is reported back (via `error`) so the daemon's
-  // runner fails closed and skips the run, mirroring the inline path.
-  private async handleLockAcquire(message: { key: string; ttlMs: number; reqId: string }): Promise<void> {
-    let acquired = false;
+  // Handles a coordinator:shouldRun request from the daemon: run the real
+  // coordinator and reply. A coordinator error is reported back (via `error`) so
+  // the daemon's runner fails closed and skips the run, mirroring the inline path.
+  private async handleShouldRun(message: { key: string; ttlMs: number; reqId: string }): Promise<void> {
+    let allowed = false;
     let error: string | undefined;
     try {
-      acquired = this.lockProvider ? await this.lockProvider.acquire(message.key, message.ttlMs) : false;
+      allowed = this.runCoordinator ? await this.runCoordinator.shouldRun(message.key, message.ttlMs) : false;
     } catch (err: any) {
       error = err?.message ?? String(err);
     }
-    this.forkProcess?.send({ type: 'lock:result', reqId: message.reqId, acquired, error });
+    this.forkProcess?.send({ type: 'coordinator:result', reqId: message.reqId, allowed, error });
   }
 
   on(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void {
@@ -360,7 +360,7 @@ class BackgroundScheduledTask implements ScheduledTask{
     }
   }
 
-  private createContext(executionDate: Date, execution?: Execution): TaskContext{
+  private createContext(executionDate: Date, execution?: Execution, reason?: SkipReason): TaskContext{
     const localTime = new LocalizedTime(executionDate, this.options?.timezone)
     const ctx: TaskContext = {
       date: localTime.toDate(),
@@ -370,20 +370,22 @@ class BackgroundScheduledTask implements ScheduledTask{
       execution: execution
     }
 
+    if (reason) ctx.reason = reason;
+
     return ctx;
   }
 }
 
 /**
  * Strips options that cannot cross the process boundary (function-bearing
- * objects: a custom `logger` and the `lockProvider`). The parent keeps the
- * original options; it does the logging itself and runs the lock provider on
- * the daemon's behalf over IPC.
+ * objects: a custom `logger` and the `runCoordinator`). The parent keeps the
+ * original options; it does the logging itself and runs the coordinator on the
+ * daemon's behalf over IPC.
  */
 function serializableOptions(options?: TaskOptions): TaskOptions | undefined {
   if(!options) return options;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { logger: _logger, lockProvider: _lockProvider, ...rest } = options;
+  const { logger: _logger, runCoordinator: _runCoordinator, ...rest } = options;
   return rest;
 }
 

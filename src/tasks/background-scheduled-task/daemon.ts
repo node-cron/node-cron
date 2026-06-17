@@ -2,7 +2,7 @@ import { fileURLToPath } from "url";
 import logger, { noopLogger } from "../../logger";
 import { InlineScheduledTask } from "../inline-scheduled-task";
 import { ScheduledTask, TaskContext, TaskEvent, TaskOptions } from "../scheduled-task";
-import { IpcLockProvider } from "../../lock/ipc-lock-provider";
+import { IpcRunCoordinator } from "../../coordinator/ipc-run-coordinator";
 
 export async function startDaemon(message: any): Promise<ScheduledTask> {
     const script = await importTaskModule(message.path);
@@ -11,10 +11,10 @@ export async function startDaemon(message: any): Promise<ScheduledTask> {
     // the forwarded events using the user's configured logger.
     const options: TaskOptions = { ...(message.options || {}), logger: noopLogger };
 
-    // The real lock provider lives in the parent; bridge to it over IPC so the
+    // The real coordinator lives in the parent; bridge to it over IPC so the
     // daemon coordinates through the same shared backend as every instance.
-    if (options.lock) {
-      options.lockProvider = new IpcLockProvider(process);
+    if (options.distributed) {
+      options.runCoordinator = new IpcRunCoordinator(process);
     }
 
     const task = new InlineScheduledTask(message.cron, script.task, options);
@@ -37,11 +37,7 @@ export async function startDaemon(message: any): Promise<ScheduledTask> {
 
     task.on('execution:maxReached', (context => sendEvent('execution:maxReached', context)));
 
-    task.on('execution:locked', (context => sendEvent('execution:locked', context)));
-
-    task.on('execution:unlocked', (context => sendEvent('execution:unlocked', context)));
-
-    task.on('execution:lockHeld', (context => sendEvent('execution:lockHeld', context)));
+    task.on('execution:skipped', (context => sendEvent('execution:skipped', context)));
 
     if (process.send) process.send({ event: 'daemon:started' });
 
@@ -104,7 +100,11 @@ function safelySerializeContext(context: TaskContext): TaskContext {
     dateLocalIso: context.dateLocalIso,
     triggeredAt: context.triggeredAt
   };
-  
+
+  if (context.reason) {
+    safeContext.reason = context.reason;
+  }
+
   if (context.task) {
     safeContext.task = {
       id: context.task.id,

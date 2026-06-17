@@ -1,6 +1,6 @@
 import { assert } from 'chai';
 import { bind } from './daemon';
-import { IpcLockProvider } from '../../lock/ipc-lock-provider';
+import { IpcRunCoordinator } from '../../coordinator/ipc-run-coordinator';
 
 describe('daemon - register', function () {
   let messages: any[] = [];
@@ -34,19 +34,48 @@ describe('daemon - register', function () {
     task.destroy();
   });
 
-  it('wires an IPC lock provider when the task uses lock', async function () {
+  it('wires an IPC run coordinator when the task is distributed', async function () {
     const message = {
       command: 'task:start',
       path: '../../../test-assets/dummy-task.js',
       cron: '* * * * * *',
-      options: { name: 'locked-task', lock: true },
+      options: { name: 'distributed-task', distributed: true },
     };
 
     bind();
     const onMessage = listeners.find(l => l.event === 'message');
     const task: any = await onMessage.fn(message);
 
-    assert.instanceOf(task.runner.lockProvider, IpcLockProvider);
+    assert.instanceOf(task.runner.runCoordinator, IpcRunCoordinator);
+    task.destroy();
+  });
+
+  it('forwards execution:skipped with its reason when the coordinator declines', async function () {
+    messages = [];
+    const message = {
+      command: 'task:start',
+      path: '../../../test-assets/dummy-task.js',
+      cron: '* * * * * *',
+      options: { name: 'distributed-task', distributed: true },
+    };
+
+    bind();
+    const onMessage = listeners.find(l => l.event === 'message');
+    const task: any = await onMessage.fn(message);
+
+    // The daemon's IpcRunCoordinator asks the parent over IPC and waits for a
+    // reply. Reply "not elected" to force the skip path.
+    await new Promise(r => setTimeout(r, 1500));
+    const ask = messages.find(m => m?.type === 'coordinator:shouldRun');
+    assert.isDefined(ask, 'daemon should ask the parent whether to run');
+    listeners
+      .filter(l => l.event === 'message')
+      .forEach(l => l.fn({ type: 'coordinator:result', reqId: ask.reqId, allowed: false }));
+
+    await new Promise(r => setTimeout(r, 400));
+    const skipped = messages.find(m => m.event === 'execution:skipped');
+    assert.isDefined(skipped, 'daemon should forward execution:skipped');
+    assert.equal(skipped.context.reason, 'not-elected');
     task.destroy();
   });
 

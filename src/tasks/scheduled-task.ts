@@ -1,5 +1,5 @@
 import { Logger } from "../logger";
-import { LockProvider } from "../lock/lock-provider";
+import { RunCoordinator, SkipReason } from "../coordinator/run-coordinator";
 
 /**
  * Represents an event triggered by a cron job.
@@ -16,6 +16,8 @@ export type TaskContext = {
   task?: ScheduledTask;
   execution?: Execution
   triggeredAt: Date;
+  /** Why the execution was skipped. Present only on `execution:skipped`. */
+  reason?: SkipReason;
 }
 
 export type TaskEvent =
@@ -28,37 +30,34 @@ export type TaskEvent =
   | 'execution:missed'
   | 'execution:overlap'
   | 'execution:maxReached'
-  | 'execution:locked'
-  | 'execution:unlocked'
-  | 'execution:lockHeld'
+  | 'execution:skipped'
 
 export type TaskOptions = {
   timezone?: string,
   name?: string,
   noOverlap?: boolean,
   /**
-   * Run this task on a single instance per fire across a fleet, using the lock
-   * provider set with `setLockProvider` (or the per-task `lockProvider`).
-   * Requires a `name` (the lock key is `name:fireTime`). Works for both inline
-   * and background tasks; for background tasks the daemon coordinates with the
-   * parent over IPC, so the provider only needs to be set in the parent. The
-   * losing instances emit `execution:lockHeld`; the winner emits
-   * `execution:locked` then `execution:unlocked`. Guarantee: no concurrent run
-   * across instances (effectively once when clocks are in sync) — not a hard
-   * exactly-once.
+   * Coordinate this task across a fleet so it runs on one instance per fire,
+   * via the run coordinator. By default the coordinator keys off an env var
+   * (`NODE_CRON_RUN`) for a single designated runner; provide one via
+   * `setRunCoordinator` (or the per-task `runCoordinator`) for HA, per-fire
+   * coordination (e.g. a Redis lock). Requires a `name` (the coordination key
+   * is `name:fireTime`). Works for both inline and background tasks; for
+   * background tasks the daemon coordinates with the parent over IPC. When an
+   * instance is not elected to run, it emits `execution:skipped`.
    */
-  lock?: boolean,
+  distributed?: boolean,
   /**
-   * Lock provider for this task, overriding the process-wide one set via
-   * `setLockProvider`. Only used when `lock` is true.
+   * Run coordinator for this task, overriding the process-wide one set via
+   * `setRunCoordinator`. Only used when `distributed` is true.
    */
-  lockProvider?: LockProvider,
+  runCoordinator?: RunCoordinator,
   /**
-   * Safety expiry (ms) for the distributed lock, in case the holder crashes
-   * without releasing. Must be larger than the task's run time, or the lock can
-   * expire mid-run. Defaults to 30000.
+   * Safety lease expiry (ms) passed to lease-based coordinators (e.g. a Redis
+   * lock), in case the holder crashes without releasing. Must be larger than
+   * the task's run time. Ignored by config-based coordinators. Defaults to 30000.
    */
-  lockTtl?: number,
+  distributedTtl?: number,
   maxExecutions?: number,
   maxRandomDelay?: number,
   /**

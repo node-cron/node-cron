@@ -448,22 +448,22 @@ describe('BackgroundScheduledTask', function() {
     });
   });
 
-  describe('distributed lock over IPC', function () {
-    function makeProvider(behavior: { acquireReturns?: boolean; acquireThrows?: boolean } = {}) {
-      const calls = { acquire: [] as { key: string; ttl: number }[], release: [] as string[] };
+  describe('run coordination over IPC', function () {
+    function makeCoordinator(behavior: { shouldRunReturns?: boolean; shouldRunThrows?: boolean } = {}) {
+      const calls = { shouldRun: [] as { key: string; ttl: number }[], onComplete: [] as string[] };
       return {
         calls,
-        async acquire(key: string, ttl: number) {
-          calls.acquire.push({ key, ttl });
-          if (behavior.acquireThrows) throw new Error('redis down');
-          return behavior.acquireReturns ?? true;
+        async shouldRun(key: string, ttl: number) {
+          calls.shouldRun.push({ key, ttl });
+          if (behavior.shouldRunThrows) throw new Error('coordinator down');
+          return behavior.shouldRunReturns ?? true;
         },
-        async release(key: string) { calls.release.push(key); },
+        async onComplete(key: string) { calls.onComplete.push(key); },
       };
     }
 
-    async function startLockedTask(provider: any) {
-      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { name: 'job', lock: true, lockProvider: provider });
+    async function startTask(options: any) {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', options);
       fakeChildProcess.send.callsFake((msg: any) => {
         if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
         else if (msg.command === 'task:start') task.emitter.emit('task:started');
@@ -472,72 +472,68 @@ describe('BackgroundScheduledTask', function() {
       return task;
     }
 
-    const replyOf = () => fakeChildProcess.send.getCalls().map(c => c.args[0]).find((a: any) => a?.type === 'lock:result');
+    const startDistributed = (coordinator: any) => startTask({ name: 'job', distributed: true, runCoordinator: coordinator });
+    const replyOf = () => fakeChildProcess.send.getCalls().map(c => c.args[0]).find((a: any) => a?.type === 'coordinator:result');
 
-    it('runs the provider and replies acquired:true on lock:acquire', async function () {
-      const provider = makeProvider();
-      const task = await startLockedTask(provider);
+    it('runs the coordinator and replies allowed:true on coordinator:shouldRun', async function () {
+      const coordinator = makeCoordinator();
+      const task = await startDistributed(coordinator);
 
-      fakeChildProcess.emit('message', { type: 'lock:acquire', key: 'job:t', ttlMs: 5000, reqId: 'r1' });
+      fakeChildProcess.emit('message', { type: 'coordinator:shouldRun', key: 'job:t', ttlMs: 5000, reqId: 'r1' });
       await wait(10);
 
-      assert.deepEqual(provider.calls.acquire, [{ key: 'job:t', ttl: 5000 }]);
+      assert.deepEqual(coordinator.calls.shouldRun, [{ key: 'job:t', ttl: 5000 }]);
       const reply = replyOf();
       assert.equal(reply.reqId, 'r1');
-      assert.isTrue(reply.acquired);
+      assert.isTrue(reply.allowed);
       assert.isUndefined(reply.error);
       await task.destroy();
     });
 
-    it('replies acquired:false when the lock is held elsewhere', async function () {
-      const provider = makeProvider({ acquireReturns: false });
-      const task = await startLockedTask(provider);
+    it('replies allowed:false when not elected', async function () {
+      const coordinator = makeCoordinator({ shouldRunReturns: false });
+      const task = await startDistributed(coordinator);
 
-      fakeChildProcess.emit('message', { type: 'lock:acquire', key: 'job:t', ttlMs: 5000, reqId: 'r2' });
+      fakeChildProcess.emit('message', { type: 'coordinator:shouldRun', key: 'job:t', ttlMs: 5000, reqId: 'r2' });
       await wait(10);
 
-      assert.isFalse(replyOf().acquired);
+      assert.isFalse(replyOf().allowed);
       await task.destroy();
     });
 
-    it('reports a provider error so the daemon fails closed', async function () {
-      const provider = makeProvider({ acquireThrows: true });
-      const task = await startLockedTask(provider);
+    it('reports a coordinator error so the daemon fails closed', async function () {
+      const coordinator = makeCoordinator({ shouldRunThrows: true });
+      const task = await startDistributed(coordinator);
 
-      fakeChildProcess.emit('message', { type: 'lock:acquire', key: 'job:t', ttlMs: 5000, reqId: 'r3' });
+      fakeChildProcess.emit('message', { type: 'coordinator:shouldRun', key: 'job:t', ttlMs: 5000, reqId: 'r3' });
       await wait(10);
 
       const reply = replyOf();
-      assert.isFalse(reply.acquired);
-      assert.match(reply.error, /redis down/);
+      assert.isFalse(reply.allowed);
+      assert.match(reply.error, /coordinator down/);
       await task.destroy();
     });
 
-    it('releases via the provider on lock:release', async function () {
-      const provider = makeProvider();
-      const task = await startLockedTask(provider);
+    it('completes via the coordinator on coordinator:complete', async function () {
+      const coordinator = makeCoordinator();
+      const task = await startDistributed(coordinator);
 
-      fakeChildProcess.emit('message', { type: 'lock:release', key: 'job:t' });
+      fakeChildProcess.emit('message', { type: 'coordinator:complete', key: 'job:t' });
       await wait(10);
 
-      assert.deepEqual(provider.calls.release, ['job:t']);
+      assert.deepEqual(coordinator.calls.onComplete, ['job:t']);
       await task.destroy();
     });
 
-    it('replies acquired:false when no provider is resolved', async function () {
-      // lock:true but no global/per-task provider: the request still gets a safe
-      // (fail-closed) reply instead of hanging the daemon.
-      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { name: 'job', lock: true });
-      fakeChildProcess.send.callsFake((msg: any) => {
-        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
-        else if (msg.command === 'task:start') task.emitter.emit('task:started');
-      });
-      await task.start();
+    it('replies allowed:false when no coordinator is resolved', async function () {
+      // A non-distributed task has no coordinator: a stray request still gets a
+      // safe (fail-closed) reply instead of hanging the daemon.
+      const task = await startTask({ name: 'job' });
 
-      fakeChildProcess.emit('message', { type: 'lock:acquire', key: 'job:t', ttlMs: 5000, reqId: 'r4' });
+      fakeChildProcess.emit('message', { type: 'coordinator:shouldRun', key: 'job:t', ttlMs: 5000, reqId: 'r4' });
       await wait(10);
 
-      assert.isFalse(replyOf().acquired);
+      assert.isFalse(replyOf().allowed);
       await task.destroy();
     });
   });

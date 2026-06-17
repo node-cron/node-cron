@@ -16,7 +16,7 @@ import logger from "./logger";
 import validation, { parse as parseExpression, validateDetailed as validateDetailedExpression } from "./pattern/validation/pattern-validation";
 import BackgroundScheduledTask from "./tasks/background-scheduled-task/background-scheduled-task";
 import { setLogger } from "./logger";
-import { setLockProvider, getLockProvider } from "./lock/lock-provider";
+import { setRunCoordinator } from "./coordinator/run-coordinator";
 
 import path from "path";
 import { pathToFileURL, fileURLToPath } from "url";
@@ -73,12 +73,12 @@ export function schedule(expression:string, func: TaskFn | string, options?: Tas
  * @private
  */
 export function createTask(expression: string, func: TaskFn | string, options?: TaskOptions): ScheduledTask {
-    if (options?.lock) {
-      if (!options.name)
-        throw new Error('`lock` requires a `name` (it forms the lock key shared across instances).');
-      if (!(options.lockProvider ?? getLockProvider()))
-        throw new Error('`lock` requires a lock provider — call cron.setLockProvider(...) before scheduling.');
+    if (options?.distributed && !options.name) {
+      throw new Error('`distributed` requires a `name` (it forms the coordination key shared across instances).');
     }
+    // The coordinator (per-task / global / env-var default) is resolved when the
+    // task is constructed below; an unset/invalid env-var default throws there,
+    // failing fast at schedule time rather than at the first fire.
 
     let task: ScheduledTask;
     if(func instanceof Function){
@@ -172,12 +172,12 @@ export const getTasks = registry.all;
 export const getTask = registry.get;
 
 export { setLogger } from './logger';
-export { setLockProvider } from './lock/lock-provider';
+export { setRunCoordinator } from './coordinator/run-coordinator';
 
 export type { ScheduledTask, TaskFn, TaskContext, TaskOptions } from './tasks/scheduled-task';
 export type { Logger } from './logger';
 export type { ParsedFields, DetailedValidation, CronFieldError } from './pattern/validation/pattern-validation';
-export type { LockProvider } from './lock/lock-provider';
+export type { RunCoordinator, SkipReason } from './coordinator/run-coordinator';
 
 export interface NodeCron {
   schedule: typeof schedule;
@@ -188,7 +188,7 @@ export interface NodeCron {
   getTasks: typeof getTasks;
   getTask: typeof getTask;
   setLogger: typeof setLogger;
-  setLockProvider: typeof setLockProvider;
+  setRunCoordinator: typeof setRunCoordinator;
 }
 
 export const nodeCron: NodeCron = {
@@ -200,7 +200,7 @@ export const nodeCron: NodeCron = {
   getTasks,
   getTask,
   setLogger,
-  setLockProvider,
+  setRunCoordinator,
 };
 
 /**

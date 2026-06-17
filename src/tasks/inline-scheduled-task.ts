@@ -6,7 +6,7 @@ import { createID } from "../create-id";
 import { StateMachine } from "./state-machine";
 import logger, { Logger } from "../logger";
 import { LocalizedTime } from "../time/localized-time";
-import { getLockProvider } from "../lock/lock-provider";
+import { resolveRunCoordinator, SkipReason } from "../coordinator/run-coordinator";
 
 class TaskEmitter extends EventEmitter{}
 
@@ -77,20 +77,14 @@ export class InlineScheduledTask implements ScheduledTask {
         this.emitter.emit('execution:maxReached', this.createContext(date));
         this.destroy();
       },
-      // Distributed lock: only wired when this task opted in (`lock: true`).
-      // A per-task provider takes precedence over the process-wide one set via
-      // setLockProvider (in a daemon this is the IPC bridge to the parent).
-      lockProvider: options?.lock ? (options?.lockProvider ?? getLockProvider()) : undefined,
-      lockKeyPrefix: this.name,
-      lockTtl: options?.lockTtl,
-      onLocked: (date: Date) => {
-        this.emitter.emit('execution:locked', this.createContext(date));
-      },
-      onUnlocked: (date: Date) => {
-        this.emitter.emit('execution:unlocked', this.createContext(date));
-      },
-      onLockHeld: (date: Date) => {
-        this.emitter.emit('execution:lockHeld', this.createContext(date));
+      // Distributed coordination: only wired when this task opted in
+      // (`distributed: true`). A per-task coordinator wins, then the global one,
+      // then the env-var default (in a daemon this is the IPC bridge to the parent).
+      runCoordinator: options?.distributed ? resolveRunCoordinator(options?.runCoordinator) : undefined,
+      coordinatorKeyPrefix: this.name,
+      coordinatorTtl: options?.distributedTtl,
+      onSkipped: (date: Date, reason: SkipReason) => {
+        this.emitter.emit('execution:skipped', this.createContext(date, undefined, reason));
       }
     }
     
@@ -203,7 +197,7 @@ export class InlineScheduledTask implements ScheduledTask {
     this.emitter.once(event, fun);
   }
 
-  private createContext(executionDate: Date, execution?: Execution): TaskContext{
+  private createContext(executionDate: Date, execution?: Execution, reason?: SkipReason): TaskContext{
     const localTime = new LocalizedTime(executionDate, this.timezone)
     const ctx: TaskContext = {
       date: localTime.toDate(),
@@ -212,6 +206,8 @@ export class InlineScheduledTask implements ScheduledTask {
       task: this,
       execution: execution
     }
+
+    if (reason) ctx.reason = reason;
 
     return ctx;
   }
