@@ -70,11 +70,11 @@ Need a task that doesn't start immediately? Use `cron.createTask(...)` and call 
 | second       | 0-59 (optional)                   |
 | minute       | 0-59                              |
 | hour         | 0-23                              |
-| day of month | 1-31                              |
+| day of month | 1-31 (or `L` for the last day)    |
 | month        | 1-12 (or names)                   |
 | day of week  | 0-7 (or names, 0 or 7 are sunday) |
 
-See the [Cron Syntax guide](https://nodecron.com/cron-syntax) for ranges, steps, lists, and named months/weekdays.
+See the [Cron Syntax guide](https://nodecron.com/cron-syntax) for ranges, steps, lists, named months/weekdays, and the `L` (last day of month) token.
 
 ## Options
 
