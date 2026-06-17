@@ -398,6 +398,55 @@ describe('BackgroundScheduledTask', function() {
       assert.equal(result, 'late result');
     });
   });
+
+  describe('introspection', function(){
+    it('getPattern returns the expression', function(){
+      const task = new BackgroundScheduledTask('0 0 12 * * *', './test-assets/dummy-task.js');
+      assert.equal(task.getPattern(), '0 0 12 * * *');
+    });
+
+    it('match and getNextRuns compute locally (no daemon needed)', function(){
+      const task = new BackgroundScheduledTask('0 0 12 * * *', './test-assets/dummy-task.js', { timezone: 'Etc/UTC' });
+      assert.isTrue(task.match(new Date('2025-06-15T12:00:00Z')));
+      assert.isFalse(task.match(new Date('2025-06-15T12:00:01Z')));
+      const runs = task.getNextRuns(3);
+      assert.lengthOf(runs, 3);
+      assert.isAbove(runs[1].getTime(), runs[0].getTime());
+    });
+
+    it('runsLeft tracks executions reported by the daemon', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { maxExecutions: 3 });
+      assert.equal(task.runsLeft(), 3);
+      task.emitter.emit('execution:started', {} as any);
+      task.emitter.emit('execution:started', {} as any);
+      assert.equal(task.runsLeft(), 1);
+    });
+
+    it('runsLeft is undefined without maxExecutions', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      assert.isUndefined(task.runsLeft());
+    });
+
+    it('isBusy is false when not executing', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      assert.isFalse(task.isBusy());
+    });
+
+    it('msToNext is null when stopped and a positive number once started', async function(){
+      const task = new BackgroundScheduledTask('* * * * *', './test-assets/dummy-task.js', { timezone: 'Etc/UTC' });
+      assert.isNull(task.msToNext());
+
+      fakeChildProcess.send.callsFake((msg: any)=>{
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+        else task.emitter.emit('task:started');
+      });
+      await task.start();
+      const ms = task.msToNext();
+      assert.isNotNull(ms);
+      assert.isAbove(ms as number, 0);
+      await task.destroy();
+    });
+  });
 });
 
 

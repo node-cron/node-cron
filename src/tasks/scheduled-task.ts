@@ -96,6 +96,19 @@ export interface ScheduledTask {
   execute(): Promise<any>;
   getNextRun(): Date | null;
 
+  /** The next `count` instants this task's expression matches, from now. */
+  getNextRuns(count: number): Date[];
+  /** Whether the given date matches this task's expression. */
+  match(date: Date): boolean;
+  /** Milliseconds until the next run, or `null` when the task is stopped. */
+  msToNext(): number | null;
+  /** Whether an execution is currently in progress. */
+  isBusy(): boolean;
+  /** Remaining executions when `maxExecutions` is set, otherwise `undefined`. */
+  runsLeft(): number | undefined;
+  /** The original cron expression. */
+  getPattern(): string;
+
   on(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void
   off(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void
   once(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void 
