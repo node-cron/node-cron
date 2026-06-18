@@ -92,10 +92,10 @@ describe('run coordinator', function () {
     assert.isAbove(ran, 0);
   });
 
-  it('honours a custom distributedTtl', async function () {
+  it('honours a custom distributedLease', async function () {
     const coordinator = makeCoordinator();
     setRunCoordinator(coordinator as any);
-    const task = new InlineScheduledTask('* * * * * *', () => {}, { name: 'job', distributed: true, distributedTtl: 5000 });
+    const task = new InlineScheduledTask('* * * * * *', () => {}, { name: 'job', distributed: true, distributedLease: 5000 });
 
     task.start();
     await wait(1200);
