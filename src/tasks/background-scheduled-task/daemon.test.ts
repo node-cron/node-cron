@@ -64,19 +64,33 @@ describe('daemon - register', function () {
     const task: any = await onMessage.fn(message);
 
     // The daemon's IpcRunCoordinator asks the parent over IPC and waits for a
-    // reply. Reply "not elected" to force the skip path.
-    await new Promise(r => setTimeout(r, 1500));
-    const ask = messages.find(m => m?.type === 'coordinator:shouldRun');
+    // reply. Wait (event-gated, not a fixed sleep) for the ask, reply "not
+    // elected", then wait for the forwarded skip.
+    const ask = await waitFor(() => messages.find(m => m?.type === 'coordinator:shouldRun'));
     assert.isDefined(ask, 'daemon should ask the parent whether to run');
     listeners
       .filter(l => l.event === 'message')
       .forEach(l => l.fn({ type: 'coordinator:result', reqId: ask.reqId, allowed: false }));
 
-    await new Promise(r => setTimeout(r, 400));
-    const skipped = messages.find(m => m.event === 'execution:skipped');
+    const skipped = await waitFor(() => messages.find(m => m.event === 'execution:skipped'));
     assert.isDefined(skipped, 'daemon should forward execution:skipped');
     assert.equal(skipped.context.reason, 'not-elected');
     task.destroy();
+  });
+
+  it('exits when the parent disconnects (does not linger as an orphan)', function () {
+    const realExit = process.exit;
+    let exitedWith: number | undefined;
+    (process as any).exit = (code?: number) => { exitedWith = code; };
+    try {
+      bind();
+      const disconnect = listeners.filter(l => l.event === 'disconnect').pop();
+      assert.isDefined(disconnect, 'daemon should listen for parent disconnect');
+      disconnect.fn();
+      assert.equal(exitedWith, 0);
+    } finally {
+      process.exit = realExit;
+    }
   });
 
   it('should send all events', async function () {
@@ -320,4 +334,15 @@ describe('daemon - register', function () {
 function blockIO(ms: number) {
   const start = Date.now();
   while (Date.now() - start < ms);
+}
+
+// Polls `get` until it returns a truthy value or the timeout elapses, instead
+// of sleeping a fixed amount and hoping the (real-timer) fire already happened.
+async function waitFor<T>(get: () => T, timeout = 3000, interval = 25): Promise<T> {
+  const deadline = Date.now() + timeout;
+  for (;;) {
+    const value = get();
+    if (value || Date.now() > deadline) return value;
+    await new Promise(r => setTimeout(r, interval));
+  }
 }

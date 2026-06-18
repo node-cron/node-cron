@@ -157,6 +157,11 @@ export function bind(){
       return task;
     }
   });
+
+  // When the parent dies the IPC channel disconnects. Exit instead of lingering
+  // as an orphan: an orphaned daemon would keep running the schedule on its own,
+  // and a distributed task's IPC coordination would hang with no parent to reply.
+  process.on('disconnect', () => process.exit(0));
 }
 
 bind();

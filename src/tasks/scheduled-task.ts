@@ -58,6 +58,13 @@ export type TaskOptions = {
    * the task's run time. Ignored by config-based coordinators. Defaults to 30000.
    */
   distributedTtl?: number,
+  /**
+   * Stop the task after this many executions. Counted per instance: combined
+   * with `distributed` and a per-fire coordinator (e.g. a Redis lock), each
+   * instance counts only the fires it won, so the total across the fleet can
+   * exceed this number. With the default single-runner coordinator it behaves
+   * as expected (only the designated instance runs and counts).
+   */
   maxExecutions?: number,
   maxRandomDelay?: number,
   /**
