@@ -6,6 +6,24 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [4.4.0] - 2026-06-17
+
+### Added
+- **Task introspection** on `ScheduledTask`: `getNextRuns(n)` (preview the next N
+  run times), `match(date)`, `msToNext()`, `isBusy()`, `runsLeft()` and
+  `getPattern()`. ([#547])
+- **`cron.parse(expression)`** and **`cron.validateDetailed(expression)`**:
+  decompose an expression into its fields, or get every field-level problem
+  (without throwing) for tooling and richer error messages. ([#548])
+- **Distributed run coordination** — opt-in `distributed: true` runs a task on a
+  single instance per fire across a fleet. Ships a built-in `NODE_CRON_RUN`
+  env-var default (one designated runner, no dependencies) and a pluggable
+  `RunCoordinator` (via `setRunCoordinator`, or the per-task `runCoordinator`
+  option) for high-availability, per-fire coordination (e.g. a Redis lock).
+  Adds the `distributedTtl` option and an `execution:skipped` event carrying a
+  `reason` (`'not-elected'` | `'coordinator-error'`). Works for inline and
+  background tasks. ([#549])
+
 ### Fixed
 - `getNextMatch` no longer scans every time of day on a day that matches the
   day-of-month but not the weekday. A dense expression constrained by both
@@ -110,7 +128,8 @@ that start stopped, per-task `logger`, and a dual ESM/CJS build. The legacy
 `scheduled`/`runOnInit` options were removed and several event names changed.
 See the [migration guide](https://nodecron.com/migrating-from-v3).
 
-[Unreleased]: https://github.com/node-cron/node-cron/compare/v4.3.0...HEAD
+[Unreleased]: https://github.com/node-cron/node-cron/compare/v4.4.0...HEAD
+[4.4.0]: https://github.com/node-cron/node-cron/compare/v4.3.0...v4.4.0
 [4.3.0]: https://github.com/node-cron/node-cron/compare/v4.2.1...v4.3.0
 [4.2.1]: https://github.com/node-cron/node-cron/compare/v4.2.0...v4.2.1
 [4.2.0]: https://github.com/node-cron/node-cron/compare/v4.1.1...v4.2.0
@@ -129,3 +148,6 @@ See the [migration guide](https://nodecron.com/migrating-from-v3).
 [#485]: https://github.com/node-cron/node-cron/issues/485
 [#518]: https://github.com/node-cron/node-cron/issues/518
 [#535]: https://github.com/node-cron/node-cron/pull/535
+[#547]: https://github.com/node-cron/node-cron/pull/547
+[#548]: https://github.com/node-cron/node-cron/pull/548
+[#549]: https://github.com/node-cron/node-cron/pull/549
