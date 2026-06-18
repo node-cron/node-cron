@@ -53,11 +53,11 @@ export type TaskOptions = {
    */
   runCoordinator?: RunCoordinator,
   /**
-   * Safety lease expiry (ms) passed to lease-based coordinators (e.g. a Redis
-   * lock), in case the holder crashes without releasing. Must be larger than
-   * the task's run time. Ignored by config-based coordinators. Defaults to 30000.
+   * Safety lease (ms) passed to lease-based coordinators (e.g. a Redis lock),
+   * in case the holder crashes without releasing. Must be larger than the
+   * task's run time. Ignored by config-based coordinators. Defaults to 30000.
    */
-  distributedTtl?: number,
+  distributedLease?: number,
   /**
    * Stop the task after this many executions. Counted per instance: combined
    * with `distributed` and a per-fire coordinator (e.g. a Redis lock), each

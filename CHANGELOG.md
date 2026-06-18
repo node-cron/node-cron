@@ -6,6 +6,12 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- Renamed the `distributedTtl` option to **`distributedLease`** (same meaning:
+  the safety lease, in ms, for lease-based coordinators). The old name was the
+  only abbreviation in the options API; the new one groups with `distributed`.
+  `distributedTtl` was introduced in 4.4.0 and is removed without an alias.
+
 ## [4.4.0] - 2026-06-17
 
 ### Added

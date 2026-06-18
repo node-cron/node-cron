@@ -82,7 +82,7 @@ export class InlineScheduledTask implements ScheduledTask {
       // then the env-var default (in a daemon this is the IPC bridge to the parent).
       runCoordinator: options?.distributed ? resolveRunCoordinator(options?.runCoordinator) : undefined,
       coordinatorKeyPrefix: this.name,
-      coordinatorTtl: options?.distributedTtl,
+      coordinatorTtl: options?.distributedLease,
       onSkipped: (date: Date, reason: SkipReason) => {
         this.emitter.emit('execution:skipped', this.createContext(date, undefined, reason));
       }
