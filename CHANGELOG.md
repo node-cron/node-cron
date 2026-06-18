@@ -6,6 +6,8 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [4.4.1] - 2026-06-18
+
 ### Changed
 - Renamed the `distributedTtl` option to **`distributedLease`** (same meaning:
   the safety lease, in ms, for lease-based coordinators). The old name was the
@@ -134,7 +136,8 @@ that start stopped, per-task `logger`, and a dual ESM/CJS build. The legacy
 `scheduled`/`runOnInit` options were removed and several event names changed.
 See the [migration guide](https://nodecron.com/migrating-from-v3).
 
-[Unreleased]: https://github.com/node-cron/node-cron/compare/v4.4.0...HEAD
+[Unreleased]: https://github.com/node-cron/node-cron/compare/v4.4.1...HEAD
+[4.4.1]: https://github.com/node-cron/node-cron/compare/v4.4.0...v4.4.1
 [4.4.0]: https://github.com/node-cron/node-cron/compare/v4.3.0...v4.4.0
 [4.3.0]: https://github.com/node-cron/node-cron/compare/v4.2.1...v4.3.0
 [4.2.1]: https://github.com/node-cron/node-cron/compare/v4.2.0...v4.2.1
