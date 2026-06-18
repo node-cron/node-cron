@@ -447,6 +447,96 @@ describe('BackgroundScheduledTask', function() {
       await task.destroy();
     });
   });
+
+  describe('run coordination over IPC', function () {
+    function makeCoordinator(behavior: { shouldRunReturns?: boolean; shouldRunThrows?: boolean } = {}) {
+      const calls = { shouldRun: [] as { key: string; ttl: number }[], onComplete: [] as string[] };
+      return {
+        calls,
+        async shouldRun(key: string, ttl: number) {
+          calls.shouldRun.push({ key, ttl });
+          if (behavior.shouldRunThrows) throw new Error('coordinator down');
+          return behavior.shouldRunReturns ?? true;
+        },
+        async onComplete(key: string) { calls.onComplete.push(key); },
+      };
+    }
+
+    async function startTask(options: any) {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', options);
+      fakeChildProcess.send.callsFake((msg: any) => {
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+        else if (msg.command === 'task:start') task.emitter.emit('task:started');
+      });
+      await task.start();
+      return task;
+    }
+
+    const startDistributed = (coordinator: any) => startTask({ name: 'job', distributed: true, runCoordinator: coordinator });
+    const replyOf = () => fakeChildProcess.send.getCalls().map(c => c.args[0]).find((a: any) => a?.type === 'coordinator:result');
+
+    it('runs the coordinator and replies allowed:true on coordinator:shouldRun', async function () {
+      const coordinator = makeCoordinator();
+      const task = await startDistributed(coordinator);
+
+      fakeChildProcess.emit('message', { type: 'coordinator:shouldRun', key: 'job:t', ttlMs: 5000, reqId: 'r1' });
+      await wait(10);
+
+      assert.deepEqual(coordinator.calls.shouldRun, [{ key: 'job:t', ttl: 5000 }]);
+      const reply = replyOf();
+      assert.equal(reply.reqId, 'r1');
+      assert.isTrue(reply.allowed);
+      assert.isUndefined(reply.error);
+      await task.destroy();
+    });
+
+    it('replies allowed:false when not elected', async function () {
+      const coordinator = makeCoordinator({ shouldRunReturns: false });
+      const task = await startDistributed(coordinator);
+
+      fakeChildProcess.emit('message', { type: 'coordinator:shouldRun', key: 'job:t', ttlMs: 5000, reqId: 'r2' });
+      await wait(10);
+
+      assert.isFalse(replyOf().allowed);
+      await task.destroy();
+    });
+
+    it('reports a coordinator error so the daemon fails closed', async function () {
+      const coordinator = makeCoordinator({ shouldRunThrows: true });
+      const task = await startDistributed(coordinator);
+
+      fakeChildProcess.emit('message', { type: 'coordinator:shouldRun', key: 'job:t', ttlMs: 5000, reqId: 'r3' });
+      await wait(10);
+
+      const reply = replyOf();
+      assert.isFalse(reply.allowed);
+      assert.match(reply.error, /coordinator down/);
+      await task.destroy();
+    });
+
+    it('completes via the coordinator on coordinator:complete', async function () {
+      const coordinator = makeCoordinator();
+      const task = await startDistributed(coordinator);
+
+      fakeChildProcess.emit('message', { type: 'coordinator:complete', key: 'job:t' });
+      await wait(10);
+
+      assert.deepEqual(coordinator.calls.onComplete, ['job:t']);
+      await task.destroy();
+    });
+
+    it('replies allowed:false when no coordinator is resolved', async function () {
+      // A non-distributed task has no coordinator: a stray request still gets a
+      // safe (fail-closed) reply instead of hanging the daemon.
+      const task = await startTask({ name: 'job' });
+
+      fakeChildProcess.emit('message', { type: 'coordinator:shouldRun', key: 'job:t', ttlMs: 5000, reqId: 'r4' });
+      await wait(10);
+
+      assert.isFalse(replyOf().allowed);
+      await task.destroy();
+    });
+  });
 });
 
 

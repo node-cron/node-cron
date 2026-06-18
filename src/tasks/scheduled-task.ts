@@ -1,4 +1,5 @@
 import { Logger } from "../logger";
+import { RunCoordinator, SkipReason } from "../coordinator/run-coordinator";
 
 /**
  * Represents an event triggered by a cron job.
@@ -15,6 +16,8 @@ export type TaskContext = {
   task?: ScheduledTask;
   execution?: Execution
   triggeredAt: Date;
+  /** Why the execution was skipped. Present only on `execution:skipped`. */
+  reason?: SkipReason;
 }
 
 export type TaskEvent =
@@ -27,11 +30,41 @@ export type TaskEvent =
   | 'execution:missed'
   | 'execution:overlap'
   | 'execution:maxReached'
+  | 'execution:skipped'
 
 export type TaskOptions = {
   timezone?: string,
   name?: string,
   noOverlap?: boolean,
+  /**
+   * Coordinate this task across a fleet so it runs on one instance per fire,
+   * via the run coordinator. By default the coordinator keys off an env var
+   * (`NODE_CRON_RUN`) for a single designated runner; provide one via
+   * `setRunCoordinator` (or the per-task `runCoordinator`) for HA, per-fire
+   * coordination (e.g. a Redis lock). Requires a `name` (the coordination key
+   * is `name:fireTime`). Works for both inline and background tasks; for
+   * background tasks the daemon coordinates with the parent over IPC. When an
+   * instance is not elected to run, it emits `execution:skipped`.
+   */
+  distributed?: boolean,
+  /**
+   * Run coordinator for this task, overriding the process-wide one set via
+   * `setRunCoordinator`. Only used when `distributed` is true.
+   */
+  runCoordinator?: RunCoordinator,
+  /**
+   * Safety lease expiry (ms) passed to lease-based coordinators (e.g. a Redis
+   * lock), in case the holder crashes without releasing. Must be larger than
+   * the task's run time. Ignored by config-based coordinators. Defaults to 30000.
+   */
+  distributedTtl?: number,
+  /**
+   * Stop the task after this many executions. Counted per instance: combined
+   * with `distributed` and a per-fire coordinator (e.g. a Redis lock), each
+   * instance counts only the fires it won, so the total across the fleet can
+   * exceed this number. With the default single-runner coordinator it behaves
+   * as expected (only the designated instance runs and counts).
+   */
   maxExecutions?: number,
   maxRandomDelay?: number,
   /**

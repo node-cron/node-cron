@@ -4,6 +4,7 @@ import { TrackedPromise } from "../promise/tracked-promise";
 import { Execution } from "../tasks/scheduled-task";
 import { TimeMatcher } from "../time/time-matcher";
 import { planBeat } from "./plan-beat";
+import { RunCoordinator, SkipReason } from "../coordinator/run-coordinator";
 
 /**
  * How late, in milliseconds, a heartbeat may wake and still run the slot it was
@@ -17,10 +18,12 @@ type OnFn = (date: Date) => void | Promise<void>;
 type OnErrorHookFn = (date: Date, error: Error, execution: Execution) => void | Promise<void>;
 type OnErrorFn = (date: Date, error: Error) => void | Promise<void>;
 type OnHookFn = (date: Date, execution: Execution) => boolean | Promise<boolean>;
+type OnSkippedFn = (date: Date, reason: SkipReason) => void | Promise<void>;
 
 type OnMatch = (date: Date, execution: Execution) => any | Promise<any>;
 
 function emptyOnFn(){};
+function emptySkipFn(){};
 function emptyHookFn(){ return true };
 
 export type RunnerOptions = {
@@ -36,7 +39,15 @@ export type RunnerOptions = {
   onFinished?: OnHookFn;
   beforeRun?: OnHookFn
   onMaxExecutions?: OnFn
+  // Distributed run coordination (one instance per fire across a fleet). Active
+  // only when a coordinator is set; the key is `${coordinatorKeyPrefix}:${fireTime}`.
+  runCoordinator?: RunCoordinator
+  coordinatorKeyPrefix?: string
+  coordinatorTtl?: number
+  onSkipped?: OnSkippedFn
 }
+
+const DEFAULT_COORDINATOR_TTL = 30000;
 
 export class Runner {
   timeMatcher: TimeMatcher;
@@ -58,6 +69,11 @@ export class Runner {
   onFinished: OnHookFn;
   onMaxExecutions: OnFn;
 
+  runCoordinator?: RunCoordinator;
+  coordinatorKeyPrefix: string;
+  coordinatorTtl: number;
+  onSkipped: OnSkippedFn;
+
   constructor(timeMatcher: TimeMatcher, onMatch: OnMatch, options?: RunnerOptions){
       this.timeMatcher = timeMatcher;
       this.onMatch = onMatch;
@@ -76,12 +92,59 @@ export class Runner {
 
       this.onMaxExecutions = options?.onMaxExecutions || emptyOnFn;
 
+      this.runCoordinator = options?.runCoordinator;
+      this.coordinatorKeyPrefix = options?.coordinatorKeyPrefix || '';
+      this.coordinatorTtl = options?.coordinatorTtl ?? DEFAULT_COORDINATOR_TTL;
+      this.onSkipped = options?.onSkipped || emptySkipFn;
+
       this.runCount = 0;
       this.running = false;
   }
 
   private onErrorFallback = (date: Date, error: Error) => {
     this.logger.error('Task failed with error!', error);
+  }
+
+  /**
+   * Runs `run` under the run coordinator when one is configured. If the
+   * coordinator declines this instance, the run is skipped and `onSkipped` is
+   * emitted with `'not-elected'`. Fail-closed: if `shouldRun` throws, the run is
+   * skipped with `'coordinator-error'`. `onComplete` runs after the task.
+   */
+  private async runCoordinated(slot: Date, run: () => Promise<any>): Promise<void> {
+    if (!this.runCoordinator) {
+      await run();
+      return;
+    }
+
+    const key = `${this.coordinatorKeyPrefix}:${slot.toISOString()}`;
+    let allowed: boolean;
+    try {
+      allowed = await this.runCoordinator.shouldRun(key, this.coordinatorTtl);
+    } catch (err: any) {
+      this.logger.error('Run coordinator failed; skipping execution (fail-closed)', err);
+      this.emitSkipped(slot, 'coordinator-error');
+      return;
+    }
+
+    if (!allowed) {
+      this.emitSkipped(slot, 'not-elected');
+      return;
+    }
+
+    try {
+      await run();
+    } finally {
+      try {
+        await this.runCoordinator.onComplete?.(key);
+      } catch (err: any) {
+        this.logger.error('Run coordinator onComplete failed', err);
+      }
+    }
+  }
+
+  private emitSkipped(slot: Date, reason: SkipReason){
+    Promise.resolve(this.onSkipped(slot, reason)).catch((err) => this.onErrorFallback(slot, err));
   }
 
   start() {
@@ -170,7 +233,7 @@ export class Runner {
         const slot = plan.run;
         lastExecution = new TrackedPromise(async (resolve, reject) => {
           try {
-            await runTask(slot);
+            await this.runCoordinated(slot, () => runTask(slot));
             resolve(true);
           } catch (err) {
             reject(err);
