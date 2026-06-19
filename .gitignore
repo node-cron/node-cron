@@ -44,3 +44,7 @@ testing.js
 todo.txt
 
 /dist/
+
+# Local scratch / drafts (not for commit)
+/.local/
+/scratch/
