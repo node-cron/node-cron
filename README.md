@@ -70,16 +70,17 @@ Need a task that doesn't start immediately? Use `cron.createTask(...)` and call 
 | second       | 0-59 (optional)                   |
 | minute       | 0-59                              |
 | hour         | 0-23                              |
-| day of month | 1-31 (or `L` for the last day)    |
-| month        | 1-12 (or names)                   |
-| day of week  | 0-7 (or names, 0 or 7 are sunday), and `<weekday>#<nth>` |
+| day of month | 1-31 (or `L` for the last day)                |
+| month        | 1-12 (or names)                               |
+| day of week  | 0-7 (or names, 0 or 7 are sunday; `2#3`, `5L`) |
 
-The day of week field also accepts the `<weekday>#<nth>` token, which matches the
-nth occurrence of a weekday in the month. For example `2#3` is the 3rd Tuesday and
-`0 0 12 * * 1#1` runs at 12:00 on the first Monday of every month. The weekday is
-0-7 (0 or 7 is Sunday) and the occurrence is 1-5.
+The day-of-week field also accepts two extended tokens. `<weekday>#<nth>` matches the
+nth occurrence of a weekday in the month: `2#3` is the 3rd Tuesday, so
+`0 0 12 * * 1#1` runs at 12:00 on the first Monday of every month (the occurrence is
+1-5). `<weekday>L` matches the last occurrence of a weekday in the month: `5L` is the
+last Friday, `0L` (or `7L`) the last Sunday.
 
-See the [Cron Syntax guide](https://nodecron.com/cron-syntax) for ranges, steps, lists, named months/weekdays, the `L` (last day of month) token, and the `#` (nth weekday) token.
+See the [Cron Syntax guide](https://nodecron.com/cron-syntax) for ranges, steps, lists, named months/weekdays, the `L` (last day of month) token, and the `#` (nth weekday) and `<weekday>L` (last weekday) tokens.
 
 ## Options
 

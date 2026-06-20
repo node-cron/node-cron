@@ -130,10 +130,11 @@ export class MatcherWalker {
 
   /**
    * Whether the calendar day matches the weekday field, including any
-   * `<weekday>#<nth>` tokens. A given Y/M/D has the same weekday in every
-   * timezone, so it is computed arithmetically. `getUTCDay()` and the converted
-   * weekday field share the same 0-6 (Sunday=0) space, so this matches what
-   * match() computes, making it a safe pre-filter.
+   * `<weekday>L` (last weekday) and `<weekday>#<nth>` (nth weekday) tokens. A
+   * given Y/M/D has the same weekday in every timezone, so it is computed
+   * arithmetically. `getUTCDay()` and the converted weekday field share the same
+   * 0-6 (Sunday=0) space, so this matches what match() computes, making it a
+   * safe pre-filter.
    */
   private matchesWeekday(year: number, month: number, day: number): boolean {
     const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();

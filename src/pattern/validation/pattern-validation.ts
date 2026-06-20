@@ -78,10 +78,13 @@ function isInvalidMonth(expression) {
  * @returns {boolean}
  */
 function isInvalidWeekDay(expression) {
-    // `<weekday>#<nth>` (e.g. `2#3`, "the 3rd Tuesday of the month") is a valid
-    // token in this field only. The weekday is 0-7 (0 or 7 = Sunday) and the
-    // occurrence is 1-5. Any remaining entries must still be valid weekdays.
-    const days = expression.filter((value) => !isNthWeekdayToken(value));
+    // `<weekday>#<nth>` (e.g. `2#3`, "the 3rd Tuesday") and `<weekday>L` (e.g.
+    // `5L`, "the last Friday") are valid tokens in this field only. The weekday
+    // is 0-7 (0 or 7 = Sunday); the `#` occurrence is 1-5. Any remaining entries
+    // must still be valid weekday numbers. Malformed forms (bare `L`, `L5`,
+    // `8L`, `2#6`, ...) never become tokens, so they fall through and are
+    // rejected.
+    const days = expression.filter((value) => !isNthWeekdayToken(value) && !/^[0-7]L$/.test(value));
     return !isValidExpression(days, 0, 7);
 }
 
