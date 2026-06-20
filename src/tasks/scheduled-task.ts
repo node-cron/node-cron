@@ -74,6 +74,15 @@ export type TaskOptions = {
    */
   logger?: Logger,
   /**
+   * Called when a scheduled or invoked execution throws (synchronously or via
+   * a rejected promise). Fires in addition to the `execution:failed` event,
+   * not instead of it. Receives the error and the execution context. Errors
+   * thrown by this callback are swallowed so they cannot crash the scheduler.
+   * For background tasks it runs in the parent process (driven by the
+   * forwarded `execution:failed` event), mirroring how `logger` is handled.
+   */
+  onError?: (error: Error, context: TaskContext) => void,
+  /**
    * When true, suppresses the "missed execution" warning for this task.
    * The warning is also suppressed automatically when an `execution:missed`
    * listener is attached.

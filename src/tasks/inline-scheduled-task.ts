@@ -21,6 +21,7 @@ export class InlineScheduledTask implements ScheduledTask {
   timezone?: string;
   logger: Logger;
   suppressMissedWarning: boolean;
+  private onErrorCallback?: (error: Error, context: TaskContext) => void;
 
   constructor(cronExpression: string, taskFn: TaskFn, options?: TaskOptions){
     this.emitter = new TaskEmitter();
@@ -31,6 +32,7 @@ export class InlineScheduledTask implements ScheduledTask {
     this.timezone = options?.timezone;
     this.logger = options?.logger || logger;
     this.suppressMissedWarning = options?.suppressMissedWarning || false;
+    this.onErrorCallback = options?.onError;
 
     this.timeMatcher = new TimeMatcher(cronExpression, options?.timezone)
     this.stateMachine = new StateMachine();
@@ -58,7 +60,9 @@ export class InlineScheduledTask implements ScheduledTask {
       },
       onError: (date: Date, error: Error, execution: Execution) => {
         this.logger.error(error);
-        this.emitter.emit('execution:failed', this.createContext(date, execution));
+        const context = this.createContext(date, execution);
+        this.emitter.emit('execution:failed', context);
+        this.runOnErrorCallback(error, context);
         this.changeState('idle');
       },
       onOverlap: (date: Date) => {
@@ -195,6 +199,17 @@ export class InlineScheduledTask implements ScheduledTask {
 
   once(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void {
     this.emitter.once(event, fun);
+  }
+
+  // Invoke the user-provided onError callback, guarding against a throwing
+  // callback so it can never crash the scheduler.
+  private runOnErrorCallback(error: Error, context: TaskContext): void {
+    if (!this.onErrorCallback) return;
+    try {
+      this.onErrorCallback(error, context);
+    } catch (err: any) {
+      this.logger.error('onError callback threw', err);
+    }
   }
 
   private createContext(executionDate: Date, execution?: Execution, reason?: SkipReason): TaskContext{

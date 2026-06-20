@@ -356,6 +356,16 @@ class BackgroundScheduledTask implements ScheduledTask{
         if(context.execution?.error){
           this.logger.error(context.execution.error);
         }
+        // The onError callback is a function and cannot cross the fork
+        // boundary, so it runs here in the parent (driven by the forwarded
+        // event), mirroring how `logger` is handled for background tasks.
+        if(this.options?.onError && context.execution?.error){
+          try {
+            this.options.onError(context.execution.error, context);
+          } catch (err: any) {
+            this.logger.error('onError callback threw', err);
+          }
+        }
         break;
     }
   }
@@ -378,14 +388,15 @@ class BackgroundScheduledTask implements ScheduledTask{
 
 /**
  * Strips options that cannot cross the process boundary (function-bearing
- * objects: a custom `logger` and the `runCoordinator`). The parent keeps the
- * original options; it does the logging itself and runs the coordinator on the
- * daemon's behalf over IPC.
+ * objects: a custom `logger`, the `runCoordinator`, and the `onError`
+ * callback). The parent keeps the original options; it does the logging
+ * itself, runs the coordinator on the daemon's behalf over IPC, and invokes
+ * `onError` from the forwarded `execution:failed` event.
  */
 function serializableOptions(options?: TaskOptions): TaskOptions | undefined {
   if(!options) return options;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { logger: _logger, runCoordinator: _runCoordinator, ...rest } = options;
+  const { logger: _logger, runCoordinator: _runCoordinator, onError: _onError, ...rest } = options;
   return rest;
 }
 

@@ -258,6 +258,85 @@ describe('InlineScheduledTask', function() {
     assert.isFalse(captured.warnings.some(w => w.includes('missed execution')), 'warning should be suppressed by the flag');
     task.destroy();
   });
+
+  it('calls onError when the task throws synchronously', async function(){
+    let received: { error: Error; context: TaskContext } | undefined;
+    const task = new InlineScheduledTask('* * * * * *', () => { throw new Error('sync boom'); }, {
+      onError: (error, context) => { received = { error, context }; }
+    });
+    try { await task.execute(); } catch { /* execute() rejects on failure */ }
+    assert.isDefined(received, 'onError should be called');
+    assert.equal(received?.error.message, 'sync boom');
+    task.destroy();
+  });
+
+  it('calls onError when the task rejects asynchronously', async function(){
+    let received: { error: Error; context: TaskContext } | undefined;
+    const task = new InlineScheduledTask('* * * * * *', async () => { throw new Error('async boom'); }, {
+      onError: (error, context) => { received = { error, context }; }
+    });
+    try { await task.execute(); } catch { /* execute() rejects on failure */ }
+    assert.isDefined(received, 'onError should be called');
+    assert.equal(received?.error.message, 'async boom');
+    task.destroy();
+  });
+
+  it('passes the error and an execution context to onError', async function(){
+    let received: { error: Error; context: TaskContext } | undefined;
+    const task = new InlineScheduledTask('* * * * * *', async () => { throw new Error('ctx boom'); }, {
+      onError: (error, context) => { received = { error, context }; }
+    });
+    try { await task.execute(); } catch { /* expected */ }
+    assert.isDefined(received);
+    assert.instanceOf(received?.error, Error);
+    assert.isDefined(received?.context.date);
+    assert.isDefined(received?.context.triggeredAt);
+    assert.isDefined(received?.context.execution);
+    assert.isDefined(received?.context.execution?.id);
+    assert.equal(received?.context.execution?.error?.message, 'ctx boom');
+    assert.equal(received?.context.task, task);
+    task.destroy();
+  });
+
+  it('still emits execution:failed alongside onError', async function(){
+    let onErrorCalled = false;
+    let eventFired = false;
+    const task = new InlineScheduledTask('* * * * * *', async () => { throw new Error('both'); }, {
+      onError: () => { onErrorCalled = true; }
+    });
+    task.on('execution:failed', () => { eventFired = true; });
+    try { await task.execute(); } catch { /* expected */ }
+    assert.isTrue(onErrorCalled, 'onError should be called');
+    assert.isTrue(eventFired, 'execution:failed should still fire');
+    task.destroy();
+  });
+
+  it('keeps current behavior when onError is absent', async function(){
+    let eventFired = false;
+    const task = new InlineScheduledTask('* * * * * *', async () => { throw new Error('no callback'); });
+    task.on('execution:failed', () => { eventFired = true; });
+    try { await task.execute(); } catch { /* expected */ }
+    assert.isTrue(eventFired, 'execution:failed should still fire without onError');
+    task.destroy();
+  });
+
+  it('does not crash the scheduler when onError itself throws', async function(){
+    const captured = makeLogger();
+    let eventFired = false;
+    const task = new InlineScheduledTask('* * * * * *', async () => { throw new Error('original'); }, {
+      logger: captured,
+      onError: () => { throw new Error('callback exploded'); }
+    });
+    task.on('execution:failed', () => { eventFired = true; });
+    // execute() must still reject with the original error, not the callback error,
+    // and the throwing callback must not propagate.
+    let rejected: Error | undefined;
+    try { await task.execute(); } catch (e: any) { rejected = e; }
+    assert.equal(rejected?.message, 'original');
+    assert.isTrue(eventFired, 'execution:failed should still fire');
+    assert.isTrue(captured.errors.some(e => typeof e === 'string' && e.includes('onError callback threw')), 'the thrown callback error should be logged, not propagated');
+    task.destroy();
+  });
 });
 
 function makeLogger(){

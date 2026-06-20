@@ -448,6 +448,63 @@ describe('BackgroundScheduledTask', function() {
     });
   });
 
+  describe('onError callback', function () {
+    // The onError option is a function and cannot cross the fork boundary, so it
+    // is stripped from the options sent to the daemon and invoked here in the
+    // parent, driven by the forwarded execution:failed message.
+    function failingMessage(){
+      return {
+        event: 'execution:failed',
+        context: { date: new Date(), task: { state: 'idle' }, execution: { id: 'exec-1' } },
+        jsonError: JSON.stringify({ name: 'Error', message: 'bg boom', stack: 'fake stack' })
+      };
+    }
+
+    it('invokes onError with the error and context on a failed execution', async function () {
+      let received: { error: Error; context: any } | undefined;
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', {
+        onError: (error, context) => { received = { error, context }; }
+      });
+      fakeChildProcess.send.callsFake(() => { task.emitter.emit('task:started'); });
+      await task.start();
+
+      fakeChildProcess.emit('message', failingMessage());
+      await wait(10);
+
+      assert.isDefined(received, 'onError should be invoked');
+      assert.equal(received?.error.message, 'bg boom');
+      assert.equal(received?.context.execution?.id, 'exec-1');
+      assert.equal(received?.context.task, task);
+    });
+
+    it('does not send the onError function to the daemon', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', {
+        name: 'job', onError: () => {}
+      });
+      fakeChildProcess.send.callsFake(() => { task.emitter.emit('task:started'); });
+      await task.start();
+
+      const startMsg = fakeChildProcess.send.getCalls().map(c => c.args[0]).find((a: any) => a?.command === 'task:start');
+      assert.isUndefined(startMsg.options.onError, 'onError must be stripped from the serialized options');
+    });
+
+    it('does not crash when onError itself throws', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', {
+        onError: () => { throw new Error('callback exploded'); }
+      });
+      let failedFired = false;
+      task.on('execution:failed', () => { failedFired = true; });
+      fakeChildProcess.send.callsFake(() => { task.emitter.emit('task:started'); });
+      await task.start();
+
+      // Must not throw out of the message handler.
+      fakeChildProcess.emit('message', failingMessage());
+      await wait(10);
+
+      assert.isTrue(failedFired, 'execution:failed should still fire');
+    });
+  });
+
   describe('run coordination over IPC', function () {
     function makeCoordinator(behavior: { shouldRunReturns?: boolean; shouldRunThrows?: boolean } = {}) {
       const calls = { shouldRun: [] as { key: string; ttl: number }[], onComplete: [] as string[] };

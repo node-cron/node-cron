@@ -87,8 +87,16 @@ cron.schedule('0 3 * * *', task, {
   noOverlap: true,            // skip a run if the previous one is still going
   maxExecutions: 10,          // destroy the task after N runs
   maxRandomDelay: 30000,      // jitter (ms) added before each run
+  onError: (err, ctx) => {    // called when a run throws (alongside the event)
+    console.error(err);
+  },
 });
 ```
+
+`onError` fires in addition to the `execution:failed` event (it does not replace
+it) and receives the error plus the execution context. Errors thrown by the
+callback are swallowed so they cannot crash the scheduler. For background tasks
+the callback runs in the parent process, mirroring how `logger` is handled.
 
 See [Scheduling Options](https://nodecron.com/scheduling-options) for the full list.
 
