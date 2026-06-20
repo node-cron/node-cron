@@ -21,12 +21,18 @@ export default (() => {
         for (let i=0; i < expressions.length; i++){
             const numbers = expressions[i].split(',');
             for (let j=0; j<numbers.length; j++){
+                const token = String(numbers[j]).trim();
                 // Keep the `L` (last day of month) token as a literal; it has no
                 // fixed numeric value. It is only meaningful in the day-of-month
                 // field, where validation accepts it; elsewhere it stays a token
                 // that no value matches and that validation rejects.
-                if (/^l$/i.test(String(numbers[j]).trim())) {
+                if (/^l$/i.test(token)) {
                     numbers[j] = 'L';
+                // Keep the `<weekday>L` (last weekday of month) token as a
+                // literal, e.g. `5L` for the last Friday. It is only meaningful
+                // in the day-of-week field; elsewhere validation rejects it.
+                } else if (/^[0-7]l$/i.test(token)) {
+                    numbers[j] = token.toUpperCase();
                 } else {
                     numbers[j] = parseInt(numbers[j]);
                 }

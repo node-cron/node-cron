@@ -25,6 +25,24 @@ describe('validateDetailed', function () {
     assert.include(result.fields?.dayOfMonth as any[], 'L');
   });
 
+  it('keeps the <weekday>L token in day-of-week', function () {
+    const result = validateDetailed('0 0 12 * * 5L');
+    assert.isTrue(result.valid);
+    assert.include(result.fields?.dayOfWeek as any[], '5L');
+  });
+
+  it('normalises 7L to 0L in day-of-week', function () {
+    const result = validateDetailed('0 0 12 * * 7L');
+    assert.isTrue(result.valid);
+    assert.include(result.fields?.dayOfWeek as any[], '0L');
+  });
+
+  it('reports an invalid <weekday>L token', function () {
+    const result = validateDetailed('0 0 12 * * 8L');
+    assert.isFalse(result.valid);
+    assert.equal(result.errors[0].field, 'dayOfWeek');
+  });
+
   it('reports an out-of-range field with its name and value', function () {
     const result = validateDetailed('0 0 99 * * *'); // 6 fields: hour = 99
     assert.isFalse(result.valid);

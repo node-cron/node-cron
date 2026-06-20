@@ -73,7 +73,13 @@ function isInvalidMonth(expression) {
  * @returns {boolean}
  */
 function isInvalidWeekDay(expression) {
-    return !isValidExpression(expression, 0, 7);
+    // `<weekday>L` (last weekday of the month, e.g. `5L`) is a valid token in
+    // this field only; the `<weekday>` part has already been validated to be a
+    // single 0-7 digit by the conversion step. The remaining values must still
+    // be valid week-day numbers. Bare `L`, `L5`, `8L` and similar never reach
+    // here as a `<weekday>L` token, so they fall through and are rejected.
+    const days = expression.filter((value) => !/^[0-7]L$/.test(value));
+    return !isValidExpression(days, 0, 7);
 }
 
 /**
@@ -128,7 +134,7 @@ export interface ParsedFields {
     hour: number[];
     dayOfMonth: (number | string)[];
     month: number[];
-    dayOfWeek: number[];
+    dayOfWeek: (number | string)[];
 }
 
 export interface DetailedValidation {
