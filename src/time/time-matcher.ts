@@ -4,6 +4,7 @@ import weekDayNamesConversion from '../pattern/conversion/week-day-names-convers
 import { LocalizedTime } from './localized-time';
 import { MatcherWalker } from './matcher-walker';
 import { matchesDayOfMonth } from './day-of-month';
+import { matchesDayOfWeek } from './day-of-week';
 
 function matchValue(allowedValues: number[], value: number){
   return allowedValues.indexOf(value) !== -1;
@@ -28,7 +29,8 @@ export class TimeMatcher{
         const runOnHour = matchValue(this.expressions[2], parts.hour);
         const runOnDay = matchesDayOfMonth(this.expressions[3], parts.year, parts.month, parts.day);
         const runOnMonth = matchValue(this.expressions[4], parts.month);
-        const runOnWeekDay = matchValue(this.expressions[5], parseInt(weekDayNamesConversion(parts.weekday)));
+        const weekday = parseInt(weekDayNamesConversion(parts.weekday));
+        const runOnWeekDay = matchesDayOfWeek(this.expressions[5], parts.year, parts.month, parts.day, weekday);
 
         return runOnSecond && runOnMinute && runOnHour && runOnDay && runOnMonth && runOnWeekDay;
     }

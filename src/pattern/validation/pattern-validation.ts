@@ -1,6 +1,11 @@
 import convertExpression from '../conversion/index';
+import { isNthWeekdayToken } from '../../time/day-of-week';
 
 const validationRegex = /^(?:\d+|\*|\*\/\d+)$/;
+
+// Characters allowed in a raw expression. `#` is permitted for the day-of-week
+// `<weekday>#<nth>` token; field-level validation rejects it elsewhere.
+const ALLOWED_CHARS_REGEX = /^[a-zA-Z0-9-*/,# ]+$/;
 
 /**
  * @param {string} expression The Cron-Job expression.
@@ -73,7 +78,11 @@ function isInvalidMonth(expression) {
  * @returns {boolean}
  */
 function isInvalidWeekDay(expression) {
-    return !isValidExpression(expression, 0, 7);
+    // `<weekday>#<nth>` (e.g. `2#3`, "the 3rd Tuesday of the month") is a valid
+    // token in this field only. The weekday is 0-7 (0 or 7 = Sunday) and the
+    // occurrence is 1-5. Any remaining entries must still be valid weekdays.
+    const days = expression.filter((value) => !isNthWeekdayToken(value));
+    return !isValidExpression(days, 0, 7);
 }
 
 /**
@@ -128,7 +137,7 @@ export interface ParsedFields {
     hour: number[];
     dayOfMonth: (number | string)[];
     month: number[];
-    dayOfWeek: number[];
+    dayOfWeek: (number | string)[];
 }
 
 export interface DetailedValidation {
@@ -147,7 +156,7 @@ export function validateDetailed(pattern: string): DetailedValidation {
     if (typeof pattern !== 'string')
         return { valid: false, errors: [{ field: 'expression', message: 'pattern must be a string' }] };
 
-    if (!/^[a-zA-Z0-9-*/, ]+$/.test(pattern))
+    if (!ALLOWED_CHARS_REGEX.test(pattern))
         return { valid: false, errors: [{ field: 'expression', value: pattern, message: 'pattern includes illegal characters' }] };
 
     const raw = pattern.replace(/\s{2,}/g, ' ').trim().split(' ');
@@ -198,8 +207,7 @@ export function parse(pattern: string): ParsedFields {
 function validate(pattern) {
     if (typeof pattern !== 'string')
         throw new TypeError('pattern must be a string!');
-    const charRegex = new RegExp('^[a-zA-Z0-9-*/, ]+$');
-    if (!charRegex.test(pattern))
+    if (!ALLOWED_CHARS_REGEX.test(pattern))
         throw new TypeError('pattern includes illegal characters!');
 
     const patterns = pattern.split(' ');

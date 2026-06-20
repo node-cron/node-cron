@@ -25,8 +25,19 @@ export default (() => {
                 // fixed numeric value. It is only meaningful in the day-of-month
                 // field, where validation accepts it; elsewhere it stays a token
                 // that no value matches and that validation rejects.
-                if (/^l$/i.test(String(numbers[j]).trim())) {
+                //
+                // Keep the `<weekday>#<nth>` token (e.g. `2#3`, "the 3rd Tuesday")
+                // as a literal too. It is only meaningful in the day-of-week
+                // field; the matcher resolves it against the actual date.
+                const value = String(numbers[j]).trim();
+                if (/^l$/i.test(value)) {
                     numbers[j] = 'L';
+                } else if (value.indexOf('#') !== -1) {
+                    // Any `#`-bearing entry is kept verbatim so the day-of-week
+                    // validator can accept the valid `<weekday>#<nth>` form and
+                    // reject malformed ones (rather than parseInt truncating
+                    // `2#6` to `2`).
+                    numbers[j] = value;
                 } else {
                     numbers[j] = parseInt(numbers[j]);
                 }

@@ -72,9 +72,14 @@ Need a task that doesn't start immediately? Use `cron.createTask(...)` and call 
 | hour         | 0-23                              |
 | day of month | 1-31 (or `L` for the last day)    |
 | month        | 1-12 (or names)                   |
-| day of week  | 0-7 (or names, 0 or 7 are sunday) |
+| day of week  | 0-7 (or names, 0 or 7 are sunday), and `<weekday>#<nth>` |
 
-See the [Cron Syntax guide](https://nodecron.com/cron-syntax) for ranges, steps, lists, named months/weekdays, and the `L` (last day of month) token.
+The day of week field also accepts the `<weekday>#<nth>` token, which matches the
+nth occurrence of a weekday in the month. For example `2#3` is the 3rd Tuesday and
+`0 0 12 * * 1#1` runs at 12:00 on the first Monday of every month. The weekday is
+0-7 (0 or 7 is Sunday) and the occurrence is 1-5.
+
+See the [Cron Syntax guide](https://nodecron.com/cron-syntax) for ranges, steps, lists, named months/weekdays, the `L` (last day of month) token, and the `#` (nth weekday) token.
 
 ## Options
 
