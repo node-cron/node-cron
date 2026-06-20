@@ -22,6 +22,7 @@ export class InlineScheduledTask implements ScheduledTask {
   logger: Logger;
   suppressMissedWarning: boolean;
   private onErrorCallback?: (error: Error, context: TaskContext) => void;
+  private onSuccessCallback?: (result: unknown, context: TaskContext) => void;
 
   constructor(cronExpression: string, taskFn: TaskFn, options?: TaskOptions){
     this.emitter = new TaskEmitter();
@@ -33,6 +34,7 @@ export class InlineScheduledTask implements ScheduledTask {
     this.logger = options?.logger || logger;
     this.suppressMissedWarning = options?.suppressMissedWarning || false;
     this.onErrorCallback = options?.onError;
+    this.onSuccessCallback = options?.onSuccess;
 
     this.timeMatcher = new TimeMatcher(cronExpression, options?.timezone)
     this.stateMachine = new StateMachine();
@@ -55,7 +57,9 @@ export class InlineScheduledTask implements ScheduledTask {
         if(execution.reason === 'scheduled'){
           this.changeState('idle');
         }
-        this.emitter.emit('execution:finished', this.createContext(date, execution));
+        const context = this.createContext(date, execution);
+        this.emitter.emit('execution:finished', context);
+        this.runOnSuccessCallback(execution.result, context);
         return true;
       },
       onError: (date: Date, error: Error, execution: Execution) => {
@@ -209,6 +213,17 @@ export class InlineScheduledTask implements ScheduledTask {
       this.onErrorCallback(error, context);
     } catch (err: any) {
       this.logger.error('onError callback threw', err);
+    }
+  }
+
+  // Invoke the user-provided onSuccess callback, guarding against a throwing
+  // callback so it can never crash the scheduler.
+  private runOnSuccessCallback(result: unknown, context: TaskContext): void {
+    if (!this.onSuccessCallback) return;
+    try {
+      this.onSuccessCallback(result, context);
+    } catch (err: any) {
+      this.logger.error('onSuccess callback threw', err);
     }
   }
 

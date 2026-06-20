@@ -505,6 +505,75 @@ describe('BackgroundScheduledTask', function() {
     });
   });
 
+  describe('onSuccess callback', function () {
+    // The onSuccess option is a function and cannot cross the fork boundary, so
+    // it is stripped from the options sent to the daemon and invoked here in the
+    // parent, driven by the forwarded execution:finished message.
+    function finishedMessage(){
+      return {
+        event: 'execution:finished',
+        context: { date: new Date(), task: { state: 'idle' }, execution: { id: 'exec-1', result: 'bg result' } }
+      };
+    }
+
+    it('invokes onSuccess with the result and context on a successful execution', async function () {
+      let received: { result: unknown; context: any } | undefined;
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', {
+        onSuccess: (result, context) => { received = { result, context }; }
+      });
+      fakeChildProcess.send.callsFake(() => { task.emitter.emit('task:started'); });
+      await task.start();
+
+      fakeChildProcess.emit('message', finishedMessage());
+      await wait(10);
+
+      assert.isDefined(received, 'onSuccess should be invoked');
+      assert.equal(received?.result, 'bg result');
+      assert.equal(received?.context.execution?.id, 'exec-1');
+      assert.equal(received?.context.task, task);
+    });
+
+    it('does not send the onSuccess function to the daemon', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', {
+        name: 'job', onSuccess: () => {}
+      });
+      fakeChildProcess.send.callsFake(() => { task.emitter.emit('task:started'); });
+      await task.start();
+
+      const startMsg = fakeChildProcess.send.getCalls().map(c => c.args[0]).find((a: any) => a?.command === 'task:start');
+      assert.isUndefined(startMsg.options.onSuccess, 'onSuccess must be stripped from the serialized options');
+    });
+
+    it('ignores a forwarded finished event when onSuccess is not set', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      let finishedFired = false;
+      task.on('execution:finished', () => { finishedFired = true; });
+      fakeChildProcess.send.callsFake(() => { task.emitter.emit('task:started'); });
+      await task.start();
+
+      fakeChildProcess.emit('message', finishedMessage());
+      await wait(10);
+
+      assert.isTrue(finishedFired, 'execution:finished should still fire');
+    });
+
+    it('does not crash when onSuccess itself throws', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', {
+        onSuccess: () => { throw new Error('callback exploded'); }
+      });
+      let finishedFired = false;
+      task.on('execution:finished', () => { finishedFired = true; });
+      fakeChildProcess.send.callsFake(() => { task.emitter.emit('task:started'); });
+      await task.start();
+
+      // Must not throw out of the message handler.
+      fakeChildProcess.emit('message', finishedMessage());
+      await wait(10);
+
+      assert.isTrue(finishedFired, 'execution:finished should still fire');
+    });
+  });
+
   describe('run coordination over IPC', function () {
     function makeCoordinator(behavior: { shouldRunReturns?: boolean; shouldRunThrows?: boolean } = {}) {
       const calls = { shouldRun: [] as { key: string; ttl: number }[], onComplete: [] as string[] };

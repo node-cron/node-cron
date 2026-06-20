@@ -90,13 +90,18 @@ cron.schedule('0 3 * * *', task, {
   onError: (err, ctx) => {    // called when a run throws (alongside the event)
     console.error(err);
   },
+  onSuccess: (result, ctx) => { // called when a run completes (alongside the event)
+    console.log(result);
+  },
 });
 ```
 
-`onError` fires in addition to the `execution:failed` event (it does not replace
-it) and receives the error plus the execution context. Errors thrown by the
-callback are swallowed so they cannot crash the scheduler. For background tasks
-the callback runs in the parent process, mirroring how `logger` is handled.
+`onError` and `onSuccess` fire in addition to the `execution:failed` /
+`execution:finished` events (they do not replace them). `onError` receives the
+error plus the execution context; `onSuccess` receives the task's return value
+plus the context. Errors thrown by either callback are swallowed so they cannot
+crash the scheduler. For background tasks the callbacks run in the parent
+process, mirroring how `logger` is handled.
 
 See [Scheduling Options](https://nodecron.com/scheduling-options) for the full list.
 

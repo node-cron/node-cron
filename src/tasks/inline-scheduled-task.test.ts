@@ -337,6 +337,71 @@ describe('InlineScheduledTask', function() {
     assert.isTrue(captured.errors.some(e => typeof e === 'string' && e.includes('onError callback threw')), 'the thrown callback error should be logged, not propagated');
     task.destroy();
   });
+
+  it('calls onSuccess with the result when the task completes', async function(){
+    let received: { result: unknown; context: TaskContext } | undefined;
+    const task = new InlineScheduledTask('* * * * * *', async () => 'the result', {
+      onSuccess: (result, context) => { received = { result, context }; }
+    });
+    await task.execute();
+    assert.isDefined(received, 'onSuccess should be called');
+    assert.equal(received?.result, 'the result');
+    task.destroy();
+  });
+
+  it('passes the result and an execution context to onSuccess', async function(){
+    let received: { result: unknown; context: TaskContext } | undefined;
+    const task = new InlineScheduledTask('* * * * * *', async () => 42, {
+      onSuccess: (result, context) => { received = { result, context }; }
+    });
+    await task.execute();
+    assert.isDefined(received);
+    assert.equal(received?.result, 42);
+    assert.isDefined(received?.context.date);
+    assert.isDefined(received?.context.triggeredAt);
+    assert.isDefined(received?.context.execution);
+    assert.isDefined(received?.context.execution?.id);
+    assert.equal(received?.context.execution?.result, 42);
+    assert.equal(received?.context.task, task);
+    task.destroy();
+  });
+
+  it('still emits execution:finished alongside onSuccess', async function(){
+    let onSuccessCalled = false;
+    let eventFired = false;
+    const task = new InlineScheduledTask('* * * * * *', async () => 'ok', {
+      onSuccess: () => { onSuccessCalled = true; }
+    });
+    task.on('execution:finished', () => { eventFired = true; });
+    await task.execute();
+    assert.isTrue(onSuccessCalled, 'onSuccess should be called');
+    assert.isTrue(eventFired, 'execution:finished should still fire');
+    task.destroy();
+  });
+
+  it('keeps current behavior when onSuccess is absent', async function(){
+    let eventFired = false;
+    const task = new InlineScheduledTask('* * * * * *', async () => 'ok');
+    task.on('execution:finished', () => { eventFired = true; });
+    await task.execute();
+    assert.isTrue(eventFired, 'execution:finished should still fire without onSuccess');
+    task.destroy();
+  });
+
+  it('does not crash the scheduler when onSuccess itself throws', async function(){
+    const captured = makeLogger();
+    let eventFired = false;
+    const task = new InlineScheduledTask('* * * * * *', async () => 'ok', {
+      logger: captured,
+      onSuccess: () => { throw new Error('callback exploded'); }
+    });
+    task.on('execution:finished', () => { eventFired = true; });
+    // execute() must still resolve and the throwing callback must not propagate.
+    await task.execute();
+    assert.isTrue(eventFired, 'execution:finished should still fire');
+    assert.isTrue(captured.errors.some(e => typeof e === 'string' && e.includes('onSuccess callback threw')), 'the thrown callback error should be logged, not propagated');
+    task.destroy();
+  });
 });
 
 function makeLogger(){

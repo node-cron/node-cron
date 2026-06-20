@@ -352,6 +352,18 @@ class BackgroundScheduledTask implements ScheduledTask{
           this.logger.warn('task still running, new execution blocked by overlap prevention!');
         }
         break;
+      case 'execution:finished':
+        // The onSuccess callback is a function and cannot cross the fork
+        // boundary, so it runs here in the parent (driven by the forwarded
+        // event), mirroring how `logger` is handled for background tasks.
+        if(this.options?.onSuccess){
+          try {
+            this.options.onSuccess(context.execution?.result, context);
+          } catch (err: any) {
+            this.logger.error('onSuccess callback threw', err);
+          }
+        }
+        break;
       case 'execution:failed':
         if(context.execution?.error){
           this.logger.error(context.execution.error);
@@ -388,15 +400,15 @@ class BackgroundScheduledTask implements ScheduledTask{
 
 /**
  * Strips options that cannot cross the process boundary (function-bearing
- * objects: a custom `logger`, the `runCoordinator`, and the `onError`
- * callback). The parent keeps the original options; it does the logging
- * itself, runs the coordinator on the daemon's behalf over IPC, and invokes
- * `onError` from the forwarded `execution:failed` event.
+ * objects: a custom `logger`, the `runCoordinator`, and the `onError` /
+ * `onSuccess` callbacks). The parent keeps the original options; it does the
+ * logging itself, runs the coordinator on the daemon's behalf over IPC, and
+ * invokes `onError` / `onSuccess` from the forwarded execution events.
  */
 function serializableOptions(options?: TaskOptions): TaskOptions | undefined {
   if(!options) return options;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { logger: _logger, runCoordinator: _runCoordinator, onError: _onError, ...rest } = options;
+  const { logger: _logger, runCoordinator: _runCoordinator, onError: _onError, onSuccess: _onSuccess, ...rest } = options;
   return rest;
 }
 

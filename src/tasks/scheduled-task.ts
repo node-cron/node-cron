@@ -83,6 +83,15 @@ export type TaskOptions = {
    */
   onError?: (error: Error, context: TaskContext) => void,
   /**
+   * Called when a scheduled or invoked execution completes successfully. Fires
+   * in addition to the `execution:finished` event, not instead of it. Receives
+   * the value returned by the task function and the execution context. Errors
+   * thrown by this callback are swallowed so they cannot crash the scheduler.
+   * For background tasks it runs in the parent process (driven by the
+   * forwarded `execution:finished` event), mirroring how `logger` is handled.
+   */
+  onSuccess?: (result: unknown, context: TaskContext) => void,
+  /**
    * When true, suppresses the "missed execution" warning for this task.
    * The warning is also suppressed automatically when an `execution:missed`
    * listener is attached.
