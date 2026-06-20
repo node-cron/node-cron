@@ -481,6 +481,34 @@ describe('BackgroundScheduledTask', function() {
       assert.equal(task.lastRun()!.result, 'second');
     });
 
+    it('lastRun falls back to startedAt when finishedAt is absent', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      const startedAt = new Date('2025-06-15T12:00:00.000Z');
+      task.emitter.emit('execution:finished', { execution: { startedAt, result: 'ok' } } as any);
+
+      const last = task.lastRun();
+      assert.equal(last!.date.getTime(), startedAt.getTime());
+      assert.equal(last!.result, 'ok');
+    });
+
+    it('lastRun uses the current time when the execution carries no timestamp', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      const before = Date.now();
+      task.emitter.emit('execution:finished', { execution: { result: 'ok' } } as any);
+      const after = Date.now();
+
+      const last = task.lastRun();
+      assert.instanceOf(last!.date, Date);
+      assert.isAtLeast(last!.date.getTime(), before);
+      assert.isAtMost(last!.date.getTime(), after);
+    });
+
+    it('lastRun ignores a forwarded event that carries no execution', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      task.emitter.emit('execution:finished', {} as any);
+      assert.isNull(task.lastRun());
+    });
+
     it('msToNext is null when stopped and a positive number once started', async function(){
       const task = new BackgroundScheduledTask('* * * * *', './test-assets/dummy-task.js', { timezone: 'Etc/UTC' });
       assert.isNull(task.msToNext());

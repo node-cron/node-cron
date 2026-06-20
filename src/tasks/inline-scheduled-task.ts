@@ -142,10 +142,11 @@ export class InlineScheduledTask implements ScheduledTask {
   }
 
   // Capture the real execution time (when the task finished running) along with
-  // its result or error. `finishedAt` is set by the runner the moment the task
-  // settles, so it reflects the actual execution, not a tick check.
+  // its result or error. The runner always sets `finishedAt` the moment the
+  // task settles (see scheduler/runner.ts) before invoking the finished/failed
+  // hooks, so it reflects the actual execution, not a tick check.
   private recordLastRun(execution: Execution){
-    const date = execution.finishedAt ?? execution.startedAt ?? new Date();
+    const date = execution.finishedAt!;
     const lastRun: LastRun = { date };
     if (execution.error) {
       lastRun.error = execution.error;
