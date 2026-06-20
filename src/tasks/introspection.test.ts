@@ -86,4 +86,68 @@ describe('task introspection', function () {
       assert.isUndefined(task.runsLeft());
     });
   });
+
+  describe('lastRun', function () {
+    it('returns null before the first execution', function () {
+      const task = new InlineScheduledTask('* * * * * *', () => {});
+      assert.isNull(task.lastRun());
+    });
+
+    it('returns the execution date and result after a successful run', async function () {
+      const task = new InlineScheduledTask('* * * * * *', () => 'done');
+      await task.execute();
+
+      const last = task.lastRun();
+      assert.isNotNull(last);
+      assert.instanceOf(last!.date, Date);
+      assert.equal(last!.result, 'done');
+      assert.isUndefined(last!.error);
+    });
+
+    it('returns the execution date and error after a failing run', async function () {
+      const boom = new Error('boom');
+      const task = new InlineScheduledTask('* * * * * *', () => { throw boom; });
+      try {
+        await task.execute();
+      } catch {
+        // execute() rejects on failure; lastRun must still be recorded.
+      }
+
+      const last = task.lastRun();
+      assert.isNotNull(last);
+      assert.instanceOf(last!.date, Date);
+      assert.strictEqual(last!.error, boom);
+      assert.isUndefined(last!.result);
+    });
+
+    it('reflects the actual execution time, not a tick check', async function () {
+      // Delay the task so its real run finishes well after the task was created.
+      // The recorded date must track the actual run, not an earlier tick check.
+      const task = new InlineScheduledTask('* * * * * *', async () => {
+        await new Promise((r) => setTimeout(r, 50));
+      });
+
+      const before = Date.now();
+      await task.execute();
+      const after = Date.now();
+
+      const last = task.lastRun();
+      assert.isNotNull(last);
+      const ranAt = last!.date.getTime();
+      assert.isAtLeast(ranAt, before);
+      assert.isAtMost(ranAt, after);
+    });
+
+    it('updates to the most recent execution on each run', async function () {
+      let value = 'first';
+      const task = new InlineScheduledTask('* * * * * *', () => value);
+
+      await task.execute();
+      assert.equal(task.lastRun()!.result, 'first');
+
+      value = 'second';
+      await task.execute();
+      assert.equal(task.lastRun()!.result, 'second');
+    });
+  });
 });

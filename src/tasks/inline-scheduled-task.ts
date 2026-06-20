@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { Execution, ScheduledTask, TaskContext, TaskEvent, TaskFn, TaskOptions } from "./scheduled-task";
+import { Execution, LastRun, ScheduledTask, TaskContext, TaskEvent, TaskFn, TaskOptions } from "./scheduled-task";
 import { Runner, RunnerOptions } from "../scheduler/runner";
 import { TimeMatcher } from "../time/time-matcher";
 import { createID } from "../create-id";
@@ -21,6 +21,9 @@ export class InlineScheduledTask implements ScheduledTask {
   timezone?: string;
   logger: Logger;
   suppressMissedWarning: boolean;
+  // The last actual execution. Recorded when a run really finishes or fails,
+  // keyed off the execution's own timestamps rather than the tick that armed it.
+  private _lastRun: LastRun | null = null;
 
   constructor(cronExpression: string, taskFn: TaskFn, options?: TaskOptions){
     this.emitter = new TaskEmitter();
@@ -53,11 +56,13 @@ export class InlineScheduledTask implements ScheduledTask {
         if(execution.reason === 'scheduled'){
           this.changeState('idle');
         }
+        this.recordLastRun(execution);
         this.emitter.emit('execution:finished', this.createContext(date, execution));
         return true;
       },
       onError: (date: Date, error: Error, execution: Execution) => {
         this.logger.error(error);
+        this.recordLastRun(execution);
         this.emitter.emit('execution:failed', this.createContext(date, execution));
         this.changeState('idle');
       },
@@ -130,6 +135,24 @@ export class InlineScheduledTask implements ScheduledTask {
 
   getPattern(): string {
     return this.cronExpression;
+  }
+
+  lastRun(): LastRun | null {
+    return this._lastRun;
+  }
+
+  // Capture the real execution time (when the task finished running) along with
+  // its result or error. `finishedAt` is set by the runner the moment the task
+  // settles, so it reflects the actual execution, not a tick check.
+  private recordLastRun(execution: Execution){
+    const date = execution.finishedAt ?? execution.startedAt ?? new Date();
+    const lastRun: LastRun = { date };
+    if (execution.error) {
+      lastRun.error = execution.error;
+    } else {
+      lastRun.result = execution.result;
+    }
+    this._lastRun = lastRun;
   }
 
   private changeState(state){

@@ -174,7 +174,7 @@ export const getTask = registry.get;
 export { setLogger } from './logger';
 export { setRunCoordinator } from './coordinator/run-coordinator';
 
-export type { ScheduledTask, TaskFn, TaskContext, TaskOptions } from './tasks/scheduled-task';
+export type { ScheduledTask, TaskFn, TaskContext, TaskOptions, LastRun } from './tasks/scheduled-task';
 export type { Logger } from './logger';
 export type { ParsedFields, DetailedValidation, CronFieldError } from './pattern/validation/pattern-validation';
 export type { RunCoordinator, SkipReason } from './coordinator/run-coordinator';

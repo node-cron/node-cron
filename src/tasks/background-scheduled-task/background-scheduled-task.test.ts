@@ -432,6 +432,55 @@ describe('BackgroundScheduledTask', function() {
       assert.isFalse(task.isBusy());
     });
 
+    it('lastRun is null before the first execution', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      assert.isNull(task.lastRun());
+    });
+
+    it('lastRun reports the execution time and result from the daemon', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      const finishedAt = new Date('2025-06-15T12:00:00.123Z');
+      task.emitter.emit('execution:finished', { execution: { finishedAt, result: 'ok' } } as any);
+
+      const last = task.lastRun();
+      assert.isNotNull(last);
+      assert.instanceOf(last!.date, Date);
+      assert.equal(last!.date.getTime(), finishedAt.getTime());
+      assert.equal(last!.result, 'ok');
+      assert.isUndefined(last!.error);
+    });
+
+    it('lastRun reports the execution time and error from the daemon', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      const finishedAt = new Date('2025-06-15T12:00:00.000Z');
+      const error = new Error('boom');
+      task.emitter.emit('execution:failed', { execution: { finishedAt, error } } as any);
+
+      const last = task.lastRun();
+      assert.isNotNull(last);
+      assert.equal(last!.date.getTime(), finishedAt.getTime());
+      assert.strictEqual(last!.error, error);
+      assert.isUndefined(last!.result);
+    });
+
+    it('lastRun coerces an ISO-string timestamp from IPC back to a Date', function(){
+      // Over IPC the execution timestamps may arrive serialized as strings.
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      task.emitter.emit('execution:finished', { execution: { finishedAt: '2025-06-15T12:00:00.000Z', result: 1 } } as any);
+
+      const last = task.lastRun();
+      assert.instanceOf(last!.date, Date);
+      assert.equal(last!.date.toISOString(), '2025-06-15T12:00:00.000Z');
+    });
+
+    it('lastRun updates to the most recent execution', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      task.emitter.emit('execution:finished', { execution: { finishedAt: new Date(), result: 'first' } } as any);
+      assert.equal(task.lastRun()!.result, 'first');
+      task.emitter.emit('execution:finished', { execution: { finishedAt: new Date(), result: 'second' } } as any);
+      assert.equal(task.lastRun()!.result, 'second');
+    });
+
     it('msToNext is null when stopped and a positive number once started', async function(){
       const task = new BackgroundScheduledTask('* * * * *', './test-assets/dummy-task.js', { timezone: 'Etc/UTC' });
       assert.isNull(task.msToNext());
