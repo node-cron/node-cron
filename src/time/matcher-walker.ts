@@ -20,11 +20,12 @@ export class MatcherWalker {
   private readonly months: number[];
   private readonly weekdays: DayOfWeekField;
 
-  constructor(timeMatcher: TimeMatcher, expressions: any[], baseDate: Date, timezone?: string) {
+  constructor(timeMatcher: TimeMatcher, baseDate: Date, timezone?: string) {
     this.baseDate = baseDate;
     this.timeMatcher = timeMatcher;
     this.timezone = timezone;
 
+    const expressions = timeMatcher.expressions;
     this.seconds = sortedAsc(expressions[0]);
     this.minutes = sortedAsc(expressions[1]);
     this.hours = sortedAsc(expressions[2]);

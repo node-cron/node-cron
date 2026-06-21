@@ -36,7 +36,7 @@ export class TimeMatcher{
     }
 
     getNextMatch(date: Date){
-      const walker = new MatcherWalker(this, this.expressions, date, this.timezone);
+      const walker = new MatcherWalker(this, date, this.timezone);
       const next = walker.matchNext();
       return next.toDate();
     }
