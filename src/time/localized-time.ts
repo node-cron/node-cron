@@ -121,7 +121,7 @@ function buildDateParts(date: Date, timezone?: string): DateParts {
       return acc;
   }, {});
 
-  return {
+  const result = {
     day: parseInt(parts.day),
     month: parseInt(parts.month),
     year: parseInt(parts.year),
@@ -129,9 +129,24 @@ function buildDateParts(date: Date, timezone?: string): DateParts {
     minute: parseInt(parts.minute),
     second: parseInt(parts.second),
     millisecond: date.getMilliseconds(),
-    weekday: parts.weekday,
-    gmt: getTimezoneGMT(date, timezone)
-  }
+    weekday: parts.weekday
+  } as DateParts;
+
+  // The GMT offset needs a second Intl.formatToParts call, but it is only read
+  // when formatting an ISO string (at fire time), never during the next-run
+  // search that formats many candidate dates. Expose it as a lazy, memoized
+  // getter so the matching hot path never pays for it, while getParts().gmt
+  // still works for callers such as toISO().
+  let gmt: string | undefined;
+  Object.defineProperty(result, 'gmt', {
+    enumerable: true,
+    configurable: true,
+    get() {
+      return gmt ??= getTimezoneGMT(date, timezone);
+    }
+  });
+
+  return result;
 }
 
 
