@@ -383,4 +383,134 @@ describe('TimeMatcher', function() {
         assert.equal(next.toISOString(), '2024-02-29T12:00:00.000Z');
       });
     })
+
+    describe('nth weekday (#) token', function() {
+      // June 2026: Tuesdays fall on 2, 9, 16, 23, 30 (the 16th is the 3rd).
+      it('matches only the 3rd Tuesday at 12:00 for 2#3', function() {
+        const matcher = new TimeMatcher('0 0 12 * * 2#3', 'Etc/UTC');
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 16, 12, 0, 0))));
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 2, 12, 0, 0))));  // 1st Tuesday
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 9, 12, 0, 0))));  // 2nd Tuesday
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 23, 12, 0, 0)))); // 4th Tuesday
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 30, 12, 0, 0)))); // 5th Tuesday
+      });
+
+      it('does not match the right occurrence at the wrong time', function() {
+        const matcher = new TimeMatcher('0 0 12 * * 2#3', 'Etc/UTC');
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 16, 11, 0, 0))));
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 16, 13, 0, 0))));
+      });
+
+      it('matches the first Monday for 1#1', function() {
+        // Weekday numbering follows cron: 0/7 = Sunday, so 1 = Monday.
+        const matcher = new TimeMatcher('0 0 12 * * 1#1', 'Etc/UTC');
+        // June 2026: first Monday is the 1st.
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 1, 12, 0, 0))));
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 8, 12, 0, 0)))); // 2nd Monday
+      });
+
+      it('matches the first Sunday for 0#1', function() {
+        const matcher = new TimeMatcher('0 0 12 * * 0#1', 'Etc/UTC');
+        // June 2026: first Sunday is the 7th.
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 7, 12, 0, 0))));
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 14, 12, 0, 0)))); // 2nd Sunday
+      });
+
+      it('treats 7#1 as the first Sunday (7 = Sunday)', function() {
+        const matcher = new TimeMatcher('0 0 12 * * 7#1', 'Etc/UTC');
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 7, 12, 0, 0))));
+      });
+
+      it('never matches #5 in a month with only four occurrences', function() {
+        // February 2026: Sundays fall on 1, 8, 15, 22 (only four).
+        const matcher = new TimeMatcher('0 0 12 * * 0#5', 'Etc/UTC');
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 1, 22, 12, 0, 0)))); // 4th & last Sunday
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 1, 1, 12, 0, 0))));
+      });
+
+      it('getNextMatch advances across months', function() {
+        const matcher = new TimeMatcher('0 0 12 * * 2#3', 'Etc/UTC');
+        // Starting before the 3rd Tuesday of January 2026 (the 20th).
+        const jan = matcher.getNextMatch(new Date('2026-01-01T00:00:00Z'));
+        assert.equal(jan.toISOString(), '2026-01-20T12:00:00.000Z');
+        // From just after, it rolls to February's 3rd Tuesday (the 17th).
+        const feb = matcher.getNextMatch(jan);
+        assert.equal(feb.toISOString(), '2026-02-17T12:00:00.000Z');
+        const mar = matcher.getNextMatch(feb);
+        assert.equal(mar.toISOString(), '2026-03-17T12:00:00.000Z');
+      });
+
+      it('getNextMatch skips months without a 5th occurrence', function() {
+        const matcher = new TimeMatcher('0 0 12 * * 0#5', 'Etc/UTC');
+        // February 2026 has only four Sundays, so the next 5th Sunday is in March.
+        const next = matcher.getNextMatch(new Date('2026-02-01T00:00:00Z'));
+        assert.equal(next.toISOString(), '2026-03-29T12:00:00.000Z');
+      });
+
+      it('matches when combined with a plain weekday', function() {
+        // Either any Friday (5) or the 3rd Tuesday.
+        const matcher = new TimeMatcher('0 0 12 * * 5,2#3', 'Etc/UTC');
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 5, 12, 0, 0))));  // a Friday
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 16, 12, 0, 0)))); // 3rd Tuesday
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 9, 12, 0, 0))));  // 2nd Tuesday, not Friday
+      });
+    });
+
+    describe('last weekday of month (<weekday>L)', function() {
+      // June 2026: Fridays fall on 5, 12, 19, 26; Sundays on 7, 14, 21, 28.
+      it('matches only the last Friday of the month', function () {
+        const matcher = new TimeMatcher('0 0 12 * * 5L', 'Etc/UTC');
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 5, 12, 0, 0))));
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 12, 12, 0, 0))));
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 19, 12, 0, 0))));
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 26, 12, 0, 0))));
+      });
+
+      it('does not match a Friday that is not the last Friday', function () {
+        const matcher = new TimeMatcher('0 0 12 * * 5L', 'Etc/UTC');
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 19, 12, 0, 0))));
+      });
+
+      it('does not match the last Friday at the wrong time', function () {
+        const matcher = new TimeMatcher('0 0 12 * * 5L', 'Etc/UTC');
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 26, 13, 0, 0))));
+      });
+
+      it('matches the last Sunday for both 0L and 7L', function () {
+        for (const expr of ['0 0 12 * * 0L', '0 0 12 * * 7L']) {
+          const matcher = new TimeMatcher(expr, 'Etc/UTC');
+          assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 21, 12, 0, 0))), expr);
+          assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 28, 12, 0, 0))), expr);
+        }
+      });
+
+      it('accepts a lowercase l', function () {
+        const matcher = new TimeMatcher('0 0 12 * * 5l', 'Etc/UTC');
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 26, 12, 0, 0))));
+      });
+
+      it('supports a token combined with explicit weekdays', function () {
+        // last Friday or any Monday (June 2026 Mondays: 1, 8, 15, 22, 29).
+        const matcher = new TimeMatcher('0 0 12 * * 5L,1', 'Etc/UTC');
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 26, 12, 0, 0))));  // last Friday
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 22, 12, 0, 0))));  // a Monday
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 19, 12, 0, 0)))); // non-last Friday
+      });
+
+      it('getNextMatch finds the last Friday of the current month', function () {
+        const next = new TimeMatcher('0 0 12 * * 5L', 'Etc/UTC').getNextMatch(new Date('2026-06-20T00:00:00Z'));
+        assert.equal(next.toISOString(), '2026-06-26T12:00:00.000Z');
+      });
+
+      it('getNextMatch advances across the month boundary', function () {
+        // After the last Friday of June, the next is the last Friday of July (31).
+        const next = new TimeMatcher('0 0 12 * * 5L', 'Etc/UTC').getNextMatch(new Date('2026-06-27T00:00:00Z'));
+        assert.equal(next.toISOString(), '2026-07-31T12:00:00.000Z');
+      });
+
+      it('getNextMatch finds the last Sunday for 7L', function () {
+        const next = new TimeMatcher('0 0 12 * * 7L', 'Etc/UTC').getNextMatch(new Date('2026-06-01T00:00:00Z'));
+        assert.equal(next.toISOString(), '2026-06-28T12:00:00.000Z');
+      });
+    })
 });

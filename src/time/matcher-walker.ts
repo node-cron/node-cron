@@ -2,6 +2,7 @@ import convertExpression from '../pattern/conversion';
 import { LocalizedTime, localTimeToTimestamp } from './localized-time';
 import { TimeMatcher } from './time-matcher';
 import { matchesDayOfMonth, DayOfMonthField } from './day-of-month';
+import { matchesDayOfWeek, DayOfWeekField } from './day-of-week';
 
 // Upper bound on the calendar search before giving up. A century is far beyond
 // any real recurrence (the calendar repeats within 28 years) and the loop is
@@ -21,7 +22,7 @@ export class MatcherWalker {
   private readonly hours: number[];
   private readonly days: DayOfMonthField;
   private readonly months: number[];
-  private readonly weekdays: number[];
+  private readonly weekdays: DayOfWeekField;
 
   constructor(cronExpression: string, baseDate: Date, timezone?: string) {
     this.cronExpression = cronExpression;
@@ -128,14 +129,16 @@ export class MatcherWalker {
   }
 
   /**
-   * Whether the calendar day matches the weekday field. A given Y/M/D has the
-   * same weekday in every timezone, so it is computed arithmetically.
-   * `getUTCDay()` and the converted weekday field share the same 0-6 (Sunday=0)
-   * space, so this matches what match() computes, making it a safe pre-filter.
+   * Whether the calendar day matches the weekday field, including any
+   * `<weekday>L` (last weekday) and `<weekday>#<nth>` (nth weekday) tokens. A
+   * given Y/M/D has the same weekday in every timezone, so it is computed
+   * arithmetically. `getUTCDay()` and the converted weekday field share the same
+   * 0-6 (Sunday=0) space, so this matches what match() computes, making it a
+   * safe pre-filter.
    */
   private matchesWeekday(year: number, month: number, day: number): boolean {
     const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
-    return this.weekdays.indexOf(weekday) !== -1;
+    return matchesDayOfWeek(this.weekdays, year, month, day, weekday);
   }
 }
 
