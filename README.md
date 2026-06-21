@@ -5,21 +5,15 @@
 ![NPM Downloads](https://img.shields.io/npm/dm/node-cron)
 [![Coverage Status](https://coveralls.io/repos/github/node-cron/node-cron/badge.svg?branch=main)](https://coveralls.io/github/node-cron/node-cron?branch=main)
 
-node-cron is a tiny, zero-dependency task scheduler for Node.js, written in TypeScript and based on [GNU crontab](https://www.gnu.org/software/mcron/manual/html_node/Crontab-file.html). It lets you schedule tasks using full cron syntax, and scale them up to timezones, background processes, lifecycle events, and custom logging when you need to.
+Job scheduling for Node.js. Schedule recurring tasks with cron expressions, prevent overlapping runs, coordinate across multiple instances, and run heavy jobs in isolated background processes. Zero dependencies, written in TypeScript.
 
-### 📚 Full documentation: [nodecron.com](https://nodecron.com)
+### Full documentation: [nodecron.com](https://nodecron.com)
 
 ## Getting Started
-
-Install node-cron using npm:
 
 ```console
 npm install node-cron
 ```
-
-Import node-cron and schedule a task:
-
-- ES Modules
 
 ```javascript
 import cron from 'node-cron';
@@ -29,41 +23,65 @@ cron.schedule('* * * * *', () => {
 });
 ```
 
-- CommonJS
+## Overlap Prevention
+
+Long-running tasks can overlap when the next tick fires before the previous run finishes. `noOverlap` skips a run instead of stacking them:
 
 ```javascript
-const cron = require('node-cron');
+cron.schedule('* * * * *', async () => {
+  await slowJob();
+}, { noOverlap: true });
+```
 
-cron.schedule('* * * * *', () => {
-  console.log('running a task every minute');
+## Distributed Coordination
+
+Running multiple instances of your app? `distributed: true` ensures only one instance executes each scheduled fire. Out of the box it uses an env-var flag; for high availability, plug in a [Redis coordinator](https://nodecron.com/distributed-coordination):
+
+```javascript
+cron.schedule('0 3 * * *', runNightlyBackup, {
+  name: 'nightly-backup',
+  distributed: true,
 });
 ```
 
-`schedule` returns a `ScheduledTask` you can control at runtime:
+## Background Tasks
+
+Pass a file path instead of a function to run a job in an isolated forked process, so heavy work never blocks your event loop:
 
 ```javascript
-const task = cron.schedule('* * * * *', () => {});
-
-task.stop();    // pause
-task.start();   // resume
-task.destroy(); // remove permanently
-task.getStatus(); // 'stopped' | 'idle' | 'running' | 'destroyed'
+cron.schedule('0 3 * * *', './tasks/backup.js');
 ```
 
-Need a task that doesn't start immediately? Use `cron.createTask(...)` and call `task.start()` yourself.
+## Runtime Control
 
-You can also inspect a task at runtime:
+Every task exposes a single consistent interface for control and inspection:
 
 ```javascript
-const task = cron.schedule('* * * * *', () => doWork());
+const task = cron.schedule('0 3 * * *', doWork, {
+  name: 'nightly-backup',
+  timezone: 'America/Sao_Paulo',
+});
 
-task.getNextRun();  // Date of the next scheduled run, or null when stopped
-task.lastRun();     // info about the last actual execution, or null if it hasn't run yet
+task.stop();          // pause
+task.start();         // resume
+task.destroy();       // remove permanently
+task.getStatus();     // 'stopped' | 'idle' | 'running' | 'destroyed'
+task.getNextRun();    // next scheduled Date, or null
+task.lastRun();       // { date, result } or { date, error }, or null
 ```
 
-`lastRun()` returns `{ date, result }` after a successful run or `{ date, error }` after a
-failed one, where `date` is when the execution actually ran (not when a tick was merely
-checked). It returns `null` until the first execution completes.
+## Events
+
+Tasks emit lifecycle events for observability:
+
+```javascript
+task.on('execution:finished', (ctx) => console.log('result:', ctx.execution?.result));
+task.on('execution:failed', (ctx) => console.error('failed:', ctx.execution?.error));
+task.on('execution:overlap', () => console.warn('skipped: previous run still active'));
+task.on('execution:skipped', (ctx) => console.log('not elected:', ctx.reason));
+```
+
+All events: `task:started`, `task:stopped`, `task:destroyed`, `execution:started`, `execution:finished`, `execution:failed`, `execution:missed`, `execution:overlap`, `execution:maxReached`, `execution:skipped`. See [Events & Observability](https://nodecron.com/event-listening).
 
 ## Cron Syntax
 
@@ -83,64 +101,44 @@ checked). It returns `null` until the first execution completes.
 | second       | 0-59 (optional)                   |
 | minute       | 0-59                              |
 | hour         | 0-23                              |
-| day of month | 1-31 (or `L` for the last day)                |
-| month        | 1-12 (or names)                               |
-| day of week  | 0-7 (or names, 0 or 7 are sunday; `2#3`, `5L`) |
+| day of month | 1-31 (or `L` for the last day)    |
+| month        | 1-12 (or names)                   |
+| day of week  | 0-7 (or names, 0 or 7 are Sunday; `2#3`, `5L`) |
 
-The day-of-week field also accepts two extended tokens. `<weekday>#<nth>` matches the
-nth occurrence of a weekday in the month: `2#3` is the 3rd Tuesday, so
-`0 0 12 * * 1#1` runs at 12:00 on the first Monday of every month (the occurrence is
-1-5). `<weekday>L` matches the last occurrence of a weekday in the month: `5L` is the
-last Friday, `0L` (or `7L`) the last Sunday.
+Supports ranges (`1-5`), steps (`*/2`), lists (`1,15`), named months/weekdays, `L` (last day of month), `#` (nth weekday), and `<weekday>L` (last weekday of month). See the [Cron Syntax guide](https://nodecron.com/cron-syntax).
 
-See the [Cron Syntax guide](https://nodecron.com/cron-syntax) for ranges, steps, lists, named months/weekdays, the `L` (last day of month) token, and the `#` (nth weekday) and `<weekday>L` (last weekday) tokens.
+## When to Use node-cron
+
+- Recurring jobs on a schedule (cron expressions with second-level precision)
+- Overlap prevention for long-running tasks
+- Coordinating scheduled tasks across multiple instances or replicas
+- Running heavy jobs in isolated background processes
+- Runtime control: start, stop, inspect, and observe tasks programmatically
+
+## When to Consider Something Else
+
+- **Durable job queues with retries and priorities**: use [BullMQ](https://bullmq.io), [Agenda](https://github.com/agenda/agenda), or [Sidequest](https://sidequestjs.com)
+- **Persistent workflow orchestration**: use [Temporal](https://temporal.io) or [Inngest](https://inngest.com)
+- **Exactly-once guarantees across crashes**: node-cron coordinates but does not persist state to a database; a queue or workflow engine is a better fit
 
 ## Options
 
-Pass an options object as the third argument to tune behavior:
-
 ```javascript
 cron.schedule('0 3 * * *', task, {
-  name: 'nightly-backup',     // human-readable identifier
+  name: 'nightly-backup',
   timezone: 'America/Sao_Paulo',
-  noOverlap: true,            // skip a run if the previous one is still going
-  maxExecutions: 10,          // destroy the task after N runs
-  maxRandomDelay: 30000,      // jitter (ms) added before each run
+  noOverlap: true,
+  distributed: true,
+  maxExecutions: 10,
+  maxRandomDelay: 30000,
 });
 ```
 
 See [Scheduling Options](https://nodecron.com/scheduling-options) for the full list.
 
-## Events
-
-Tasks emit lifecycle events you can subscribe to with `.on()`, `.once()`, and `.off()`:
-
-```javascript
-const task = cron.schedule('* * * * *', async () => doWork());
-
-task.on('execution:finished', (ctx) => console.log('result:', ctx.execution?.result));
-task.on('execution:failed', (ctx) => console.error('failed:', ctx.execution?.error));
-```
-
-Available events: `task:started`, `task:stopped`, `task:destroyed`, `execution:started`, `execution:finished`, `execution:failed`, `execution:missed`, `execution:overlap`, `execution:maxReached`. See [Events & Observability](https://nodecron.com/event-listening).
-
-## Background Tasks
-
-Pass a file path instead of a function to run a job in an isolated forked process, ideal for heavy work that would otherwise block the event loop:
-
-```javascript
-// tasks/backup.js
-export function task() { /* ... */ }
-
-// app.js
-cron.schedule('0 3 * * *', './tasks/backup.js');
-```
-
-See [Background Tasks](https://nodecron.com/background-tasks).
-
 ## Migrating from v3
 
-v4 is a TypeScript rewrite with a smarter scheduler and a streamlined API (the `scheduled` and `runOnInit` options were removed; event names changed). See the [Migration Guide](https://nodecron.com/migrating-from-v3).
+v4 is a TypeScript rewrite with a smarter scheduler and a streamlined API. See the [Migration Guide](https://nodecron.com/migrating-from-v3).
 
 ## Issues
 
