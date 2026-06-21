@@ -1,7 +1,7 @@
 {
   "name": "node-cron",
   "version": "4.4.1",
-  "description": "A tiny, zero-dependency cron task scheduler for Node.js, written in TypeScript.",
+  "description": "Job scheduling for Node.js with overlap prevention, distributed coordination, and background tasks. Zero dependencies, written in TypeScript.",
   "author": "Lucas Merencia",
   "license": "ISC",
   "homepage": "https://nodecron.com",
@@ -47,7 +47,12 @@
     "scheduled-tasks",
     "task",
     "job",
-    "typescript"
+    "typescript",
+    "nodejs",
+    "background-jobs",
+    "distributed-cron",
+    "overlap-prevention",
+    "cron-jobs"
   ],
   "bugs": {
     "url": "https://github.com/node-cron/node-cron/issues"

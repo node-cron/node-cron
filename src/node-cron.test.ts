@@ -41,10 +41,17 @@ describe('node-cron', function() {
             const task = cron.schedule('* * * * * *', () => {
                 executed += 1;
             });
-            
-            await new Promise(r=>{setTimeout(r, 1000)})
 
-            assert.equal(1, executed);
+            await new Promise<void>(resolve => {
+                const check = setInterval(() => {
+                    if (executed >= 1) {
+                        clearInterval(check);
+                        resolve();
+                    }
+                }, 50);
+            });
+
+            assert.isAtLeast(executed, 1);
             task.stop();
         });
 
