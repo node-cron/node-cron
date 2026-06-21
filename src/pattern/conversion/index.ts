@@ -5,7 +5,7 @@ import convertRanges from './range-conversion';
 
 export default (() => {
 
-    function appendSeccondExpression(expressions){
+    function appendSecondExpression(expressions){
         if(expressions.length === 5){
             return ['0'].concat(expressions);
         }
@@ -67,9 +67,9 @@ export default (() => {
    *  - expression 1-5 * * * *
    *  - Will be translated to 1,2,3,4,5 * * * *
    */
-    function interprete(expression){
+    function interpret(expression){
         let expressions = removeSpaces(`${expression}`).split(' ');
-        expressions = appendSeccondExpression(expressions);
+        expressions = appendSecondExpression(expressions);
         expressions[4] = monthNamesConversion(expressions[4]);
         expressions[5] = weekDayNamesConversion(expressions[5]);
         expressions = convertAsterisksToRanges(expressions);
@@ -80,5 +80,5 @@ export default (() => {
         return expressions;
     }
 
-    return interprete;
+    return interpret;
 })();
