@@ -6,6 +6,39 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [4.5.0] - 2026-06-21
+
+### Added
+- **`lastRun()`** introspection getter on `ScheduledTask`: returns `{ date, result }` after
+  a successful execution, `{ date, error }` after a failed one, or `null` before the first
+  run. ([#557])
+- **Extended day-of-week tokens**: `<weekday>#<nth>` (nth weekday of the month, e.g.
+  `1#1` for the first Monday) and `<weekday>L` (last weekday of the month, e.g. `5L`
+  for the last Friday). ([#560])
+
+### Performance
+- Cache `Intl.DateTimeFormat` instances per timezone instead of rebuilding on every
+  call. ([#561])
+- Parse the cron expression once per `TimeMatcher` instead of re-parsing in
+  `MatcherWalker`. ([#562])
+- Compute the GMT offset lazily (only when formatting ISO strings, not during the
+  next-run search). ([#563])
+- Replace `crypto.randomBytes` with `crypto.randomUUID` for internal ID
+  generation. ([#564])
+- Skip `setTimeout` jitter wrapper when `maxRandomDelay` is zero. ([#565])
+- Bundle dist into flat files instead of preserving the module tree (reduces import
+  time). ([#566])
+
+### Fixed
+- Flaky `should schedule a task` test: poll for the first execution instead of
+  asserting an exact count after a fixed sleep.
+
+### Changed
+- Renamed internal functions `interprete` to `interpret` and
+  `appendSeccondExpression` to `appendSecondExpression`. ([#567])
+- Rewritten README and package metadata to surface scheduling capabilities
+  (overlap prevention, distributed coordination, background tasks). ([#568])
+
 ## [4.4.1] - 2026-06-18
 
 ### Changed
@@ -136,7 +169,8 @@ that start stopped, per-task `logger`, and a dual ESM/CJS build. The legacy
 `scheduled`/`runOnInit` options were removed and several event names changed.
 See the [migration guide](https://nodecron.com/migrating-from-v3).
 
-[Unreleased]: https://github.com/node-cron/node-cron/compare/v4.4.1...HEAD
+[Unreleased]: https://github.com/node-cron/node-cron/compare/v4.5.0...HEAD
+[4.5.0]: https://github.com/node-cron/node-cron/compare/v4.4.1...v4.5.0
 [4.4.1]: https://github.com/node-cron/node-cron/compare/v4.4.0...v4.4.1
 [4.4.0]: https://github.com/node-cron/node-cron/compare/v4.3.0...v4.4.0
 [4.3.0]: https://github.com/node-cron/node-cron/compare/v4.2.1...v4.3.0
@@ -157,6 +191,16 @@ See the [migration guide](https://nodecron.com/migrating-from-v3).
 [#485]: https://github.com/node-cron/node-cron/issues/485
 [#518]: https://github.com/node-cron/node-cron/issues/518
 [#535]: https://github.com/node-cron/node-cron/pull/535
+[#557]: https://github.com/node-cron/node-cron/pull/557
+[#560]: https://github.com/node-cron/node-cron/pull/560
+[#561]: https://github.com/node-cron/node-cron/pull/561
+[#562]: https://github.com/node-cron/node-cron/pull/562
+[#563]: https://github.com/node-cron/node-cron/pull/563
+[#564]: https://github.com/node-cron/node-cron/pull/564
+[#565]: https://github.com/node-cron/node-cron/pull/565
+[#566]: https://github.com/node-cron/node-cron/pull/566
+[#567]: https://github.com/node-cron/node-cron/pull/567
+[#568]: https://github.com/node-cron/node-cron/pull/568
 [#547]: https://github.com/node-cron/node-cron/pull/547
 [#548]: https://github.com/node-cron/node-cron/pull/548
 [#549]: https://github.com/node-cron/node-cron/pull/549
