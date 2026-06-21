@@ -11,11 +11,11 @@ export default (() => {
         return expression;
     }
 
-    function interprete(monthExpression){
+    function interpret(monthExpression){
         monthExpression = convertMonthName(monthExpression, months);
         monthExpression = convertMonthName(monthExpression, shortMonths);
         return monthExpression;
     }
 
-    return interprete;
+    return interpret;
 })();
