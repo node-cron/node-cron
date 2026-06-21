@@ -5,7 +5,7 @@
 ![NPM Downloads](https://img.shields.io/npm/dm/node-cron)
 [![Coverage Status](https://coveralls.io/repos/github/node-cron/node-cron/badge.svg?branch=main)](https://coveralls.io/github/node-cron/node-cron?branch=main)
 
-Job scheduling for Node.js. Schedule recurring tasks with cron expressions, prevent overlapping runs, coordinate across multiple instances, and run heavy jobs in isolated background processes. Zero dependencies, written in TypeScript.
+Job scheduling for Node.js with overlap prevention, distributed coordination, and background tasks. Schedule recurring tasks with cron expressions, prevent overlapping runs, coordinate across multiple instances, and run heavy jobs in isolated background processes. Zero dependencies, written in TypeScript.
 
 ### Full documentation: [nodecron.com](https://nodecron.com)
 

@@ -1,7 +1,7 @@
 {
   "name": "node-cron",
   "version": "4.4.1",
-  "description": "Job scheduling for Node.js. Cron expressions, overlap prevention, distributed coordination, and background tasks. Zero dependencies, written in TypeScript.",
+  "description": "Job scheduling for Node.js with overlap prevention, distributed coordination, and background tasks. Zero dependencies, written in TypeScript.",
   "author": "Lucas Merencia",
   "license": "ISC",
   "homepage": "https://nodecron.com",
