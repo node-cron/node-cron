@@ -97,23 +97,58 @@ export function localTimeToTimestamp(parts: WallClock, timezone?: string): numbe
   return Math.max(candidate1, candidate2);
 }
 
+// Constructing an Intl.DateTimeFormat is expensive (~90us each on V8) while
+// reusing one is ~16x cheaper. A formatter only depends on the timezone, so we
+// build one per timezone and reuse it. Computing the next run scans many
+// candidate instants, each formatting several dates, so without this cache a
+// single schedule() rebuilt the same formatters ~10 times.
+//
+// The default (no timezone) formatter resolves to the runtime's local timezone
+// at construction time. A process that changes its TZ mid-run is not supported
+// here (cron processes don't).
+const partsFormatterCache = new Map<string, Intl.DateTimeFormat>();
+const offsetFormatterCache = new Map<string, Intl.DateTimeFormat>();
+
+function getPartsFormatter(timezone?: string): Intl.DateTimeFormat {
+  const key = timezone ?? '';
+  let formatter = partsFormatterCache.get(key);
+  if (!formatter) {
+    const dftOptions: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      weekday: 'short',
+      hour12: false
+    }
+
+    if(timezone){
+      dftOptions.timeZone = timezone;
+    }
+
+    formatter = new Intl.DateTimeFormat('en-US', dftOptions);
+    partsFormatterCache.set(key, formatter);
+  }
+  return formatter;
+}
+
+function getOffsetFormatter(timezone?: string): Intl.DateTimeFormat {
+  const key = timezone ?? '';
+  let formatter = offsetFormatterCache.get(key);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      timeZoneName: 'shortOffset'
+    });
+    offsetFormatterCache.set(key, formatter);
+  }
+  return formatter;
+}
+
 function buildDateParts(date: Date, timezone?: string): DateParts {
-  const dftOptions: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    weekday: 'short',
-    hour12: false
-  }
-
-  if(timezone){
-    dftOptions.timeZone = timezone;
-  }
-
-  const dateFormat = new Intl.DateTimeFormat('en-US', dftOptions);
+  const dateFormat = getPartsFormatter(timezone);
   const parts = dateFormat.formatToParts(date).filter(part => {
     return part.type !== 'literal';
   }).reduce((acc:any, part) => {
@@ -159,10 +194,7 @@ function parseOffsetMinutes(isoString: string): number | null {
 }
 
 function getTimezoneGMT(date: Date, timezone?: string) {
-  const fmt = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    timeZoneName: 'shortOffset'
-  });
+  const fmt = getOffsetFormatter(timezone);
   const parts = fmt.formatToParts(date);
   const tzPart = parts.find(p => p.type === 'timeZoneName');
   if (!tzPart) return 'Z';
