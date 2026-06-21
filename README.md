@@ -52,6 +52,19 @@ task.getStatus(); // 'stopped' | 'idle' | 'running' | 'destroyed'
 
 Need a task that doesn't start immediately? Use `cron.createTask(...)` and call `task.start()` yourself.
 
+You can also inspect a task at runtime:
+
+```javascript
+const task = cron.schedule('* * * * *', () => doWork());
+
+task.getNextRun();  // Date of the next scheduled run, or null when stopped
+task.lastRun();     // info about the last actual execution, or null if it hasn't run yet
+```
+
+`lastRun()` returns `{ date, result }` after a successful run or `{ date, error }` after a
+failed one, where `date` is when the execution actually ran (not when a tick was merely
+checked). It returns `null` until the first execution completes.
+
 ## Cron Syntax
 
 ```

@@ -113,6 +113,20 @@ export type Execution = {
   result?: any
 }
 
+/**
+ * Information about the last actual execution of a task.
+ *
+ * @property date - When the execution actually ran (the moment it finished),
+ *   not when the scheduler merely checked a tick.
+ * @property result - The value returned by the task on a successful run.
+ * @property error - The error thrown by the task on a failed run.
+ */
+export type LastRun = {
+  date: Date;
+  result?: unknown;
+  error?: Error;
+}
+
 export type TaskFn = (context: TaskContext) => any | Promise<any>;
 
 /**
@@ -141,6 +155,12 @@ export interface ScheduledTask {
   runsLeft(): number | undefined;
   /** The original cron expression. */
   getPattern(): string;
+  /**
+   * Information about the last actual execution, or `null` if the task has not
+   * run yet. `date` reflects when the execution really ran, not when a tick was
+   * checked.
+   */
+  lastRun(): LastRun | null;
 
   on(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void
   off(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void

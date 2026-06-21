@@ -2,7 +2,7 @@ import { dirname, resolve as resolvePath } from 'path';
 import { fileURLToPath } from 'url';
 import { fork, ChildProcess} from 'child_process';
 
-import { Execution, ScheduledTask, TaskContext, TaskEvent, TaskOptions } from '../scheduled-task';
+import { Execution, LastRun, ScheduledTask, TaskContext, TaskEvent, TaskOptions } from '../scheduled-task';
 import { createID } from '../../create-id';
 import { EventEmitter } from 'events';
 import { StateMachine } from '../state-machine';
@@ -34,6 +34,9 @@ class BackgroundScheduledTask implements ScheduledTask{
   // The run coordinator lives here in the parent (it cannot cross the fork). The
   // daemon asks over IPC and this process runs the real coordinator.
   runCoordinator?: RunCoordinator;
+  // The last actual execution, mirrored in the parent from the daemon's
+  // forwarded finished/failed events.
+  private _lastRun: LastRun | null = null;
 
   constructor(cronExpression: string, taskPath: string, options?: TaskOptions){
     this.cronExpression = cronExpression;
@@ -48,6 +51,10 @@ class BackgroundScheduledTask implements ScheduledTask{
     this.timeMatcher = new TimeMatcher(cronExpression, options?.timezone);
     this.runCount = 0;
     this.on('execution:started', () => { this.runCount++; });
+    // Mirror the last actual execution from the daemon's events. Both carry the
+    // execution's own timestamps, so lastRun reflects the real run time.
+    this.on('execution:finished', (context) => { this.recordLastRun(context.execution); });
+    this.on('execution:failed', (context) => { this.recordLastRun(context.execution); });
     // The logger lives in the parent process: it cannot cross the fork
     // boundary. The daemon runs with a no-op logger and forwards events, and
     // this process logs from those events using the configured logger.
@@ -105,6 +112,26 @@ class BackgroundScheduledTask implements ScheduledTask{
 
   getPattern(): string {
     return this.cronExpression;
+  }
+
+  lastRun(): LastRun | null {
+    return this._lastRun;
+  }
+
+  // Record the last actual execution from a forwarded event. Timestamps may
+  // arrive as ISO strings over IPC, so coerce them back to Date and prefer the
+  // execution's own finish/start time over any tick check.
+  private recordLastRun(execution?: Execution){
+    if (!execution) return;
+    const raw = execution.finishedAt ?? execution.startedAt;
+    const date = raw ? new Date(raw) : new Date();
+    const lastRun: LastRun = { date };
+    if (execution.error) {
+      lastRun.error = execution.error;
+    } else {
+      lastRun.result = execution.result;
+    }
+    this._lastRun = lastRun;
   }
 
   start(): Promise<void> {

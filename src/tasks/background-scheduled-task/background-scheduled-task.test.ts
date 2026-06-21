@@ -432,6 +432,83 @@ describe('BackgroundScheduledTask', function() {
       assert.isFalse(task.isBusy());
     });
 
+    it('lastRun is null before the first execution', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      assert.isNull(task.lastRun());
+    });
+
+    it('lastRun reports the execution time and result from the daemon', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      const finishedAt = new Date('2025-06-15T12:00:00.123Z');
+      task.emitter.emit('execution:finished', { execution: { finishedAt, result: 'ok' } } as any);
+
+      const last = task.lastRun();
+      assert.isNotNull(last);
+      assert.instanceOf(last!.date, Date);
+      assert.equal(last!.date.getTime(), finishedAt.getTime());
+      assert.equal(last!.result, 'ok');
+      assert.isUndefined(last!.error);
+    });
+
+    it('lastRun reports the execution time and error from the daemon', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      const finishedAt = new Date('2025-06-15T12:00:00.000Z');
+      const error = new Error('boom');
+      task.emitter.emit('execution:failed', { execution: { finishedAt, error } } as any);
+
+      const last = task.lastRun();
+      assert.isNotNull(last);
+      assert.equal(last!.date.getTime(), finishedAt.getTime());
+      assert.strictEqual(last!.error, error);
+      assert.isUndefined(last!.result);
+    });
+
+    it('lastRun coerces an ISO-string timestamp from IPC back to a Date', function(){
+      // Over IPC the execution timestamps may arrive serialized as strings.
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      task.emitter.emit('execution:finished', { execution: { finishedAt: '2025-06-15T12:00:00.000Z', result: 1 } } as any);
+
+      const last = task.lastRun();
+      assert.instanceOf(last!.date, Date);
+      assert.equal(last!.date.toISOString(), '2025-06-15T12:00:00.000Z');
+    });
+
+    it('lastRun updates to the most recent execution', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      task.emitter.emit('execution:finished', { execution: { finishedAt: new Date(), result: 'first' } } as any);
+      assert.equal(task.lastRun()!.result, 'first');
+      task.emitter.emit('execution:finished', { execution: { finishedAt: new Date(), result: 'second' } } as any);
+      assert.equal(task.lastRun()!.result, 'second');
+    });
+
+    it('lastRun falls back to startedAt when finishedAt is absent', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      const startedAt = new Date('2025-06-15T12:00:00.000Z');
+      task.emitter.emit('execution:finished', { execution: { startedAt, result: 'ok' } } as any);
+
+      const last = task.lastRun();
+      assert.equal(last!.date.getTime(), startedAt.getTime());
+      assert.equal(last!.result, 'ok');
+    });
+
+    it('lastRun uses the current time when the execution carries no timestamp', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      const before = Date.now();
+      task.emitter.emit('execution:finished', { execution: { result: 'ok' } } as any);
+      const after = Date.now();
+
+      const last = task.lastRun();
+      assert.instanceOf(last!.date, Date);
+      assert.isAtLeast(last!.date.getTime(), before);
+      assert.isAtMost(last!.date.getTime(), after);
+    });
+
+    it('lastRun ignores a forwarded event that carries no execution', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      task.emitter.emit('execution:finished', {} as any);
+      assert.isNull(task.lastRun());
+    });
+
     it('msToNext is null when stopped and a positive number once started', async function(){
       const task = new BackgroundScheduledTask('* * * * *', './test-assets/dummy-task.js', { timezone: 'Etc/UTC' });
       assert.isNull(task.msToNext());
