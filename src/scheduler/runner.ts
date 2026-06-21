@@ -171,8 +171,7 @@ export class Runner {
         const randomDelay = Math.floor(Math.random() * this.maxRandomDelay);
 
         if(shouldExecute){
-          // uses a setTimeout for aplying a jitter
-          setTimeout(async () => {
+          const execute = async () => {
             try {
               this.runCount++;
               execution.startedAt = new Date();
@@ -192,7 +191,18 @@ export class Runner {
             }
 
             resolve(true);
-          }, randomDelay);
+          };
+
+          // The jitter timer only earns its macrotask hop when a random delay is
+          // actually configured. With the default maxRandomDelay of 0 the delay
+          // is always 0, so run inline and fire on the heartbeat's own tick
+          // instead of bouncing through an extra setTimeout (which adds ~1ms+ of
+          // avoidable drift to every execution).
+          if (randomDelay > 0) {
+            setTimeout(execute, randomDelay);
+          } else {
+            execute();
+          }
         } else {
           resolve(true);
         }
