@@ -6,7 +6,7 @@ describe('InlineScheduledTask', function() {
   it('builds with default values', function(){
     const task = new InlineScheduledTask('* * * * * *', ()=> {});
 
-   assert.isTrue(task.id.startsWith('task-'));
+   assert.match(task.id, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
    assert.equal(task.id, task.name);
    assert.isDefined(task.runner);
    assert.equal(task.getStatus(), 'stopped')

@@ -35,7 +35,7 @@ export class IpcRunCoordinator implements RunCoordinator {
   }
 
   shouldRun(key: string, ttlMs: number): Promise<boolean> {
-    const reqId = createID('coord');
+    const reqId = createID();
     return new Promise<boolean>((resolve, reject) => {
       this.pending.set(reqId, (result) => {
         // The parent reports a coordinator error by replying with `error`; reject
