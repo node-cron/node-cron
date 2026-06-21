@@ -29,7 +29,7 @@ export class InlineScheduledTask implements ScheduledTask {
     this.emitter = new TaskEmitter();
     this.cronExpression = cronExpression;
 
-    this.id = createID('task', 12);
+    this.id = createID();
     this.name = options?.name || this.id;
     this.timezone = options?.timezone;
     this.logger = options?.logger || logger;

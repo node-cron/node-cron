@@ -163,7 +163,7 @@ export class Runner {
     const runTask = (date: Date): Promise<any> => {
       return new Promise(async (resolve) => {
         const execution: Execution = {
-          id: createID('exec'),
+          id: createID(),
           reason: 'scheduled'
         }
 
@@ -280,7 +280,7 @@ export class Runner {
   async execute(){
     const date = new Date();
     const execution: Execution = {
-      id: createID('exec'),
+      id: createID(),
       reason: 'invoked'
     }
     try {

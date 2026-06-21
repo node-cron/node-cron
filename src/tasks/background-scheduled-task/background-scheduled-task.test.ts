@@ -31,7 +31,7 @@ describe('BackgroundScheduledTask', function() {
 
   it('creates a new background task', function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-      assert.isTrue(task.id.startsWith('task-'));
+      assert.match(task.id, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
       assert.equal(task.id, task.name);
       assert.equal(task.getStatus(), 'stopped');
   });

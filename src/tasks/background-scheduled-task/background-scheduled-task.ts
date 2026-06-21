@@ -42,7 +42,7 @@ class BackgroundScheduledTask implements ScheduledTask{
     this.cronExpression = cronExpression;
     this.taskPath = taskPath;
     this.options = options;
-    this.id = createID('task');
+    this.id = createID();
     this.name = options?.name || this.id;
     this.emitter = new TaskEmitter();
     this.stateMachine = new StateMachine('stopped');
