@@ -1,4 +1,3 @@
-import convertExpression from '../pattern/conversion';
 import { LocalizedTime, localTimeToTimestamp } from './localized-time';
 import { TimeMatcher } from './time-matcher';
 import { matchesDayOfMonth, DayOfMonthField } from './day-of-month';
@@ -10,13 +9,10 @@ import { matchesDayOfWeek, DayOfWeekField } from './day-of-week';
 const MAX_DAYS = 366 * 100;
 
 export class MatcherWalker {
-  cronExpression: string;
   baseDate: Date;
   timeMatcher: TimeMatcher;
   timezone?: string;
 
-  // Time fields are sorted so they can be iterated in ascending order; day and
-  // month are only membership-tested, so their order does not matter.
   private readonly seconds: number[];
   private readonly minutes: number[];
   private readonly hours: number[];
@@ -24,13 +20,11 @@ export class MatcherWalker {
   private readonly months: number[];
   private readonly weekdays: DayOfWeekField;
 
-  constructor(cronExpression: string, baseDate: Date, timezone?: string) {
-    this.cronExpression = cronExpression;
+  constructor(timeMatcher: TimeMatcher, expressions: any[], baseDate: Date, timezone?: string) {
     this.baseDate = baseDate;
-    this.timeMatcher = new TimeMatcher(cronExpression, timezone);
+    this.timeMatcher = timeMatcher;
     this.timezone = timezone;
 
-    const expressions = convertExpression(cronExpression);
     this.seconds = sortedAsc(expressions[0]);
     this.minutes = sortedAsc(expressions[1]);
     this.hours = sortedAsc(expressions[2]);

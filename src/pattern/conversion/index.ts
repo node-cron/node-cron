@@ -80,18 +80,5 @@ export default (() => {
         return expressions;
     }
 
-    // Parsing a pattern is pure and the same patterns recur constantly (every
-    // schedule re-parses, and every heartbeat re-parses to compute the next
-    // run). Memoize the parsed fields per pattern string. The result is treated
-    // as immutable by every caller (matchers read it with indexOf; the walker
-    // copies before sorting), so a shared instance is safe to hand out.
-    const cache = new Map();
-    return function interpreteCached(expression){
-        const key = `${expression}`;
-        const cached = cache.get(key);
-        if (cached !== undefined) return cached;
-        const result = interprete(expression);
-        cache.set(key, result);
-        return result;
-    };
+    return interprete;
 })();
