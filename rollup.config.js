@@ -20,13 +20,6 @@ const external = [
   ...builtinModules.map((m) => `node:${m}`),
 ];
 
-// daemon.ts is launched in a forked process (referenced by path, not imported),
-// so it must be an explicit entry point in addition to the public entry.
-const input = [
-  "src/node-cron.ts",
-  "src/tasks/background-scheduled-task/daemon.ts",
-];
-
 const basePlugins = () => [
   resolve(),
   commonjs(),
@@ -52,29 +45,33 @@ const cjsReplace = () =>
   });
 
 export default [
-  // ESM build
+  // ESM build: single bundle per entry
   {
-    input,
+    input: {
+      "node-cron": "src/node-cron.ts",
+      daemon: "src/tasks/background-scheduled-task/daemon.ts",
+    },
     output: {
       dir: "dist",
       format: "esm",
-      preserveModules: true,
-      preserveModulesRoot: "src",
       entryFileNames: "[name].js",
+      chunkFileNames: "_shared.js",
       sourcemap: true,
     },
     external,
     plugins: [cleanDist(), ...basePlugins()],
   },
-  // CJS build
+  // CJS build: single bundle per entry
   {
-    input,
+    input: {
+      "node-cron": "src/node-cron.ts",
+      daemon: "src/tasks/background-scheduled-task/daemon.ts",
+    },
     output: {
       dir: "dist",
       format: "cjs",
-      preserveModules: true,
-      preserveModulesRoot: "src",
       entryFileNames: "[name].cjs",
+      chunkFileNames: "_shared.cjs",
       sourcemap: true,
       exports: "named",
     },
