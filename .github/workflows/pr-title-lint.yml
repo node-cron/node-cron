@@ -1,0 +1,39 @@
+name: Lint PR Title
+
+# PRs are squash-merged, so the PR title becomes the commit message on main.
+# Enforcing Conventional Commits here keeps the history clean and lets
+# release-please categorise changes into the changelog correctly.
+on:
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+
+permissions:
+  pull-requests: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Keep in sync with the changelog-sections in release-please-config.json.
+          types: |
+            feat
+            fix
+            perf
+            refactor
+            revert
+            docs
+            chore
+            ci
+            test
+            build
+            style
+          # Scopes are allowed (e.g. feat(day-of-month)) but not required.
+          requireScope: false
