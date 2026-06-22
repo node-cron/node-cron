@@ -101,11 +101,15 @@ All events: `task:started`, `task:stopped`, `task:destroyed`, `execution:started
 | second       | 0-59 (optional)                   |
 | minute       | 0-59                              |
 | hour         | 0-23                              |
-| day of month | 1-31 (or `L` for the last day)    |
+| day of month | 1-31 (or `L` for the last day; `L-3` offset from last; `15W`, `LW` for nearest weekday) |
 | month        | 1-12 (or names)                   |
 | day of week  | 0-7 (or names, 0 or 7 are Sunday; `2#3`, `5L`) |
 
-Supports ranges (`1-5`), steps (`*/2`), lists (`1,15`), named months/weekdays, `L` (last day of month), `#` (nth weekday), and `<weekday>L` (last weekday of month). See the [Cron Syntax guide](https://nodecron.com/cron-syntax).
+Supports ranges (`1-5`), steps (`*/2`), lists (`1,15`), named months/weekdays, `L` (last day of month), `L-n` (offset from the last day), `#` (nth weekday), `<weekday>L` (last weekday of month), `W` (nearest weekday), and `?` (alias for `*` in the day fields, for Quartz-style expressions). See the [Cron Syntax guide](https://nodecron.com/cron-syntax).
+
+The `W` modifier in the day-of-month field fires on the nearest weekday (Monday-Friday) to a given day, without crossing the month boundary: `15W` is the nearest weekday to the 15th, `1W` the first weekday of the month, and `LW` the last weekday of the month. Only weekends are adjusted for; **there is no holiday awareness**.
+
+The `L-n` form fires `n` days before the last day of the month (`L-3` is the third-to-last day). In months where the offset reaches before the 1st (e.g. `L-29` in February), it simply does not fire that month.
 
 ## When to Use node-cron
 

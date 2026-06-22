@@ -4,8 +4,9 @@ import { isNthWeekdayToken } from '../../time/day-of-week';
 const validationRegex = /^(?:\d+|\*|\*\/\d+)$/;
 
 // Characters allowed in a raw expression. `#` is permitted for the day-of-week
-// `<weekday>#<nth>` token; field-level validation rejects it elsewhere.
-const ALLOWED_CHARS_REGEX = /^[a-zA-Z0-9-*/,# ]+$/;
+// `<weekday>#<nth>` token and `?` for the Quartz no-specific-value alias in the
+// day fields; field-level validation rejects either elsewhere.
+const ALLOWED_CHARS_REGEX = /^[a-zA-Z0-9-*/,#? ]+$/;
 
 /**
  * @param {string} expression The Cron-Job expression.
@@ -58,11 +59,58 @@ function isInvalidHour(expression) {
  * @param {string} expression The Cron-Job expression.
  * @returns {boolean}
  */
+// `nW` / `LW` (nearest weekday) tokens, valid in the day-of-month field only.
+const DAY_OF_MONTH_W_TOKEN = /^(\d{1,2}|L)W$/i;
+// `L-n` (n days before the last day of the month), valid in day-of-month only.
+const DAY_OF_MONTH_OFFSET_TOKEN = /^L-(\d{1,2})$/i;
+
 function isInvalidDayOfMonth(expression) {
-    // 'L' (last day of the month) is a valid token in this field only; the
-    // remaining values must still be valid day numbers.
-    const days = expression.filter((value) => value !== 'L');
+    // 'L' (last day of the month), the `nW` / `LW` (nearest weekday) tokens and
+    // the `L-n` (offset from the last day) form are valid in this field only;
+    // the remaining values must still be valid day numbers. Out-of-range forms
+    // (e.g. `0W`, `32W`, `L-0`, `L-40`) are left in so the numeric check below
+    // rejects them. The largest meaningful offset is 30 (`L-30` is day 1 of a
+    // 31-day month); anything larger can never resolve to a real day.
+    const days = expression.filter((value) => {
+        if (value === 'L') return false;
+        const weekday = DAY_OF_MONTH_W_TOKEN.exec(String(value));
+        if (weekday) {
+            if (weekday[1] === 'L') return false;
+            const target = parseInt(weekday[1], 10);
+            return target < 1 || target > 31;
+        }
+        const offset = DAY_OF_MONTH_OFFSET_TOKEN.exec(String(value));
+        if (offset) {
+            const n = parseInt(offset[1], 10);
+            return n < 1 || n > 30;
+        }
+        return true;
+    });
     return !isValidExpression(days, 1, 31);
+}
+
+/**
+ * Detects misuse of the `W` (nearest weekday) modifier in the RAW day-of-month
+ * field, before range expansion destroys the information: `W` is only valid on a
+ * single day number (`15W`) or on `L` (`LW`), optionally in a comma list
+ * (`1W,15W`). Ranges and steps (`1-15W`, `15W/2`) and malformed forms are
+ * rejected. Runs on the unexpanded string because `convertRanges` turns
+ * `1-15W` into `1,2,...,15W`, which would otherwise look valid.
+ *
+ * @param {string} rawDayOfMonth The raw day-of-month field.
+ * @returns {boolean}
+ */
+function hasInvalidWModifier(rawDayOfMonth) {
+    if (!/w/i.test(rawDayOfMonth)) return false;
+    return rawDayOfMonth.split(',').some((token) => {
+        const value = token.trim();
+        if (!/w/i.test(value)) return false; // non-W entries handled elsewhere
+        const match = DAY_OF_MONTH_W_TOKEN.exec(value);
+        if (!match) return true; // range/step/malformed `W` usage
+        if (match[1] === 'L' || match[1] === 'l') return false;
+        const target = parseInt(match[1], 10);
+        return target < 1 || target > 31;
+    });
 }
 
 /**
@@ -104,7 +152,7 @@ function validateFields(patterns, executablePatterns) {
     if (isInvalidHour(executablePatterns[2]))
         throw new Error(`${patterns[2]} is a invalid expression for hour`);
 
-    if (isInvalidDayOfMonth(executablePatterns[3]))
+    if (isInvalidDayOfMonth(executablePatterns[3]) || hasInvalidWModifier(patterns[3]))
         throw new Error(
             `${patterns[3]} is a invalid expression for day of month`
         );
@@ -171,7 +219,8 @@ export function validateDetailed(pattern: string): DetailedValidation {
 
     const errors: CronFieldError[] = [];
     FIELDS.forEach((f, i) => {
-        if (f.invalid(executable[i]))
+        const rawWMisuse = f.key === 'dayOfMonth' && hasInvalidWModifier(patterns[i]);
+        if (f.invalid(executable[i]) || rawWMisuse)
             errors.push({ field: f.key, value: patterns[i], message: `${patterns[i]} is a invalid expression for ${f.label}` });
     });
 

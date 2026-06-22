@@ -33,7 +33,17 @@ export default (() => {
                 // matcher resolves them against the actual date.
                 if (/^l$/i.test(token)) {
                     numbers[j] = 'L';
+                } else if (/^l-\d{1,2}$/i.test(token)) {
+                    // `L-n` (n days before the last day of the month) is kept as a
+                    // literal token, like `L`; only meaningful in day-of-month.
+                    numbers[j] = token.toUpperCase();
                 } else if (/^[0-7]l$/i.test(token)) {
+                    numbers[j] = token.toUpperCase();
+                } else if (/w/i.test(token)) {
+                    // Keep any `W`-bearing entry (e.g. `15W`, `LW`) as a literal
+                    // uppercase token so the day-of-month validator can accept the
+                    // valid forms and reject malformed ones, rather than parseInt
+                    // truncating `15W` to `15`. Only meaningful in day-of-month.
                     numbers[j] = token.toUpperCase();
                 } else if (token.indexOf('#') !== -1) {
                     // Any `#`-bearing entry is kept verbatim so the day-of-week
@@ -67,9 +77,19 @@ export default (() => {
    *  - expression 1-5 * * * *
    *  - Will be translated to 1,2,3,4,5 * * * *
    */
+    // The Quartz `?` ("no specific value") is accepted only as a whole-field
+    // token in the day-of-month and day-of-week fields, where it is an alias for
+    // `*`. Anywhere else it is left untouched so field validation rejects it.
+    function convertQuestionMarks(expressions) {
+        if (expressions[3] === '?') expressions[3] = '*';
+        if (expressions[5] === '?') expressions[5] = '*';
+        return expressions;
+    }
+
     function interpret(expression){
         let expressions = removeSpaces(`${expression}`).split(' ');
         expressions = appendSecondExpression(expressions);
+        expressions = convertQuestionMarks(expressions);
         expressions[4] = monthNamesConversion(expressions[4]);
         expressions[5] = weekDayNamesConversion(expressions[5]);
         expressions = convertAsterisksToRanges(expressions);
