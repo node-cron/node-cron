@@ -1,7 +1,10 @@
 name: Publish to npm
 
 on:
-  # Manual publish, with a choice of dist-tag (for prereleases etc.).
+  # The only trigger. Used both for a manual publish (with a dist-tag choice) and
+  # for the automatic publish, which release-please.yml fires via
+  # `gh workflow run` after it cuts a release. Either way this workflow is the
+  # run's entry point, which is what npm trusted publishing matches against.
   workflow_dispatch:
     inputs:
       dist_tag:
@@ -13,18 +16,6 @@ on:
           - latest
           - beta
           - next
-
-  # Called by release-please.yml right after it cuts a release, so merging the
-  # `chore(main): release X.Y.Z` PR publishes automatically. A reusable-workflow
-  # call (rather than `on: release`) is used because a Release created with the
-  # default GITHUB_TOKEN does not trigger event-based workflows.
-  workflow_call:
-    inputs:
-      dist_tag:
-        description: 'npm dist-tag to publish under'
-        type: string
-        default: latest
-        required: false
 
 jobs:
   publish:

@@ -2,8 +2,7 @@ name: Release Please
 
 # Maintains a "release PR" that bumps the version and updates CHANGELOG.md from
 # Conventional Commits as they land on main. Merging that PR creates the git tag
-# (vX.Y.Z) and the GitHub Release, and then publishes to npm via the publish
-# workflow (called below only when a release was actually created).
+# (vX.Y.Z) and the GitHub Release, then triggers the publish workflow.
 on:
   push:
     branches:
@@ -26,15 +25,20 @@ jobs:
           # from the repo root.
           token: ${{ secrets.GITHUB_TOKEN }}
 
-  # Runs only when the previous job just cut a release (i.e. the release PR was
-  # merged). Calls the publish workflow as a reusable workflow so npm publishing
-  # stays defined in one place (publish.yml) and keeps OIDC trusted publishing.
-  publish:
+  # Runs only when the previous job just cut a release. It dispatches publish.yml
+  # rather than calling it as a reusable workflow, so the publish run's *entry*
+  # workflow is publish.yml itself: npm trusted publishing matches the top-level
+  # workflow, so it must be the entry, not a called sub-workflow. A GITHUB_TOKEN
+  # cannot trigger release/push events, but workflow_dispatch is the documented
+  # exception, so no PAT is needed.
+  trigger-publish:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    runs-on: ubuntu-latest
     permissions:
-      id-token: write
-      contents: read
-    uses: ./.github/workflows/publish.yml
-    with:
-      dist_tag: latest
+      actions: write
+    steps:
+      - name: Dispatch the publish workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run publish.yml --repo "${{ github.repository }}" --ref "${{ github.ref_name }}" -f dist_tag=latest
