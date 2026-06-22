@@ -1,0 +1,24 @@
+name: Release Please
+
+# Maintains a "release PR" that bumps the version and updates CHANGELOG.md from
+# Conventional Commits as they land on main. Merging that PR creates the git tag
+# (vX.Y.Z) and the GitHub Release. Publishing to npm stays a separate, manual
+# step (see publish.yml) for now.
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          # Reads release-please-config.json and .release-please-manifest.json
+          # from the repo root.
+          token: ${{ secrets.GITHUB_TOKEN }}
