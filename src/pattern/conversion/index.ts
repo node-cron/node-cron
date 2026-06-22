@@ -2,6 +2,7 @@ import monthNamesConversion from './month-names-conversion';
 import weekDayNamesConversion from './week-day-names-conversion';
 import convertAsterisksToRanges from './asterisk-to-range-conversion';
 import convertRanges from './range-conversion';
+import { resolveNickname } from './nicknames';
 
 export default (() => {
 
@@ -100,7 +101,7 @@ export default (() => {
     }
 
     function interpret(expression){
-        let expressions = removeSpaces(`${expression}`).split(' ');
+        let expressions = removeSpaces(resolveNickname(`${expression}`)).split(' ');
         expressions = appendSecondExpression(expressions);
         expressions = convertQuestionMarks(expressions);
         expressions[4] = monthNamesConversion(expressions[4]);

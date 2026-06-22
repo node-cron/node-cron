@@ -1,5 +1,6 @@
 import convertExpression from '../conversion/index';
 import { isNthWeekdayToken } from '../../time/day-of-week';
+import { resolveNickname } from '../conversion/nicknames';
 
 const validationRegex = /^(?:\d+|\*|\*\/\d+)$/;
 
@@ -204,10 +205,12 @@ export function validateDetailed(pattern: string): DetailedValidation {
     if (typeof pattern !== 'string')
         return { valid: false, errors: [{ field: 'expression', message: 'pattern must be a string' }] };
 
-    if (!ALLOWED_CHARS_REGEX.test(pattern))
+    const resolved = resolveNickname(pattern);
+
+    if (!ALLOWED_CHARS_REGEX.test(resolved))
         return { valid: false, errors: [{ field: 'expression', value: pattern, message: 'pattern includes illegal characters' }] };
 
-    const raw = pattern.replace(/\s{2,}/g, ' ').trim().split(' ');
+    const raw = resolved.replace(/\s{2,}/g, ' ').trim().split(' ');
     if (raw.length !== 5 && raw.length !== 6)
         return { valid: false, errors: [{ field: 'expression', value: pattern, message: `expected 5 or 6 fields but got ${raw.length}` }] };
 
@@ -256,11 +259,14 @@ export function parse(pattern: string): ParsedFields {
 function validate(pattern) {
     if (typeof pattern !== 'string')
         throw new TypeError('pattern must be a string!');
-    if (!ALLOWED_CHARS_REGEX.test(pattern))
+
+    const resolved = resolveNickname(pattern);
+
+    if (!ALLOWED_CHARS_REGEX.test(resolved))
         throw new TypeError('pattern includes illegal characters!');
 
-    const patterns = pattern.split(' ');
-    const executablePatterns = convertExpression(pattern);
+    const patterns = resolved.split(' ');
+    const executablePatterns = convertExpression(resolved);
 
     if (patterns.length === 5) patterns.unshift('0');
 

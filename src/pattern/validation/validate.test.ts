@@ -61,4 +61,23 @@ describe('pattern-validation', function() {
                 .forEach((expr) => expect(() => validate(expr), expr).to.not.throw());
         });
     });
+
+    describe('nicknames', function() {
+        const valid = ['@yearly', '@annually', '@monthly', '@weekly', '@daily', '@midnight', '@hourly'];
+
+        valid.forEach((nickname) => {
+            it(`accepts ${nickname}`, function() {
+                expect(() => validate(nickname)).to.not.throw();
+            });
+        });
+
+        it('is case-insensitive', function() {
+            expect(() => validate('@Daily')).to.not.throw();
+            expect(() => validate('@YEARLY')).to.not.throw();
+        });
+
+        it('rejects unknown nicknames', function() {
+            expect(() => validate('@every_second')).to.throw();
+        });
+    });
 });
