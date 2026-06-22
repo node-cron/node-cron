@@ -1,14 +1,27 @@
 name: Publish to npm
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
-      - 'v*.*.*-*'  # include pre-releases like v1.2.3-beta.1
+  workflow_dispatch:
+    inputs:
+      dist_tag:
+        description: 'npm dist-tag to publish under'
+        type: choice
+        default: latest
+        required: true
+        options:
+          - latest
+          - beta
+          - next
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+
+    # OIDC trusted publishing: the id-token is exchanged with npm at publish
+    # time, so no NPM_TOKEN secret is needed. It also enables provenance.
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
       - name: Checkout repo
@@ -20,6 +33,10 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org/'
 
+      # Trusted publishing requires npm >= 11.5.1; node 20 ships an older npm.
+      - name: Upgrade npm
+        run: npm install -g npm@latest
+
       - name: Install dependencies
         run: npm install
 
@@ -29,24 +46,8 @@ jobs:
       - name: Tests
         run: npm run test
 
-      - name: Run build
+      - name: Build
         run: npm run build
 
-      - name: Detect pre-release
-        id: prerelease
-        run: |
-          if [[ "${GITHUB_REF##*/}" == *"-"* ]]; then
-            echo "is_prerelease=true" >> $GITHUB_OUTPUT
-          else
-            echo "is_prerelease=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Publish to npm
-        run: |
-          if [[ "${{ steps.prerelease.outputs.is_prerelease }}" == "true" ]]; then
-            npm publish --tag beta
-          else
-            npm publish
-          fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --tag "${{ inputs.dist_tag }}"
