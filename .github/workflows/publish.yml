@@ -13,6 +13,18 @@ on:
           - beta
           - next
 
+  # Automatic publish on each GitHub Release (created by release-please when its
+  # release PR is merged). Disabled for now: publishing stays a manual
+  # workflow_dispatch. To enable, uncomment the block below.
+  #
+  # NOTE: a Release created with the default GITHUB_TOKEN does NOT trigger other
+  # workflows. For this trigger to fire, give release-please-action a PAT (or a
+  # GitHub App token) instead of secrets.GITHUB_TOKEN. With the default token,
+  # publish from inside the release-please job using its `release_created` output.
+  #
+  # release:
+  #   types: [published]
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -50,4 +62,6 @@ jobs:
         run: npm run build
 
       - name: Publish to npm
-        run: npm publish --provenance --tag "${{ inputs.dist_tag }}"
+        # `inputs.dist_tag` is set on workflow_dispatch; on a release event (when
+        # the trigger above is enabled) it is empty, so fall back to `latest`.
+        run: npm publish --provenance --tag "${{ inputs.dist_tag || 'latest' }}"
