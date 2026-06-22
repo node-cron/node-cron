@@ -80,6 +80,13 @@ export default (() => {
     // The Quartz `?` ("no specific value") is accepted only as a whole-field
     // token in the day-of-month and day-of-week fields, where it is an alias for
     // `*`. Anywhere else it is left untouched so field validation rejects it.
+    //
+    // NOTE: this (and the `L`, `L-n`, `W`, `LW`, `#`, `<weekday>L` tokens) is
+    // borrowed from Quartz but node-cron is NOT Quartz-compatible. Day-of-week
+    // numbering is standard cron (0-7, 0/7 = Sunday, 1 = Monday), not Quartz
+    // (1 = Sunday); and day-of-month/day-of-week are combined with AND and may
+    // both be set, whereas Quartz treats them as mutually exclusive. `?` is thus
+    // a parse-time convenience, not a semantic compatibility guarantee.
     function convertQuestionMarks(expressions) {
         if (expressions[3] === '?') expressions[3] = '*';
         if (expressions[5] === '?') expressions[5] = '*';

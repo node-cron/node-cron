@@ -111,6 +111,12 @@ The `W` modifier in the day-of-month field fires on the nearest weekday (Monday-
 
 The `L-n` form fires `n` days before the last day of the month (`L-3` is the third-to-last day). In months where the offset reaches before the 1st (e.g. `L-29` in February), it simply does not fire that month.
 
+> **Note on Quartz:** `L`, `L-n`, `W`, `LW`, `#`, `<weekday>L` and `?` are borrowed from [Quartz](https://www.quartz-scheduler.org/), but node-cron is **not** Quartz-compatible. Two differences matter:
+> - **Day-of-week numbering** is standard cron, not Quartz: `0-7` with `0`/`7` = Sunday and `1` = Monday. In Quartz `1` = Sunday, so the same numeric weekday fires on a different day.
+> - **day-of-month and day-of-week** are combined with **AND** (both must match), and may both be set; Quartz instead treats them as mutually exclusive and requires `?` in one of them.
+>
+> `?` is accepted purely as an alias for `*` in the day fields so Quartz-style expressions parse, not as a semantic compatibility guarantee.
+
 ## When to Use node-cron
 
 - Recurring jobs on a schedule (cron expressions with second-level precision)
