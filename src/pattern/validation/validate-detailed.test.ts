@@ -37,6 +37,32 @@ describe('validateDetailed', function () {
     assert.include(result.fields?.dayOfWeek as any[], '0L');
   });
 
+  it('keeps the nW / LW tokens in day-of-month', function () {
+    const result = validateDetailed('0 0 12 15W,LW * *');
+    assert.isTrue(result.valid);
+    assert.includeMembers(result.fields?.dayOfMonth as any[], ['15W', 'LW']);
+  });
+
+  it('reports W used in a range as invalid day-of-month', function () {
+    const result = validateDetailed('0 0 12 1-15W * *');
+    assert.isFalse(result.valid);
+    assert.equal(result.errors[0].field, 'dayOfMonth');
+    assert.equal(result.errors[0].value, '1-15W');
+  });
+
+  it('keeps the L-n token in day-of-month', function () {
+    const result = validateDetailed('0 0 12 L-3 * *');
+    assert.isTrue(result.valid);
+    assert.include(result.fields?.dayOfMonth as any[], 'L-3');
+  });
+
+  it('reports an out-of-range L-n token', function () {
+    const result = validateDetailed('0 0 12 L-40 * *');
+    assert.isFalse(result.valid);
+    assert.equal(result.errors[0].field, 'dayOfMonth');
+    assert.equal(result.errors[0].value, 'L-40');
+  });
+
   it('reports an invalid <weekday>L token', function () {
     const result = validateDetailed('0 0 12 * * 8L');
     assert.isFalse(result.valid);

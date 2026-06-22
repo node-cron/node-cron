@@ -513,4 +513,91 @@ describe('TimeMatcher', function() {
         assert.equal(next.toISOString(), '2026-06-28T12:00:00.000Z');
       });
     })
+
+    describe('nearest weekday (nW / LW)', function() {
+      // 2026: Aug 1 = Sat (so Aug 15 = Sat), Mar 1 = Sun, May 31 = Sun,
+      // Jun 30 = Tue, Oct 31 = Sat.
+      it('shifts 15W off a Saturday to the previous Friday', function () {
+        const matcher = new TimeMatcher('0 0 12 15W * *', 'Etc/UTC');
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 7, 14, 12, 0, 0))));  // Fri 14
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 7, 15, 12, 0, 0)))); // the Saturday
+      });
+
+      it('keeps 1W inside the month when the 1st is a weekend', function () {
+        const matcher = new TimeMatcher('0 0 12 1W * *', 'Etc/UTC');
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 7, 3, 12, 0, 0))));  // Aug 1 = Sat -> Mon 3
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 7, 1, 12, 0, 0))));
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 2, 2, 12, 0, 0))));  // Mar 1 = Sun -> Mon 2
+      });
+
+      it('matches the last weekday of the month for LW', function () {
+        const matcher = new TimeMatcher('0 0 12 LW * *', 'Etc/UTC');
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 4, 29, 12, 0, 0))));  // May 31 = Sun -> Fri 29
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 4, 31, 12, 0, 0))));
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 30, 12, 0, 0))));  // Jun 30 = Tue -> 30
+      });
+
+      it('does not match a non-existent target day (31W in a 30-day month)', function () {
+        const matcher = new TimeMatcher('0 0 12 31W * *', 'Etc/UTC');
+        for (let day = 1; day <= 30; day++) {
+          assert.isFalse(matcher.match(new Date(Date.UTC(2026, 8, day, 12, 0, 0)))); // September
+        }
+      });
+
+      it('getNextMatch resolves nW across the month boundary', function () {
+        // Aug 15 2026 is a Saturday -> the nearest weekday is Fri 14.
+        const next = new TimeMatcher('0 0 12 15W * *', 'Etc/UTC').getNextMatch(new Date('2026-08-01T00:00:00Z'));
+        assert.equal(next.toISOString(), '2026-08-14T12:00:00.000Z');
+      });
+
+      it('getNextMatch advances LW to the next month', function () {
+        // After May's last business day (Fri 29), the next is June's (Tue 30).
+        const next = new TimeMatcher('0 0 12 LW * *', 'Etc/UTC').getNextMatch(new Date('2026-05-30T00:00:00Z'));
+        assert.equal(next.toISOString(), '2026-06-30T12:00:00.000Z');
+      });
+
+      it('resolves the fire time correctly across a DST transition', function () {
+        // March 2026: DST starts Mar 8; Mar 31 (a Tuesday) is the last business
+        // day. Noon America/New_York that day is EDT (UTC-4) -> 16:00Z.
+        const next = new TimeMatcher('0 0 12 LW * *', 'America/New_York').getNextMatch(new Date('2026-03-01T00:00:00Z'));
+        assert.equal(next.toISOString(), '2026-03-31T16:00:00.000Z');
+      });
+    })
+
+    describe('offset from last day (L-n)', function() {
+      it('matches the nth-to-last day of the month', function () {
+        const matcher = new TimeMatcher('0 0 12 L-3 * *', 'Etc/UTC');
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 0, 28, 12, 0, 0))));  // Jan (31) -> 28
+        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 0, 31, 12, 0, 0))));
+        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 1, 25, 12, 0, 0))));  // Feb (28) -> 25
+      });
+
+      it('getNextMatch resolves L-3 within the month', function () {
+        const next = new TimeMatcher('0 0 12 L-3 * *', 'Etc/UTC').getNextMatch(new Date('2026-01-01T00:00:00Z'));
+        assert.equal(next.toISOString(), '2026-01-28T12:00:00.000Z');
+      });
+
+      it('getNextMatch skips months where the offset reaches before the 1st', function () {
+        // L-30 needs a 31-day month; Feb 2026 (28 days) has no match, so the next
+        // fire after Feb 1 is Mar 1 (31 - 30).
+        const next = new TimeMatcher('0 0 12 L-30 * *', 'Etc/UTC').getNextMatch(new Date('2026-02-01T00:00:00Z'));
+        assert.equal(next.toISOString(), '2026-03-01T12:00:00.000Z');
+      });
+    })
+
+    describe('? (no-specific-value alias)', function() {
+      const base = new Date('2026-06-01T00:00:00Z');
+
+      it('treats ? as * in the day-of-week field', function () {
+        const withQuestion = new TimeMatcher('0 0 12 15 * ?', 'Etc/UTC').getNextMatch(base);
+        const withStar = new TimeMatcher('0 0 12 15 * *', 'Etc/UTC').getNextMatch(base);
+        assert.equal(withQuestion.toISOString(), withStar.toISOString());
+      });
+
+      it('treats ? as * in the day-of-month field', function () {
+        const withQuestion = new TimeMatcher('0 0 12 ? * 1', 'Etc/UTC').getNextMatch(base);
+        const withStar = new TimeMatcher('0 0 12 * * 1', 'Etc/UTC').getNextMatch(base);
+        assert.equal(withQuestion.toISOString(), withStar.toISOString());
+      });
+    })
 });

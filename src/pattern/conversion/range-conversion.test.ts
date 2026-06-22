@@ -20,4 +20,20 @@ describe('range-conversion', function() {
       const expression = conversion(expressions).join(' ');
       expect(expression).to.equal('0,2,4,6,8,10 11,13,15,17,19,21');
   });
+
+    it('should expand a reversed range', function() {
+        expect(conversion(['5-3']).join(' ')).to.equal('3,4,5');
+    });
+
+    it('should leave malformed multi-dash forms untouched', function() {
+        // Only whole `n-n` / `n-n/step` tokens expand; mangling these into
+        // valid-looking numbers is what let `1-2-3` slip past validation.
+        expect(conversion(['1-2-3'])[0]).to.equal('1-2-3');
+        expect(conversion(['1-2-3-4'])[0]).to.equal('1-2-3-4');
+        expect(conversion(['L-3-5'])[0]).to.equal('L-3-5');
+    });
+
+    it('should leave a non-positive step untouched (no infinite loop)', function() {
+        expect(conversion(['1-5/0'])[0]).to.equal('1-5/0');
+    });
 });
