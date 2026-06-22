@@ -1,6 +1,7 @@
 name: Publish to npm
 
 on:
+  # Manual publish, with a choice of dist-tag (for prereleases etc.).
   workflow_dispatch:
     inputs:
       dist_tag:
@@ -13,17 +14,17 @@ on:
           - beta
           - next
 
-  # Automatic publish on each GitHub Release (created by release-please when its
-  # release PR is merged). Disabled for now: publishing stays a manual
-  # workflow_dispatch. To enable, uncomment the block below.
-  #
-  # NOTE: a Release created with the default GITHUB_TOKEN does NOT trigger other
-  # workflows. For this trigger to fire, give release-please-action a PAT (or a
-  # GitHub App token) instead of secrets.GITHUB_TOKEN. With the default token,
-  # publish from inside the release-please job using its `release_created` output.
-  #
-  # release:
-  #   types: [published]
+  # Called by release-please.yml right after it cuts a release, so merging the
+  # `chore(main): release X.Y.Z` PR publishes automatically. A reusable-workflow
+  # call (rather than `on: release`) is used because a Release created with the
+  # default GITHUB_TOKEN does not trigger event-based workflows.
+  workflow_call:
+    inputs:
+      dist_tag:
+        description: 'npm dist-tag to publish under'
+        type: string
+        default: latest
+        required: false
 
 jobs:
   publish:
@@ -62,6 +63,6 @@ jobs:
         run: npm run build
 
       - name: Publish to npm
-        # `inputs.dist_tag` is set on workflow_dispatch; on a release event (when
-        # the trigger above is enabled) it is empty, so fall back to `latest`.
-        run: npm publish --provenance --tag "${{ inputs.dist_tag || 'latest' }}"
+        # `inputs.dist_tag` comes from workflow_dispatch (chosen) or workflow_call
+        # (defaults to latest).
+        run: npm publish --provenance --tag "${{ inputs.dist_tag }}"

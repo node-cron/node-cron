@@ -2,8 +2,8 @@ name: Release Please
 
 # Maintains a "release PR" that bumps the version and updates CHANGELOG.md from
 # Conventional Commits as they land on main. Merging that PR creates the git tag
-# (vX.Y.Z) and the GitHub Release. Publishing to npm stays a separate, manual
-# step (see publish.yml) for now.
+# (vX.Y.Z) and the GitHub Release, and then publishes to npm via the publish
+# workflow (called below only when a release was actually created).
 on:
   push:
     branches:
@@ -16,9 +16,25 @@ permissions:
 jobs:
   release-please:
     runs-on: ubuntu-latest
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
     steps:
       - uses: googleapis/release-please-action@v4
+        id: release
         with:
           # Reads release-please-config.json and .release-please-manifest.json
           # from the repo root.
           token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Runs only when the previous job just cut a release (i.e. the release PR was
+  # merged). Calls the publish workflow as a reusable workflow so npm publishing
+  # stays defined in one place (publish.yml) and keeps OIDC trusted publishing.
+  publish:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/publish.yml
+    with:
+      dist_tag: latest
