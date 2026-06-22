@@ -51,8 +51,14 @@ export default (() => {
                     // reject malformed ones (rather than parseInt truncating
                     // `2#6` to `2`).
                     numbers[j] = token;
+                } else if (/^\d+$/.test(token)) {
+                    numbers[j] = parseInt(token, 10);
                 } else {
-                    numbers[j] = parseInt(numbers[j]);
+                    // Not a plain integer or a recognised token. Keep it verbatim
+                    // so field validation rejects it, instead of `parseInt`
+                    // silently truncating garbage (`15abc` -> 15, `0x1f` -> 31,
+                    // `1e2` -> 1, `15-L` -> 15).
+                    numbers[j] = token;
                 }
             }
             expressions[i] = numbers;
