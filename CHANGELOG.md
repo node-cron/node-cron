@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+<!-- Unreleased changes are staged in the open release-please PR, not here. -->
 
 ## [4.5.0] - 2026-06-21
 
@@ -169,7 +169,6 @@ that start stopped, per-task `logger`, and a dual ESM/CJS build. The legacy
 `scheduled`/`runOnInit` options were removed and several event names changed.
 See the [migration guide](https://nodecron.com/migrating-from-v3).
 
-[Unreleased]: https://github.com/node-cron/node-cron/compare/v4.5.0...HEAD
 [4.5.0]: https://github.com/node-cron/node-cron/compare/v4.4.1...v4.5.0
 [4.4.1]: https://github.com/node-cron/node-cron/compare/v4.4.0...v4.4.1
 [4.4.0]: https://github.com/node-cron/node-cron/compare/v4.3.0...v4.4.0
