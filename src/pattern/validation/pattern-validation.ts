@@ -55,15 +55,15 @@ function isInvalidHour(expression) {
     return !isValidExpression(expression, 0, 23);
 }
 
-/**
- * @param {string} expression The Cron-Job expression.
- * @returns {boolean}
- */
 // `nW` / `LW` (nearest weekday) tokens, valid in the day-of-month field only.
 const DAY_OF_MONTH_W_TOKEN = /^(\d{1,2}|L)W$/i;
 // `L-n` (n days before the last day of the month), valid in day-of-month only.
 const DAY_OF_MONTH_OFFSET_TOKEN = /^L-(\d{1,2})$/i;
 
+/**
+ * @param {string} expression The Cron-Job expression.
+ * @returns {boolean}
+ */
 function isInvalidDayOfMonth(expression) {
     // 'L' (last day of the month), the `nW` / `LW` (nearest weekday) tokens and
     // the `L-n` (offset from the last day) form are valid in this field only;
@@ -90,12 +90,13 @@ function isInvalidDayOfMonth(expression) {
 }
 
 /**
- * Detects misuse of the `W` (nearest weekday) modifier in the RAW day-of-month
- * field, before range expansion destroys the information: `W` is only valid on a
- * single day number (`15W`) or on `L` (`LW`), optionally in a comma list
- * (`1W,15W`). Ranges and steps (`1-15W`, `15W/2`) and malformed forms are
- * rejected. Runs on the unexpanded string because `convertRanges` turns
- * `1-15W` into `1,2,...,15W`, which would otherwise look valid.
+ * Detects structural misuse of the `W` (nearest weekday) modifier in the RAW
+ * day-of-month field, before range expansion destroys the information: `W` is
+ * only valid on a single day number (`15W`) or on `L` (`LW`), optionally in a
+ * comma list (`1W,15W`). Ranges and steps (`1-15W`, `15W/2`) and malformed forms
+ * are rejected. Runs on the unexpanded string because `convertRanges` turns
+ * `1-15W` into `1,2,...,15W`, which would otherwise look valid. The numeric
+ * range of a well-formed `nW` token (`0W`, `32W`) is left to isInvalidDayOfMonth.
  *
  * @param {string} rawDayOfMonth The raw day-of-month field.
  * @returns {boolean}
@@ -105,11 +106,7 @@ function hasInvalidWModifier(rawDayOfMonth) {
     return rawDayOfMonth.split(',').some((token) => {
         const value = token.trim();
         if (!/w/i.test(value)) return false; // non-W entries handled elsewhere
-        const match = DAY_OF_MONTH_W_TOKEN.exec(value);
-        if (!match) return true; // range/step/malformed `W` usage
-        if (match[1] === 'L' || match[1] === 'l') return false;
-        const target = parseInt(match[1], 10);
-        return target < 1 || target > 31;
+        return !DAY_OF_MONTH_W_TOKEN.test(value); // range/step/malformed `W` usage
     });
 }
 
