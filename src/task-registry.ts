@@ -21,8 +21,8 @@ export class TaskRegistry {
 
   remove(task: ScheduledTask ){
     if(this.has(task.id)){
-      task?.destroy();
       tasks.delete(task.id);
+      task.destroy();
     }
   }
 
