@@ -101,7 +101,13 @@ export type TaskOptions = {
    * with "Start operation timed out"; increase it in that case. Defaults to
    * 5000. Has no effect on inline tasks.
    */
-  startTimeout?: number
+  startTimeout?: number,
+  /**
+   * When true, the internal heartbeat setTimeout is unref'd so the Node.js
+   * process can exit naturally when only this timer remains. Useful for CLI
+   * tools and scripts that should not be kept alive solely by cron timers.
+   */
+  unref?: boolean
 }
 
 export type Execution = {
