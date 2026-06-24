@@ -157,8 +157,44 @@ export const validateDetailed = validateDetailedExpression;
 export const parse = parseExpression;
 
 /**
+ * Stops all registered tasks, waits for any in-progress executions to finish
+ * (up to `timeout` ms), then destroys all tasks. Returns a Promise that
+ * resolves when everything is cleaned up.
+ *
+ * @param timeout - Maximum milliseconds to wait for in-progress executions.
+ *   Defaults to 5000.
+ */
+export async function shutdown(timeout = 5000): Promise<void> {
+  const tasks = registry.all();
+  const pending: Promise<any>[] = [];
+
+  for (const task of tasks.values()) {
+    const busy = task.isBusy();
+    const wait = new Promise<void>(resolve => {
+      task.once('execution:finished', resolve);
+      task.once('execution:failed', resolve);
+    });
+    task.stop();
+    if (busy) {
+      pending.push(wait);
+    }
+  }
+
+  if (pending.length) {
+    await Promise.race([
+      Promise.allSettled(pending),
+      new Promise(r => setTimeout(r, timeout))
+    ]);
+  }
+
+  for (const task of tasks.values()) {
+    task.destroy();
+  }
+}
+
+/**
  * Retrieves all scheduled tasks from the registry.
- * 
+ *
  * @returns A map of scheduled tasks
  */
 export const getTasks = registry.all;
@@ -189,6 +225,7 @@ export interface NodeCron {
   getTask: typeof getTask;
   setLogger: typeof setLogger;
   setRunCoordinator: typeof setRunCoordinator;
+  shutdown: typeof shutdown;
 }
 
 export const nodeCron: NodeCron = {
@@ -201,6 +238,7 @@ export const nodeCron: NodeCron = {
   getTask,
   setLogger,
   setRunCoordinator,
+  shutdown,
 };
 
 /**
