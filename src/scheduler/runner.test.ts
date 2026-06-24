@@ -310,6 +310,107 @@ describe('scheduler/runner', function(){
     runner.stop();
   });
 
+  it('does not hang when beforeRun throws', async function(){
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let errorCaught = false;
+
+    const runner = new Runner(timeMatcher, async () => {
+      return 'should not reach';
+    }, {
+      beforeRun() {
+        throw new Error('beforeRun failed');
+      },
+      onError() {
+        errorCaught = true;
+      }
+    });
+
+    runner.start();
+    await new Promise(resolve => { setTimeout(resolve, 2000) });
+    runner.stop();
+
+    // The runner should still be scheduling heartbeats (not stuck on a
+    // permanently pending promise). With noOverlap this would previously
+    // block all future executions.
+    assert.isTrue(errorCaught, 'onError should be called when beforeRun throws');
+  });
+
+  it('reports beforeRun errors via onError', async function(){
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let caughtMessage = '';
+
+    const errorSeen = new Promise<void>((resolve) => {
+      const runner = new Runner(timeMatcher, async () => {
+        return 'should not reach';
+      }, {
+        beforeRun() {
+          throw new Error('beforeRun exploded');
+        },
+        onError(date, err) {
+          caughtMessage = err.message;
+          runner.stop();
+          resolve();
+        }
+      });
+      runner.start();
+    });
+
+    await errorSeen;
+    assert.equal(caughtMessage, 'beforeRun exploded');
+  });
+
+  it('does not hang jitter promise when onError throws', async function(){
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    const origRandom = Math.random;
+    Math.random = () => 0.5;
+    let onErrorCallCount = 0;
+
+    const runner = new Runner(timeMatcher, async () => {
+      throw new Error('task boom');
+    }, {
+      maxRandomDelay: 200,
+      noOverlap: true,
+      onError() {
+        onErrorCallCount++;
+        throw new Error('onError also throws');
+      }
+    });
+
+    runner.start();
+    await new Promise(resolve => { setTimeout(resolve, 4000) });
+    Math.random = origRandom;
+    runner.stop();
+
+    assert.isAbove(onErrorCallCount, 1, 'onError should be called multiple times if jitter promise resolves properly');
+  });
+
+  it('does not emit unhandled rejection when task throws', async function(){
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let unhandled = false;
+
+    const handler = () => { unhandled = true; };
+    process.on('unhandledRejection', handler);
+
+    const errorSeen = new Promise<void>((resolve) => {
+      const runner = new Runner(timeMatcher, async () => {
+        throw new Error('task boom');
+      }, {
+        onError() {
+          runner.stop();
+          resolve();
+        }
+      });
+      runner.start();
+    });
+
+    await errorSeen;
+    // Give the event loop a tick for any unhandled rejection to surface.
+    await new Promise(resolve => setTimeout(resolve, 50));
+    process.removeListener('unhandledRejection', handler);
+
+    assert.isFalse(unhandled, 'TrackedPromise rejection should be caught');
+  });
+
 });
 
 function blockIO(ms: number) {

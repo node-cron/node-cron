@@ -161,53 +161,61 @@ export class Runner {
       }
     };
 
-    const runTask = (date: Date): Promise<any> => {
-      return new Promise(async (resolve) => {
-        const execution: Execution = {
-          id: createID(),
-          reason: 'scheduled'
-        }
+    const runTask = async (date: Date): Promise<void> => {
+      const execution: Execution = {
+        id: createID(),
+        reason: 'scheduled'
+      }
 
-        const shouldExecute = await this.beforeRun(date, execution);
-        const randomDelay = Math.floor(Math.random() * this.maxRandomDelay);
+      let shouldExecute: boolean;
+      try {
+        shouldExecute = await this.beforeRun(date, execution);
+      } catch (error: any) {
+        this.onError(date, error, execution);
+        return;
+      }
 
-        if(shouldExecute){
-          const execute = async () => {
-            try {
-              this.runCount++;
-              execution.startedAt = new Date();
-              const result = await this.onMatch(date, execution);
-              execution.finishedAt = new Date();
-              execution.result = result;
-              this.onFinished(date, execution);
+      if (!shouldExecute) return;
 
-              if( this.maxExecutions && this.runCount >= this.maxExecutions){
-                this.onMaxExecutions(date);
-                this.stop();
-              }
-            } catch (error: any){
-              execution.finishedAt = new Date();
-              execution.error = error;
-              this.onError(date, error, execution);
-            }
+      const execute = async () => {
+        try {
+          this.runCount++;
+          execution.startedAt = new Date();
+          const result = await this.onMatch(date, execution);
+          execution.finishedAt = new Date();
+          execution.result = result;
+          this.onFinished(date, execution);
 
-            resolve(true);
-          };
-
-          // The jitter timer only earns its macrotask hop when a random delay is
-          // actually configured. With the default maxRandomDelay of 0 the delay
-          // is always 0, so run inline and fire on the heartbeat's own tick
-          // instead of bouncing through an extra setTimeout (which adds ~1ms+ of
-          // avoidable drift to every execution).
-          if (randomDelay > 0) {
-            this.jitterTimeout = setTimeout(execute, randomDelay);
-          } else {
-            execute();
+          if (this.maxExecutions && this.runCount >= this.maxExecutions) {
+            this.onMaxExecutions(date);
+            this.stop();
           }
-        } else {
-          resolve(true);
+        } catch (error: any) {
+          execution.finishedAt = new Date();
+          execution.error = error;
+          try {
+            this.onError(date, error, execution);
+          } catch (hookError: any) {
+            this.onErrorFallback(date, hookError);
+          }
         }
-      })
+      };
+
+      // The jitter timer only earns its macrotask hop when a random delay is
+      // actually configured. With the default maxRandomDelay of 0 the delay
+      // is always 0, so run inline and fire on the heartbeat's own tick
+      // instead of bouncing through an extra setTimeout (which adds ~1ms+ of
+      // avoidable drift to every execution).
+      const randomDelay = Math.floor(Math.random() * this.maxRandomDelay);
+      if (randomDelay > 0) {
+        await new Promise<void>(resolve => {
+          this.jitterTimeout = setTimeout(() => {
+            execute().then(() => resolve(), () => resolve());
+          }, randomDelay);
+        });
+      } else {
+        await execute();
+      }
     }
 
     const heartBeat = async () => {
@@ -250,6 +258,9 @@ export class Runner {
             reject(err);
           }
         });
+        // Errors are already reported via onError; suppress the unhandled
+        // rejection that would otherwise crash the process on Node 22+.
+        lastExecution.catch(() => {});
       }
 
       armHeartBeat();
