@@ -242,8 +242,10 @@ class BackgroundScheduledTask implements ScheduledTask{
       
       const timeoutId = setTimeout(() => {
         clearTimeout(timeoutId);
+        this.forkProcess?.kill();
+        this.forkProcess = undefined;
         reject(new Error('Stop operation timed out'))
-      }, 5000); 
+      }, 5000);
       
       const cleanupAndResolve = () => {
         clearTimeout(timeoutId);
@@ -276,8 +278,10 @@ class BackgroundScheduledTask implements ScheduledTask{
 
       const timeoutId = setTimeout(() => {
         clearTimeout(timeoutId);
+        this.forkProcess?.kill();
+        this.forkProcess = undefined;
         reject(new Error('Destroy operation timed out'))
-      }, 5000); 
+      }, 5000);
   
       
       const onDestroy = () => {
