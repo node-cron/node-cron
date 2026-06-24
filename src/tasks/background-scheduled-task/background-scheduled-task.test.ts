@@ -268,13 +268,23 @@ describe('BackgroundScheduledTask', function() {
     it('fails on stop timeout', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
       task.forkProcess = fakeChildProcess as any;
-   
+
       try {
         await task.stop();
         assert.fail("should fail before")
       } catch (error: any){
         assert.equal(error.message, 'Stop operation timed out');
       }
+    });
+
+    it('kills the fork process when stop times out (no orphan)', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      task.forkProcess = fakeChildProcess as any;
+
+      try { await task.stop(); } catch { /* expected timeout */ }
+
+      assert.isTrue(fakeChildProcess.kill.called, 'the daemon must be killed on stop timeout');
+      assert.isUndefined(task.forkProcess, 'forkProcess must be cleared after a timed-out stop');
     });
   });
 
@@ -308,6 +318,16 @@ describe('BackgroundScheduledTask', function() {
       } catch (error: any){
         assert.equal(error.message, 'Destroy operation timed out');
       }
+    });
+
+    it('kills the fork process when destroy times out (no orphan)', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      task.forkProcess = fakeChildProcess as any;
+
+      try { await task.destroy(); } catch { /* expected timeout */ }
+
+      assert.isTrue(fakeChildProcess.kill.called, 'the daemon must be killed on destroy timeout');
+      assert.isUndefined(task.forkProcess, 'forkProcess must be cleared after a timed-out destroy');
     });
   });
 
