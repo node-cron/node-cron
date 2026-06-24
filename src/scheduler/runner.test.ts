@@ -274,6 +274,30 @@ describe('scheduler/runner', function(){
 
   });
 
+  it('clears jitter timeout on stop', async function(){
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let taskCalled = false;
+    const origRandom = Math.random;
+    // Force a long jitter delay so stop() is called while it's pending
+    Math.random = () => 0.999;
+
+    const runner = new Runner(timeMatcher, async () => {
+      taskCalled = true;
+    }, { maxRandomDelay: 30000 });
+
+    runner.start();
+
+    // Wait for heartbeat to fire and start the jitter delay (~29970ms)
+    await new Promise(resolve => { setTimeout(resolve, 1500) });
+    runner.stop();
+    Math.random = origRandom;
+
+    // Wait to confirm the jitter timeout was actually cleared
+    await new Promise(resolve => { setTimeout(resolve, 2000) });
+
+    assert.isFalse(taskCalled, 'task should not run after stop() cancels the jitter timeout');
+  });
+
   it('sets a max delay on heartbeat', function(){
     const timeMatcher = new TimeMatcher('0 0 1 1 *');
     const runner = createRunner(timeMatcher, 1000);
