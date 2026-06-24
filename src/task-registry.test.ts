@@ -74,6 +74,22 @@ describe('TaskRegistry', function(){
     assert.lengthOf(tasks, 3);
   });
 
+  it('calls destroy exactly once when remove is called', function(){
+    const task = createTask();
+    registry.add(task);
+
+    let destroyCount = 0;
+    const original = task.destroy.bind(task);
+    task.destroy = function() {
+      destroyCount++;
+      return original();
+    };
+
+    registry.remove(task);
+    assert.equal(destroyCount, 1, 'destroy should be called exactly once');
+    assert.isFalse(registry.has(task.id));
+  });
+
   it('kills all tasks', function() {
     registry.add(createTask());
     registry.add(createTask());
