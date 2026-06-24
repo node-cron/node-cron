@@ -252,6 +252,29 @@ describe('daemon - register', function () {
     task.destroy();
   });
 
+  it('serializes task state field as "state" in messages', async function () {
+    messages = [];
+    const message = {
+      command: 'task:start',
+      path: '../../../test-assets/dummy-task.js',
+      cron: '* * * * * *',
+      options: { name: 'dummy-task' },
+    };
+
+    bind();
+    const onMessage = listeners.find(l => l.event === 'message');
+    const task = await onMessage.fn(message);
+    task.start();
+
+    await new Promise(r => setTimeout(r, 1000));
+    task.destroy();
+
+    const started = messages.find(m => m.event === 'execution:started');
+    assert.isDefined(started, 'execution:started should be sent');
+    assert.isDefined(started.context.task.state, 'task field should use "state" not "status"');
+    assert.isUndefined(started.context.task.status, 'task field should not use "status"');
+  });
+
   it('should handle task:execute command', async function () {
     messages = [];
     const message = {

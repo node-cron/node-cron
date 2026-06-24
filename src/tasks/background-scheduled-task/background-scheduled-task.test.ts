@@ -365,6 +365,70 @@ describe('BackgroundScheduledTask', function() {
     });
   });
 
+  describe('state sync from daemon messages', function(){
+    it('transitions to running when daemon reports execution:started', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+
+      fakeChildProcess.send.callsFake((msg: any) => {
+        if (msg.command === 'task:start') {
+          task.emitter.emit('task:started');
+        } else if (msg.command === 'task:execute') {
+          const now = new Date().toISOString();
+          fakeChildProcess.emit('message', {
+            event: 'execution:started',
+            context: {
+              date: now,
+              task: { id: task.id, name: task.name, state: 'running' },
+              execution: { id: 'e1', reason: 'invoked', startedAt: now }
+            }
+          });
+        }
+      });
+
+      await task.start();
+      assert.equal(task.getStatus(), 'idle');
+
+      task.execute().catch(() => {});
+      await new Promise(r => setTimeout(r, 50));
+
+      assert.equal(task.getStatus(), 'running', 'should transition to running from daemon status');
+    });
+
+    it('transitions back to idle when daemon reports execution:finished', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+
+      fakeChildProcess.send.callsFake((msg: any) => {
+        if (msg.command === 'task:start') {
+          task.emitter.emit('task:started');
+        } else if (msg.command === 'task:execute') {
+          const now = new Date().toISOString();
+          fakeChildProcess.emit('message', {
+            event: 'execution:started',
+            context: {
+              date: now,
+              task: { id: task.id, name: task.name, state: 'running' },
+              execution: { id: 'e1', reason: 'invoked', startedAt: now }
+            }
+          });
+          queueMicrotask(() => {
+            fakeChildProcess.emit('message', {
+              event: 'execution:finished',
+              context: {
+                date: now,
+                task: { id: task.id, name: task.name, state: 'idle' },
+                execution: { id: 'e1', reason: 'invoked', startedAt: now, finishedAt: now, result: 'ok' }
+              }
+            });
+          });
+        }
+      });
+
+      await task.start();
+      await task.execute();
+      assert.equal(task.getStatus(), 'idle', 'should transition back to idle after execution');
+    });
+  });
+
   describe('execute', function(){
     it('fails when call execute on stoped task', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
