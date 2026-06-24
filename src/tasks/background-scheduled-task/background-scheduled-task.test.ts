@@ -296,6 +296,40 @@ describe('BackgroundScheduledTask', function() {
       assert.isUndefined(result);
     });
 
+    it('transitions to destroyed when forkProcess is absent', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      assert.equal(task.getStatus(), 'stopped');
+
+      await task.destroy();
+      assert.equal(task.getStatus(), 'destroyed');
+    });
+
+    it('emits task:destroyed when forkProcess is absent', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      let emitted = false;
+      task.on('task:destroyed', () => { emitted = true; });
+
+      await task.destroy();
+      assert.isTrue(emitted);
+    });
+
+    it('transitions to stopped on stop() when forkProcess is absent', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      // Already stopped, should remain stopped without error
+      await task.stop();
+      assert.equal(task.getStatus(), 'stopped');
+    });
+
+    it('is a no-op when already destroyed', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      await task.destroy();
+      assert.equal(task.getStatus(), 'destroyed');
+
+      // Second destroy should not throw
+      await task.destroy();
+      assert.equal(task.getStatus(), 'destroyed');
+    });
+
     it('destroys a task an kills the fork', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
       task.forkProcess = fakeChildProcess as any;

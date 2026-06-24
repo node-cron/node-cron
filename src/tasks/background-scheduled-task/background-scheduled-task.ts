@@ -237,6 +237,7 @@ class BackgroundScheduledTask implements ScheduledTask{
   stop(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.forkProcess) {
+        this.emitter.emit('task:stopped');
         return resolve(undefined);
       }
       
@@ -272,7 +273,12 @@ class BackgroundScheduledTask implements ScheduledTask{
 
   destroy(): Promise<void> {
     return new Promise((resolve, reject) => {
+      if (this.stateMachine.state === 'destroyed') {
+        return resolve(undefined);
+      }
+
       if (!this.forkProcess) {
+        this.emitter.emit('task:destroyed');
         return resolve(undefined);
       }
 
