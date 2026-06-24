@@ -239,6 +239,58 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
       assert.isDefined(last!.error);
     });
 
+    // -- no duplicate events --
+
+    it('start emits task:started exactly once', async () => {
+      task = factory();
+      let count = 0;
+      task.on('task:started', () => count++);
+      await task.start();
+      assert.equal(count, 1);
+    });
+
+    it('stop emits task:stopped exactly once', async () => {
+      task = factory();
+      await task.start();
+      let count = 0;
+      task.on('task:stopped', () => count++);
+      await task.stop();
+      assert.equal(count, 1);
+    });
+
+    it('destroy emits task:destroyed exactly once', async () => {
+      task = factory();
+      await task.start();
+      let count = 0;
+      task.on('task:destroyed', () => count++);
+      await task.destroy();
+      assert.equal(count, 1);
+    });
+
+    it('execute emits execution:started and execution:finished exactly once each', async () => {
+      task = factory();
+      await task.start();
+      let started = 0;
+      let finished = 0;
+      task.on('execution:started', () => started++);
+      task.on('execution:finished', () => finished++);
+      await task.execute();
+      assert.equal(started, 1);
+      assert.equal(finished, 1);
+    });
+
+    it('failed execute emits execution:started and execution:failed exactly once each', async () => {
+      task = factory({ fail: true });
+      await task.start();
+      let started = 0;
+      let failed = 0;
+      task.on('execution:started', () => started++);
+      task.on('execution:failed', () => failed++);
+      try { await task.execute(); } catch { /* expected */ }
+      assert.equal(started, 1);
+      assert.equal(failed, 1);
+    });
+
     // -- introspection --
 
     it('returns the cron pattern', () => {
