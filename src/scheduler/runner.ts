@@ -61,6 +61,7 @@ export class Runner {
   running: boolean;
 
   heartBeatTimeout?: NodeJS.Timeout;
+  private jitterTimeout?: NodeJS.Timeout;
   logger: Logger;
   onMissedExecution: OnFn;
   onOverlap: OnFn;
@@ -199,7 +200,7 @@ export class Runner {
           // instead of bouncing through an extra setTimeout (which adds ~1ms+ of
           // avoidable drift to every execution).
           if (randomDelay > 0) {
-            setTimeout(execute, randomDelay);
+            this.jitterTimeout = setTimeout(execute, randomDelay);
           } else {
             execute();
           }
@@ -266,6 +267,10 @@ export class Runner {
     if(this.heartBeatTimeout) {
       clearTimeout(this.heartBeatTimeout);
       this.heartBeatTimeout = undefined;
+    }
+    if(this.jitterTimeout) {
+      clearTimeout(this.jitterTimeout);
+      this.jitterTimeout = undefined;
     }
   }
   
