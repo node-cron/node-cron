@@ -14,6 +14,43 @@ describe('month-names-conversion', function() {
     });
 });
 
+describe('weekday 7-to-0 normalization', function() {
+    it('should convert standalone 7 to 0', function() {
+        const expressions = conversion('* * * * * 7');
+        assert.deepEqual(expressions[5], [0]);
+    });
+
+    it('should convert 7 in a list to 0', function() {
+        const expressions = conversion('* * * * * 1,7');
+        assert.deepEqual(expressions[5], [1,0]);
+    });
+
+    it('should deduplicate when both 0 and 7 are present', function() {
+        const expressions = conversion('* * * * * 0,7');
+        assert.deepEqual(expressions[5], [0]);
+    });
+
+    it('should expand range 5-7 to Fri,Sat,Sun', function() {
+        const expressions = conversion('* * * * * 5-7');
+        assert.deepEqual(expressions[5], [5,6,0]);
+    });
+
+    it('should expand range 1-7 to all days', function() {
+        const expressions = conversion('* * * * * 1-7');
+        assert.deepEqual(expressions[5], [1,2,3,4,5,6,0]);
+    });
+
+    it('should expand range 6-7 to Sat,Sun', function() {
+        const expressions = conversion('* * * * * 6-7');
+        assert.deepEqual(expressions[5], [6,0]);
+    });
+
+    it('should expand range 0-7 to all days', function() {
+        const expressions = conversion('* * * * * 0-7');
+        assert.deepEqual(expressions[5], [0,1,2,3,4,5,6]);
+    });
+});
+
 describe('nicknames', function() {
     it('should convert @yearly', function() {
         const expressions = conversion('@yearly');

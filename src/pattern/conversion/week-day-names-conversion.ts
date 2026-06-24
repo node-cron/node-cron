@@ -11,7 +11,6 @@ export default (() => {
     }
   
     function convertWeekDays(expression){
-        expression = expression.replace('7', '0');
         expression = convertWeekDayName(expression, weekDays);
         return convertWeekDayName(expression, shortWeekDays);
     }
