@@ -320,7 +320,7 @@ describe('scheduler/runner', function(){
       beforeRun() {
         throw new Error('beforeRun failed');
       },
-      onError(date, err) {
+      onError() {
         errorCaught = true;
       }
     });
