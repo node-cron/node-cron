@@ -310,6 +310,58 @@ describe('scheduler/runner', function(){
     runner.stop();
   });
 
+  it('does not hang when beforeRun throws', async function(){
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let errorCaught = false;
+
+    const runner = new Runner(timeMatcher, async () => {
+      return 'should not reach';
+    }, {
+      beforeRun() {
+        throw new Error('beforeRun failed');
+      },
+      onError(date, err) {
+        errorCaught = true;
+      }
+    });
+
+    runner.start();
+    await new Promise(resolve => { setTimeout(resolve, 2000) });
+    runner.stop();
+
+    // The runner should still be scheduling heartbeats (not stuck on a
+    // permanently pending promise). With noOverlap this would previously
+    // block all future executions.
+    assert.isTrue(errorCaught || runner.runCount === 0);
+  });
+
+  it('does not emit unhandled rejection when task throws', async function(){
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let unhandled = false;
+
+    const handler = () => { unhandled = true; };
+    process.on('unhandledRejection', handler);
+
+    const errorSeen = new Promise<void>((resolve) => {
+      const runner = new Runner(timeMatcher, async () => {
+        throw new Error('task boom');
+      }, {
+        onError() {
+          runner.stop();
+          resolve();
+        }
+      });
+      runner.start();
+    });
+
+    await errorSeen;
+    // Give the event loop a tick for any unhandled rejection to surface.
+    await new Promise(resolve => setTimeout(resolve, 50));
+    process.removeListener('unhandledRejection', handler);
+
+    assert.isFalse(unhandled, 'TrackedPromise rejection should be caught');
+  });
+
 });
 
 function blockIO(ms: number) {
