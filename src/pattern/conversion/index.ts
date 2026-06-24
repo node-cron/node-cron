@@ -111,6 +111,19 @@ export default (() => {
 
         expressions = normalizeIntegers(expressions);
 
+        // Normalize weekday 7 (Sunday) to 0 after range expansion and integer
+        // parsing. Doing it at the string level before range expansion would
+        // corrupt ranges like 5-7 into 5-0.
+        const weekdays = expressions[5];
+        for (let i = 0; i < weekdays.length; i++) {
+            if (weekdays[i] === 7) weekdays[i] = 0;
+            else if (typeof weekdays[i] === 'string' && weekdays[i].startsWith('7')) {
+                weekdays[i] = '0' + weekdays[i].slice(1);
+            }
+        }
+        // Deduplicate in case both 0 and 7 were present.
+        expressions[5] = [...new Set(weekdays)];
+
         return expressions;
     }
 

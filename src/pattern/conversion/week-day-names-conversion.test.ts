@@ -13,8 +13,15 @@ describe('week-day-names-conversion', function() {
         expect(weekDays).to.equal('1,2,3,4,5,6,0');
     });
 
-    it('shuld convert 7 to 0', function() {
+    it('should pass through 7 unchanged (normalized later in the pipeline)', function() {
         const weekDays = conversion('7');
-        expect(weekDays).to.equal('0');
+        expect(weekDays).to.equal('7');
+    });
+
+    it('should not touch ranges containing 7', function() {
+        expect(conversion('5-7')).to.equal('5-7');
+        expect(conversion('1-7')).to.equal('1-7');
+        expect(conversion('6-7')).to.equal('6-7');
+        expect(conversion('0-7')).to.equal('0-7');
     });
 });
