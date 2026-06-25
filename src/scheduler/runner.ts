@@ -306,10 +306,12 @@ export class Runner {
   setUnref(value: boolean){
     this.unref = value;
     if (this.heartBeatTimeout) {
-      value ? this.heartBeatTimeout.unref() : this.heartBeatTimeout.ref();
+      if (value) this.heartBeatTimeout.unref();
+      else this.heartBeatTimeout.ref();
     }
     if (this.jitterTimeout) {
-      value ? this.jitterTimeout.unref() : this.jitterTimeout.ref();
+      if (value) this.jitterTimeout.unref();
+      else this.jitterTimeout.ref();
     }
   }
 
