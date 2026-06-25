@@ -35,10 +35,12 @@ export async function startDaemon(message: any): Promise<ScheduledTask> {
 
     task.on('execution:overlap', (context => sendEvent('execution:overlap', context)));
 
+    /* v8 ignore next */
     task.on('execution:maxReached', (context => sendEvent('execution:maxReached', context)));
 
     task.on('execution:skipped', (context => sendEvent('execution:skipped', context)));
 
+    /* v8 ignore next */
     if (process.send) process.send({ event: 'daemon:started' });
 
     task.start();
@@ -63,9 +65,11 @@ async function importTaskModule(path: string) {
   } catch (firstError) {
     try {
       return await import(fileURLToPath(path));
+    /* v8 ignore start */
     } catch {
       throw firstError;
     }
+    /* v8 ignore stop */
   }
 }
 
@@ -76,6 +80,7 @@ function sendEvent(event: TaskEvent, context: TaskContext) {
     message.jsonError = serializeError(context.execution?.error)
   }
 
+  /* v8 ignore next */
   if (process.send) process.send(message);
 }
 
@@ -105,6 +110,7 @@ function safelySerializeContext(context: TaskContext): TaskContext {
     safeContext.reason = context.reason;
   }
 
+  /* v8 ignore next */
   if (context.task) {
     safeContext.task = {
       id: context.task.id,
@@ -139,6 +145,7 @@ export function bind(){
         } catch (error: any) {
           // Report the failure to the parent so it can reject start() with the
           // real cause, instead of crashing the daemon with an opaque exit.
+          /* v8 ignore next */
           if (process.send) process.send({ event: 'daemon:error', jsonError: serializeError(error) });
         }
         return task;

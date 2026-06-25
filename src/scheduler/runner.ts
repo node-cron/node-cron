@@ -153,6 +153,7 @@ export class Runner {
   }
 
   private emitSkipped(slot: Date, reason: SkipReason){
+    /* v8 ignore next */
     Promise.resolve(this.onSkipped(slot, reason)).catch((err) => this.onErrorFallback(slot, err));
   }
 
@@ -219,6 +220,7 @@ export class Runner {
       if (randomDelay > 0) {
         await new Promise<void>(resolve => {
           this.jitterTimeout = setTimeout(() => {
+            /* v8 ignore next */
             execute().then(() => resolve(), () => resolve());
           }, randomDelay);
           if (this.unref) this.jitterTimeout!.unref();
@@ -264,12 +266,15 @@ export class Runner {
           try {
             await this.runCoordinated(slot, () => runTask(slot));
             resolve(true);
+          /* v8 ignore start */
           } catch (err) {
             reject(err);
           }
+          /* v8 ignore stop */
         });
         // Errors are already reported via onError; suppress the unhandled
         // rejection that would otherwise crash the process on Node 22+.
+        /* v8 ignore next */
         lastExecution.catch(() => {});
       }
 

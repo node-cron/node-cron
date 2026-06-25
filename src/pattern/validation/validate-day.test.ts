@@ -80,6 +80,12 @@ describe('pattern-validation', function() {
             }).not.toThrow();
         });
 
+        it('should not fail with mixed W and non-W tokens in a list', function() {
+            expect(() => {
+                validate('0 0 12 1,15W * *');
+            }).not.toThrow();
+        });
+
         it('should fail with W in a range', function() {
             expect(() => {
                 validate('0 0 12 1-15W * *');

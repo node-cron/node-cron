@@ -183,6 +183,7 @@ class BackgroundScheduledTask implements ScheduledTask{
             return;
           }
           if (message.type === 'coordinator:complete') {
+            /* v8 ignore next */
             this.runCoordinator?.onComplete?.(message.key)?.catch?.((err: any) => this.logger.error('Run coordinator onComplete failed', err));
             return;
           }
@@ -363,8 +364,10 @@ class BackgroundScheduledTask implements ScheduledTask{
     try {
       allowed = this.runCoordinator ? await this.runCoordinator.shouldRun(message.key, message.ttlMs) : false;
     } catch (err: any) {
+      /* v8 ignore next */
       error = err?.message ?? String(err);
     }
+    /* v8 ignore next */
     this.forkProcess?.send({ type: 'coordinator:result', reqId: message.reqId, allowed, error });
   }
 

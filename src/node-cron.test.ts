@@ -160,6 +160,31 @@ describe('node-cron', function() {
             expect(errors.some(e => JSON.stringify(e).includes('load failed in child'))).toBe(true);
             await task.destroy();
         });
+
+        it('logs background task start failure to default logger when no custom logger', async function() {
+            const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+            vi.mocked(fork).mockImplementation(() => {
+              const child: any = new EventEmitter();
+              child.killed = false;
+              child.kill = () => { child.killed = true; };
+              child.send = () => {
+                queueMicrotask(() => child.emit('message', {
+                  event: 'daemon:error',
+                  jsonError: JSON.stringify({ name: 'Error', message: 'daemon crashed' })
+                }));
+                return true;
+              };
+              return child;
+            });
+
+            const task = cron.schedule('* * * * *', '../test-assets/dummy-task.js');
+            await wait(200);
+
+            expect(spy.mock.calls.some(c => c.some((a: any) => String(a).includes('daemon crashed')))).toBe(true);
+            spy.mockRestore();
+            await task.destroy();
+        });
     });
     
     describe('validate', function() {
@@ -287,6 +312,22 @@ describe('node-cron', function() {
         expect(solvedPath).toBeDefined();
         expect(solvedPath).toContain(`file:///`);
         expect(solvedPath).toContain(path.slice(1));
+      });
+
+      it('throws when the caller cannot be located in the stack', function(){
+        const OrigError = globalThis.Error;
+        const FakeError = class extends OrigError {
+          constructor(msg?: string) {
+            super(msg);
+            this.stack = 'Error\n    at <anonymous>';
+          }
+        };
+        globalThis.Error = FakeError as any;
+        try {
+          expect(() => solvePath('./relative.js')).toThrow('Could not locate task file');
+        } finally {
+          globalThis.Error = OrigError;
+        }
       });
     })
 });

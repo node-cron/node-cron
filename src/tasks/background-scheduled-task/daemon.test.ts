@@ -322,6 +322,64 @@ describe('daemon - register', function () {
     task.destroy();
   });
 
+  it('task:stop is safe when no task has been started', async function () {
+    bind();
+    const onMessage = listeners.filter(l => l.event === 'message').pop();
+    const result = await onMessage.fn({ command: 'task:stop' });
+    expect(result).toBeUndefined();
+  });
+
+  it('task:destroy is safe when no task has been started', async function () {
+    bind();
+    const onMessage = listeners.filter(l => l.event === 'message').pop();
+    const result = await onMessage.fn({ command: 'task:destroy' });
+    expect(result).toBeUndefined();
+  });
+
+  it('task:execute is safe when no task has been started', async function () {
+    bind();
+    const onMessage = listeners.filter(l => l.event === 'message').pop();
+    const result = await onMessage.fn({ command: 'task:execute' });
+    expect(result).toBeUndefined();
+  });
+
+  it('starts a daemon without options', async function () {
+    const message = {
+      command: 'task:start',
+      path: '../../../test-assets/dummy-task.js',
+      cron: '* * * * * *',
+    };
+
+    bind();
+    const onMessage = listeners.filter(l => l.event === 'message').pop();
+    const task = await onMessage.fn(message);
+
+    expect(task).toBeDefined();
+    task.destroy();
+  });
+
+  it('sendEvent does not crash when process.send is undefined', async function () {
+    const message = {
+      command: 'task:start',
+      path: '../../../test-assets/dummy-task.js',
+      cron: '* * * * * *',
+      options: { name: 'dummy-task' },
+    };
+
+    bind();
+    const onMessage = listeners.filter(l => l.event === 'message').pop();
+    const task = await onMessage.fn(message);
+
+    const savedSend = process.send;
+    process.send = undefined as any;
+
+    task.start();
+    await new Promise(r => setTimeout(r, 1000));
+
+    process.send = savedSend;
+    task.destroy();
+  });
+
   it('forwards the real load error to the parent instead of crashing', async function () {
     messages = [];
     const message = {

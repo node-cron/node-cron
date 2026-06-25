@@ -87,6 +87,14 @@ describe('scheduler/plan-beat', function(){
     expect(plan.next.toISOString()).toBe('2026-06-16T13:00:00.000Z');
   });
 
+  it('recovers when getNextMatch does not advance (defense in depth)', function(){
+    const stuckMatcher = (d: Date) => d;
+    const plan = planBeat(at('2026-06-16T09:00:00Z'), at('2026-06-16T09:00:00Z'), SECOND, stuckMatcher);
+    expect(plan.run).toBeUndefined();
+    expect(times(plan.missed)).toEqual([]);
+    expect(plan.next.toISOString()).toBe('2026-06-16T09:00:00.000Z');
+  });
+
   it('reports the slot missed but keeps waiting for the future next slot (late beyond tolerance, next not yet due)', function(){
     // Hourly, woke 30s late with a 1s tolerance: 10:00 is missed, but 11:00 is
     // still in the future so nothing runs and we wait for it.

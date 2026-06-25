@@ -129,6 +129,48 @@ describe('scheduler/runner unref', function () {
 
     expect(jitterRefed).toBe(true);
   });
+  it('setUnref on a stopped runner is a no-op (no timeouts to change)', function () {
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    const runner = new Runner(timeMatcher, async () => {});
+
+    runner.setUnref(true);
+    expect(runner.unref).toBe(true);
+
+    runner.setUnref(false);
+    expect(runner.unref).toBe(false);
+  });
+
+  it('setUnref(true) unrefs an active jitter timeout', async function () {
+    const origRandom = Math.random;
+    Math.random = () => 0.999;
+
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let jitterUnrefed = false;
+
+    const runner = new Runner(timeMatcher, async () => {}, {
+      maxRandomDelay: 30000,
+    });
+
+    const origStart = runner.start.bind(runner);
+    runner.start = function () {
+      origStart();
+      setTimeout(() => {
+        const jt = (runner as any).jitterTimeout;
+        if (jt) {
+          runner.setUnref(true);
+          jitterUnrefed = !jt.hasRef();
+        }
+      }, 1500);
+    };
+
+    runner.start();
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    Math.random = origRandom;
+    runner.stop();
+
+    expect(jitterUnrefed).toBe(true);
+  });
 });
 
 const noopLogger: any = { error() {}, warn() {}, info() {}, debug() {} };

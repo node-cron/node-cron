@@ -135,6 +135,61 @@ describe('BackgroundScheduledTask', function() {
       }
     });
 
+    it('ignores clean exit (code 0)', async function(){
+      const errorFn = vi.fn();
+      const customLogger = { info() {}, warn() {}, error: errorFn, debug() {} };
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { logger: customLogger });
+
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') {
+          task.emitter.emit('task:started');
+          queueMicrotask(() => fakeChildProcess.emit('exit', 0, null));
+        }
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+
+      await task.start();
+      await wait(10);
+
+      expect(errorFn).not.toHaveBeenCalled();
+      await task.destroy();
+    });
+
+    it('ignores SIGTERM exit', async function(){
+      const errorFn = vi.fn();
+      const customLogger = { info() {}, warn() {}, error: errorFn, debug() {} };
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { logger: customLogger });
+
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') {
+          task.emitter.emit('task:started');
+          queueMicrotask(() => fakeChildProcess.emit('exit', null, 'SIGTERM'));
+        }
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+
+      await task.start();
+      await wait(10);
+
+      expect(errorFn).not.toHaveBeenCalled();
+      await task.destroy();
+    });
+
+    it('fails on unexpected signal exit (null code)', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+
+      fakeChildProcess.send.mockImplementation(() => {
+        fakeChildProcess.emit('exit', null, 'SIGKILL');
+      });
+
+      try {
+        await task.start();
+        expect.fail('should throw');
+      } catch (error: any){
+        expect(error.message).toBe('node-cron daemon exited with code SIGKILL');
+      }
+    });
+
     it('starts and bypass events', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
   
@@ -473,6 +528,27 @@ describe('BackgroundScheduledTask', function() {
       }
     });
 
+    it('rejects with generic error when execution:failed has no error', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+
+      fakeChildProcess.send.mockImplementation((obj: any) => {
+        if(obj.command === 'task:execute'){
+          task.emitter.emit('execution:failed', { execution: {} });
+        } else {
+          task.emitter.emit('task:started');
+        }
+      });
+
+      await task.start();
+
+      try {
+        await task.execute();
+        expect.fail('should have thrown');
+      } catch(error: any){
+        expect(error.message).toBe('Execution failed without specific error');
+      }
+    });
+
     it('fails on execute when executeTimeout is exceeded', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { executeTimeout: 50 });
 
@@ -726,6 +802,298 @@ describe('BackgroundScheduledTask', function() {
       await wait(10);
 
       expect(replyOf().allowed).toBe(false);
+      await task.destroy();
+    });
+  });
+
+  describe('logEvent', function () {
+    it('logs a warning on execution:missed when no listener is attached', async function () {
+      const warnFn = vi.fn();
+      const customLogger = { info() {}, warn: warnFn, error() {}, debug() {} };
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { logger: customLogger });
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      await task.start();
+
+      fakeChildProcess.emit('message', {
+        event: 'execution:missed',
+        context: { date: new Date().toISOString() }
+      });
+      await wait(10);
+
+      expect(warnFn).toHaveBeenCalledOnce();
+      expect(warnFn.mock.calls[0][0]).toMatch(/missed execution/);
+      await task.destroy();
+    });
+
+    it('suppresses missed warning when suppressMissedWarning is set', async function () {
+      const warnFn = vi.fn();
+      const customLogger = { info() {}, warn: warnFn, error() {}, debug() {} };
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', {
+        logger: customLogger,
+        suppressMissedWarning: true
+      });
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      await task.start();
+
+      fakeChildProcess.emit('message', {
+        event: 'execution:missed',
+        context: { date: new Date().toISOString() }
+      });
+      await wait(10);
+
+      expect(warnFn).not.toHaveBeenCalled();
+      await task.destroy();
+    });
+
+    it('logs a warning on execution:overlap when noOverlap is set', async function () {
+      const warnFn = vi.fn();
+      const customLogger = { info() {}, warn: warnFn, error() {}, debug() {} };
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', {
+        logger: customLogger,
+        noOverlap: true
+      });
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      await task.start();
+
+      fakeChildProcess.emit('message', {
+        event: 'execution:overlap',
+        context: { date: new Date().toISOString() }
+      });
+      await wait(10);
+
+      expect(warnFn).toHaveBeenCalledOnce();
+      expect(warnFn.mock.calls[0][0]).toMatch(/overlap/);
+      await task.destroy();
+    });
+
+    it('logs error on execution:failed with an error', async function () {
+      const errorFn = vi.fn();
+      const customLogger = { info() {}, warn() {}, error: errorFn, debug() {} };
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { logger: customLogger });
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      await task.start();
+
+      const serializedError = JSON.stringify({ name: 'Error', message: 'task exploded', stack: '' });
+      fakeChildProcess.emit('message', {
+        event: 'execution:failed',
+        jsonError: serializedError,
+        context: {
+          date: new Date().toISOString(),
+          execution: { id: 'e1', reason: 'scheduled', hasError: true }
+        }
+      });
+      await wait(10);
+
+      expect(errorFn).toHaveBeenCalledOnce();
+      await task.destroy();
+    });
+
+    it('does not log on execution:failed without an error', async function () {
+      const errorFn = vi.fn();
+      const customLogger = { info() {}, warn() {}, error: errorFn, debug() {} };
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { logger: customLogger });
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      await task.start();
+
+      fakeChildProcess.emit('message', {
+        event: 'execution:failed',
+        context: {
+          date: new Date().toISOString(),
+          execution: { id: 'e2', reason: 'scheduled' }
+        }
+      });
+      await wait(10);
+
+      expect(errorFn).not.toHaveBeenCalled();
+      await task.destroy();
+    });
+
+    it('does not log overlap warning when noOverlap is not set', async function () {
+      const warnFn = vi.fn();
+      const customLogger = { info() {}, warn: warnFn, error() {}, debug() {} };
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', {
+        logger: customLogger
+      });
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      await task.start();
+
+      fakeChildProcess.emit('message', {
+        event: 'execution:overlap',
+        context: { date: new Date().toISOString() }
+      });
+      await wait(10);
+
+      expect(warnFn).not.toHaveBeenCalled();
+      await task.destroy();
+    });
+  });
+
+  describe('IPC message edge cases', function () {
+    it('handles jsonError without context.execution', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      await task.start();
+
+      fakeChildProcess.emit('message', {
+        event: 'execution:failed',
+        jsonError: JSON.stringify({ name: 'Error', message: 'orphan error' }),
+        context: { date: new Date().toISOString() }
+      });
+      await wait(10);
+      await task.destroy();
+    });
+
+    it('handles a message with no context', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      await task.start();
+
+      fakeChildProcess.emit('message', { event: 'some:event' });
+      await wait(10);
+      await task.destroy();
+    });
+
+    it('handles daemon:error without jsonError', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') {
+          queueMicrotask(() => {
+            fakeChildProcess.emit('message', { event: 'daemon:error' });
+          });
+        }
+      });
+      await expect(task.start()).rejects.toThrow('Background task failed to start');
+    });
+
+    it('handles a message with task state but no context body', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      await task.start();
+
+      fakeChildProcess.emit('message', {
+        event: 'execution:started',
+        context: {
+          date: new Date().toISOString(),
+          task: { id: task.id, name: task.name, state: 'running' },
+          execution: { id: 'e1', reason: 'scheduled', startedAt: new Date().toISOString() }
+        }
+      });
+      await wait(10);
+
+      expect(task.getStatus()).toBe('running');
+      await task.destroy();
+    });
+  });
+
+  describe('deserializeError', function () {
+    it('reconstructs a TypeError from serialized JSON', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      await task.start();
+
+      const serialized = JSON.stringify({ name: 'TypeError', message: 'x is not a function', stack: 'TypeError: x is not a function' });
+      const failPromise = new Promise<any>(resolve => {
+        task.on('execution:failed', (ctx) => resolve(ctx.execution?.error));
+      });
+
+      fakeChildProcess.emit('message', {
+        event: 'execution:failed',
+        jsonError: serialized,
+        context: {
+          date: new Date().toISOString(),
+          execution: { id: 'e1', reason: 'scheduled', hasError: true }
+        }
+      });
+
+      const err = await failPromise;
+      expect(err).toBeInstanceOf(TypeError);
+      expect(err.message).toBe('x is not a function');
+      await task.destroy();
+    });
+
+    it('falls back to Error for unknown error names', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      await task.start();
+
+      const serialized = JSON.stringify({ name: 'CustomAppError', message: 'custom', stack: '', code: 'APP_ERR' });
+      const failPromise = new Promise<any>(resolve => {
+        task.on('execution:failed', (ctx) => resolve(ctx.execution?.error));
+      });
+
+      fakeChildProcess.emit('message', {
+        event: 'execution:failed',
+        jsonError: serialized,
+        context: {
+          date: new Date().toISOString(),
+          execution: { id: 'e2', reason: 'scheduled', hasError: true }
+        }
+      });
+
+      const err = await failPromise;
+      expect(err).toBeInstanceOf(Error);
+      expect(err.message).toBe('custom');
+      expect(err.code).toBe('APP_ERR');
+      await task.destroy();
+    });
+  });
+
+  describe('createContext', function () {
+    it('includes skip reason when present', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      await task.start();
+
+      const skippedPromise = new Promise<any>(resolve => {
+        task.on('execution:skipped', resolve);
+      });
+
+      fakeChildProcess.emit('message', {
+        event: 'execution:skipped',
+        context: {
+          date: new Date().toISOString(),
+          reason: 'not-elected'
+        }
+      });
+
+      const ctx = await skippedPromise;
+      expect(ctx.reason).toBe('not-elected');
       await task.destroy();
     });
   });

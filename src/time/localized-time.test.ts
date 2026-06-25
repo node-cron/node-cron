@@ -48,6 +48,22 @@ describe('LocalizedTime', function(){
   });
 })
 
+describe('LocalizedTime with UTC', function(){
+  it('formats ISO with Z offset for Etc/UTC timezone', function(){
+    const date = new Date(Date.UTC(2025, 3, 30, 9, 8, 5, 78));
+    const localTime = new LocalizedTime(date, 'Etc/UTC');
+    expect(localTime.toISO()).toBe('2025-04-30T09:08:05.078Z');
+  });
+
+  it('resolves UTC offset via localTimeToTimestamp', function(){
+    const ts = localTimeToTimestamp(
+      { year: 2026, month: 6, day: 15, hour: 12, minute: 0, second: 0, millisecond: 0 },
+      'Etc/UTC'
+    );
+    expect(new Date(ts).toISOString()).toBe('2026-06-15T12:00:00.000Z');
+  });
+});
+
 describe('localTimeToTimestamp', function(){
   it('resolves a wall-clock outside any DST transition', function(){
     const ts = localTimeToTimestamp(
