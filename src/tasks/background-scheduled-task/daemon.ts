@@ -109,7 +109,7 @@ function safelySerializeContext(context: TaskContext): TaskContext {
     safeContext.task = {
       id: context.task.id,
       name: context.task.name,
-      status: context.task.getStatus()
+      state: context.task.getStatus()
     };
   }
   
