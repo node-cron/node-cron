@@ -146,11 +146,9 @@ export class Runner {
     } finally {
       try {
         await this.runCoordinator.onComplete?.(key);
-      /* v8 ignore start */
       } catch (err: any) {
         this.logger.error('Run coordinator onComplete failed', err);
       }
-      /* v8 ignore stop */
     }
   }
 

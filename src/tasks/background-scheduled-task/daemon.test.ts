@@ -367,7 +367,7 @@ describe('daemon - register', function () {
     };
 
     bind();
-    const onMessage = listeners.find(l => l.event === 'message');
+    const onMessage = listeners.filter(l => l.event === 'message').pop();
     const task = await onMessage.fn(message);
 
     const savedSend = process.send;

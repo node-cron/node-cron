@@ -513,6 +513,33 @@ describe('scheduler/runner', function(){
     expect(completedKey).toMatch(/^test:/);
   });
 
+  it('logs error when coordinator onComplete throws', async function () {
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let loggedMessage: string | undefined;
+
+    const coordinator = {
+      async shouldRun() { return true; },
+      async onComplete() { throw new Error('cleanup failed'); },
+    };
+
+    const runner = new Runner(timeMatcher, async () => 'done', {
+      runCoordinator: coordinator,
+      coordinatorKeyPrefix: 'test',
+      logger: {
+        info() {},
+        warn() {},
+        error(msg: any) { loggedMessage = typeof msg === 'string' ? msg : undefined; },
+        debug() {},
+      },
+    });
+
+    runner.start();
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    runner.stop();
+
+    expect(loggedMessage).toBe('Run coordinator onComplete failed');
+  });
+
   it('catches rejection when beforeRun and onError both throw', async function () {
     const timeMatcher = new TimeMatcher('* * * * * *');
     const runner = new Runner(timeMatcher, async () => {}, {
