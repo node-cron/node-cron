@@ -303,6 +303,16 @@ export class Runner {
     return !this.isStarted();
   }
 
+  setUnref(value: boolean){
+    this.unref = value;
+    if (this.heartBeatTimeout) {
+      value ? this.heartBeatTimeout.unref() : this.heartBeatTimeout.ref();
+    }
+    if (this.jitterTimeout) {
+      value ? this.jitterTimeout.unref() : this.jitterTimeout.ref();
+    }
+  }
+
   async execute(){
     const date = new Date();
     const execution: Execution = {

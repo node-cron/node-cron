@@ -271,6 +271,14 @@ class BackgroundScheduledTask implements ScheduledTask{
     return this.stateMachine.state;
   }
 
+  unref(): void {
+    if (this.forkProcess) this.forkProcess.unref();
+  }
+
+  ref(): void {
+    if (this.forkProcess) this.forkProcess.ref();
+  }
+
   destroy(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (this.stateMachine.state === 'destroyed') {

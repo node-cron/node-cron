@@ -182,6 +182,14 @@ export class InlineScheduledTask implements ScheduledTask {
   getStatus(): string {
     return this.stateMachine.state;
   }
+
+  unref(): void {
+    this.runner.setUnref(true);
+  }
+
+  ref(): void {
+    this.runner.setUnref(false);
+  }
   
   destroy(): void {
     if (this.stateMachine.state === 'destroyed') return;

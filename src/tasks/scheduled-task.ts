@@ -168,7 +168,12 @@ export interface ScheduledTask {
    */
   lastRun(): LastRun | null;
 
+  /** Unref the internal timers so the process can exit naturally. */
+  unref(): void;
+  /** Re-ref the internal timers (reverses unref). */
+  ref(): void;
+
   on(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void
   off(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void
-  once(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void 
+  once(event: TaskEvent, fun: (context: TaskContext) => Promise<void> | void): void
 }
