@@ -1,4 +1,3 @@
-import { assert } from 'chai';
 import { InlineScheduledTask } from '../tasks/inline-scheduled-task';
 import { setRunCoordinator } from './run-coordinator';
 import cron from '../node-cron';
@@ -37,12 +36,12 @@ describe('run coordinator', function () {
     await wait(1200);
     task.stop();
 
-    assert.isAbove(ran, 0);
-    assert.isAbove(coordinator.calls.shouldRun.length, 0);
-    assert.match(coordinator.calls.shouldRun[0].key, /^job:.+Z$/);
-    assert.equal(coordinator.calls.shouldRun[0].ttl, 30000);
-    assert.isAbove(coordinator.calls.onComplete.length, 0);
-    assert.equal(skipped, 0);
+    expect(ran).toBeGreaterThan(0);
+    expect(coordinator.calls.shouldRun.length).toBeGreaterThan(0);
+    expect(coordinator.calls.shouldRun[0].key).toMatch(/^job:.+Z$/);
+    expect(coordinator.calls.shouldRun[0].ttl).toBe(30000);
+    expect(coordinator.calls.onComplete.length).toBeGreaterThan(0);
+    expect(skipped).toBe(0);
   });
 
   it('not-elected instance emits skipped(not-elected) and does not run', async function () {
@@ -57,10 +56,10 @@ describe('run coordinator', function () {
     await wait(1200);
     task.stop();
 
-    assert.equal(ran, 0, 'must not run when not elected');
-    assert.isAbove(reasons.length, 0);
-    assert.deepEqual([...new Set(reasons)], ['not-elected']);
-    assert.equal(coordinator.calls.onComplete.length, 0, 'never completes a run it did not start');
+    expect(ran).toBe(0);
+    expect(reasons.length).toBeGreaterThan(0);
+    expect([...new Set(reasons)]).toEqual(['not-elected']);
+    expect(coordinator.calls.onComplete.length).toBe(0);
   });
 
   it('fails closed and emits skipped(coordinator-error) when shouldRun throws', async function () {
@@ -75,8 +74,8 @@ describe('run coordinator', function () {
     await wait(1200);
     task.stop();
 
-    assert.equal(ran, 0);
-    assert.deepEqual([...new Set(reasons)], ['coordinator-error']);
+    expect(ran).toBe(0);
+    expect([...new Set(reasons)]).toEqual(['coordinator-error']);
   });
 
   it('runs even if onComplete fails', async function () {
@@ -89,7 +88,7 @@ describe('run coordinator', function () {
     await wait(1200);
     task.stop();
 
-    assert.isAbove(ran, 0);
+    expect(ran).toBeGreaterThan(0);
   });
 
   it('honours a custom distributedLease', async function () {
@@ -101,7 +100,7 @@ describe('run coordinator', function () {
     await wait(1200);
     task.stop();
 
-    assert.equal(coordinator.calls.shouldRun[0].ttl, 5000);
+    expect(coordinator.calls.shouldRun[0].ttl).toBe(5000);
   });
 
   it('uses a per-task runCoordinator over the global one', async function () {
@@ -114,8 +113,8 @@ describe('run coordinator', function () {
     await wait(1200);
     task.stop();
 
-    assert.isAbove(perTask.calls.shouldRun.length, 0);
-    assert.equal(global.calls.shouldRun.length, 0);
+    expect(perTask.calls.shouldRun.length).toBeGreaterThan(0);
+    expect(global.calls.shouldRun.length).toBe(0);
   });
 
   describe('createTask validation', function () {
@@ -126,27 +125,27 @@ describe('run coordinator', function () {
 
     it('throws when distributed is set without a name', function () {
       setRunCoordinator(makeCoordinator() as any);
-      assert.throws(() => cron.createTask('* * * * *', () => {}, { distributed: true }), /requires a `name`/);
+      expect(() => cron.createTask('* * * * *', () => {}, { distributed: true })).toThrow(/requires a `name`/);
     });
 
     it('accepts a per-task runCoordinator without a global one', function () {
-      assert.doesNotThrow(() => cron.createTask('* * * * *', () => {}, { name: 'x', distributed: true, runCoordinator: makeCoordinator() as any }));
+      expect(() => cron.createTask('* * * * *', () => {}, { name: 'x', distributed: true, runCoordinator: makeCoordinator() as any })).not.toThrow();
     });
 
     it('allows distributed on a background task when a coordinator is set', function () {
       setRunCoordinator(makeCoordinator() as any);
-      assert.doesNotThrow(() =>
+      expect(() =>
         cron.createTask('* * * * *', '../test-assets/dummy-task.js', { name: 'x', distributed: true })
-      );
+      ).not.toThrow();
     });
 
     it('falls back to the env-var default and throws at schedule time when NODE_CRON_RUN is unset', function () {
-      assert.throws(() => cron.createTask('* * * * *', () => {}, { name: 'x', distributed: true }), /NODE_CRON_RUN/);
+      expect(() => cron.createTask('* * * * *', () => {}, { name: 'x', distributed: true })).toThrow(/NODE_CRON_RUN/);
     });
 
     it('uses the env-var default when NODE_CRON_RUN is set', function () {
       process.env.NODE_CRON_RUN = 'true';
-      assert.doesNotThrow(() => cron.createTask('* * * * *', () => {}, { name: 'x', distributed: true }));
+      expect(() => cron.createTask('* * * * *', () => {}, { name: 'x', distributed: true })).not.toThrow();
     });
   });
 });

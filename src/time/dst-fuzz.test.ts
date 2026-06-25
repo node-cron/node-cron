@@ -1,4 +1,3 @@
-import { assert } from 'chai';
 import { TimeMatcher } from './time-matcher';
 
 // Fuzz testing (spec 05-spec-dst, section 3.6).
@@ -82,17 +81,14 @@ describe('getNextMatch fuzzing', function () {
         next = new TimeMatcher(expr, tz).getNextMatch(base);
       } catch (err: any) {
         // An impossible expression must fail in finite time, not loop forever.
-        assert.match(err.message, /reasonable time range/, `unexpected error for "${expr}" @ ${tz}`);
+        expect(err.message).toMatch(/reasonable time range/);
         continue;
       }
-      assert.isAbove(
-        next.getTime(), base.getTime(),
-        `seed=${SEED} "${expr}" @ ${tz} from ${base.toISOString()} returned ${next.toISOString()} (not in the future)`
-      );
+      expect(next.getTime()).toBeGreaterThan(base.getTime());
       matched++;
     }
     // sanity: the generator should mostly produce satisfiable expressions
-    assert.isAbove(matched, 2500, 'most fuzzed expressions should be satisfiable');
+    expect(matched).toBeGreaterThan(2500);
   });
 
   it('10,000 chained getNextMatch stay strictly monotonic across DST', function () {
@@ -100,8 +96,8 @@ describe('getNextMatch fuzzing', function () {
     let prev = new Date('2025-01-01T00:00:00Z'); // crosses both 2025 transitions
     for (let i = 0; i < 10000; i++) {
       const next = matcher.getNextMatch(prev);
-      assert.isAbove(next.getTime(), prev.getTime(), `iteration ${i} did not advance`);
-      assert.isAtLeast(next.getTime() - prev.getTime(), 60000, `iteration ${i} fired faster than the 1-minute interval`);
+      expect(next.getTime()).toBeGreaterThan(prev.getTime());
+      expect(next.getTime() - prev.getTime()).toBeGreaterThanOrEqual(60000);
       prev = next;
     }
   });
@@ -113,19 +109,17 @@ describe('getNextMatch fuzzing', function () {
     const start = Date.now();
     const next = new TimeMatcher('* * * 15 * 1', 'America/New_York')
       .getNextMatch(new Date('2025-01-01T00:00:00Z'));
-    assert.equal(next.toISOString(), '2025-09-15T04:00:00.000Z'); // first Monday the 15th
-    assert.isBelow(Date.now() - start, 1000, 'must skip weekday-mismatched days instead of scanning each one');
+    expect(next.toISOString()).toBe('2025-09-15T04:00:00.000Z'); // first Monday the 15th
+    expect(Date.now() - start).toBeLessThan(1000);
   });
 
   it('impossible expressions throw in finite time (<= the walk bound)', function () {
     for (const expr of ['0 0 31 2 *', '0 0 30 2 *', '0 0 31 4 *', '0 0 31 6 *']) {
       const start = Date.now();
-      assert.throws(
-        () => new TimeMatcher(expr, 'America/New_York').getNextMatch(new Date('2025-01-01T00:00:00Z')),
-        /reasonable time range/,
-        `"${expr}" should be reported impossible`
-      );
-      assert.isBelow(Date.now() - start, 5000, `"${expr}" took too long to give up`);
+      expect(
+        () => new TimeMatcher(expr, 'America/New_York').getNextMatch(new Date('2025-01-01T00:00:00Z'))
+      ).toThrow(/reasonable time range/);
+      expect(Date.now() - start).toBeLessThan(5000);
     }
   });
 });

@@ -1,4 +1,3 @@
-import { assert }  from 'chai';
 import { fork } from 'child_process';
 import { EventEmitter } from 'events';
 import cron, { solvePath } from './node-cron';
@@ -51,7 +50,7 @@ describe('node-cron', function() {
                 }, 50);
             });
 
-            assert.isAtLeast(executed, 1);
+            expect(executed).toBeGreaterThanOrEqual(1);
             task.stop();
         });
 
@@ -62,10 +61,10 @@ describe('node-cron', function() {
                 { name: 'Dummy Task' },
             ) as InlineScheduledTask;
 
-            assert.isDefined(task);
-            assert.instanceOf(task, InlineScheduledTask);
-            assert.isDefined(task.name);
-            assert.equal(task.name, 'Dummy Task');
+            expect(task).toBeDefined();
+            expect(task).toBeInstanceOf(InlineScheduledTask);
+            expect(task.name).toBeDefined();
+            expect(task.name).toBe('Dummy Task');
 
             task.stop();
         });
@@ -80,10 +79,10 @@ describe('node-cron', function() {
             
             await new Promise(r=>{setTimeout(r, 1000)})
 
-            assert.isTrue(localIso.endsWith('-03:00'));
+            expect(localIso.endsWith('-03:00')).toBe(true);
             task.stop();
         });
-        
+
         it('should schedule a task with Europe/Istanbul timezone', async function() {
           let localIso: string = '';
             const task = cron.schedule('* * * * * *', (event) => {
@@ -93,7 +92,7 @@ describe('node-cron', function() {
             });
             await new Promise(r=>{setTimeout(r, 1000)})
             console.log(localIso)
-            assert.isTrue(localIso.endsWith('+03:00'));
+            expect(localIso.endsWith('+03:00')).toBe(true);
             task.stop();
         });
 
@@ -104,10 +103,10 @@ describe('node-cron', function() {
                 { noOverlap: true },
             );
 
-            assert.isDefined(task);
-            assert.instanceOf(task, InlineScheduledTask);
-            assert.isDefined(task.runner.noOverlap);
-            assert.isTrue(task.runner.noOverlap);
+            expect(task).toBeDefined();
+            expect(task).toBeInstanceOf(InlineScheduledTask);
+            expect(task.runner.noOverlap).toBeDefined();
+            expect(task.runner.noOverlap).toBe(true);
 
             task.stop();
         });
@@ -119,19 +118,19 @@ describe('node-cron', function() {
                 { maxExecutions: 5 },
             );
 
-            assert.isDefined(task);
-            assert.instanceOf(task, InlineScheduledTask);
-            assert.isDefined(task.runner.maxExecutions);
-            assert.equal(task.runner.maxExecutions, 5);
+            expect(task).toBeDefined();
+            expect(task).toBeInstanceOf(InlineScheduledTask);
+            expect(task.runner.maxExecutions).toBeDefined();
+            expect(task.runner.maxExecutions).toBe(5);
 
             task.stop();
         });
-        
+
         it('should schedule a background task', async function() {
             const task = cron.schedule('* * * * *', '../test-assets/dummy-task.js');
             await wait(1000);
-            assert.isNotNull(task);
-            assert.isDefined(task);
+            expect(task).not.toBeNull();
+            expect(task).toBeDefined();
             await task.destroy();
         });
 
@@ -158,51 +157,48 @@ describe('node-cron', function() {
             const task = cron.schedule('* * * * *', '../test-assets/dummy-task.js', { logger: fakeLogger });
             await wait(200);
 
-            assert.isTrue(
-              errors.some(e => JSON.stringify(e).includes('load failed in child')),
-              'the start failure should be logged via the configured logger'
-            );
+            expect(errors.some(e => JSON.stringify(e).includes('load failed in child'))).toBe(true);
             await task.destroy();
         });
     });
     
     describe('validate', function() {
         it('should validate a pattern', function() {
-            assert.isTrue(cron.validate('* * * * * *')); 
+            expect(cron.validate('* * * * * *')).toBe(true);
         });
-        
+
         it('should fail with a invalid pattern', function() {
-            assert.isFalse(cron.validate('62 * * * * *'));
+            expect(cron.validate('62 * * * * *')).toBe(false);
         });
     });
 
     describe('validateDetailed', function() {
         it('returns a structured result', function() {
             const ok = cron.validateDetailed('0 30 9 * * *');
-            assert.isTrue(ok.valid);
-            assert.deepEqual(ok.fields?.minute, [30]);
+            expect(ok.valid).toBe(true);
+            expect(ok.fields?.minute).toEqual([30]);
 
             const bad = cron.validateDetailed('62 * * * * *');
-            assert.isFalse(bad.valid);
-            assert.equal(bad.errors[0].field, 'second');
+            expect(bad.valid).toBe(false);
+            expect(bad.errors[0].field).toBe('second');
         });
     });
 
     describe('parse', function() {
         it('returns decomposed fields', function() {
-            assert.deepEqual(cron.parse('0 30 9 * * *').hour, [9]);
+            expect(cron.parse('0 30 9 * * *').hour).toEqual([9]);
         });
         it('throws on an invalid expression', function() {
-            assert.throws(() => cron.parse('62 * * * * *'));
+            expect(() => cron.parse('62 * * * * *')).toThrow();
         });
     });
 
     describe('createTask', function(){
       it('creates a inline task', function(){
         const task = cron.createTask('* * * * *', ()=>{});
-        assert.isDefined(task);
-        assert.isDefined(task.id);
-        assert.equal(task.getStatus(), 'stopped');
+        expect(task).toBeDefined();
+        expect(task.id).toBeDefined();
+        expect(task.getStatus()).toBe('stopped');
       });
 
       it('creates an inline task with name', function() {
@@ -212,11 +208,11 @@ describe('node-cron', function() {
           { name: 'Dummy Task' },
         );
 
-        assert.isDefined(task);
-        assert.instanceOf(task, InlineScheduledTask);
-        assert.equal(task.getStatus(), 'stopped');
-        assert.isDefined(task.name);
-        assert.equal(task.name, 'Dummy Task');
+        expect(task).toBeDefined();
+        expect(task).toBeInstanceOf(InlineScheduledTask);
+        expect(task.getStatus()).toBe('stopped');
+        expect(task.name).toBeDefined();
+        expect(task.name).toBe('Dummy Task');
       });
 
       it('creates an inline task with America/Sao_Paulo timezone', function() {
@@ -226,11 +222,11 @@ describe('node-cron', function() {
           { timezone: 'America/Sao_Paulo' },
         ) as InlineScheduledTask;
 
-        assert.isDefined(task);
-        assert.instanceOf(task, InlineScheduledTask);
-        assert.equal(task.getStatus(), 'stopped');
-        assert.isDefined(task.timezone);
-        assert.equal(task.timezone, 'America/Sao_Paulo');
+        expect(task).toBeDefined();
+        expect(task).toBeInstanceOf(InlineScheduledTask);
+        expect(task.getStatus()).toBe('stopped');
+        expect(task.timezone).toBeDefined();
+        expect(task.timezone).toBe('America/Sao_Paulo');
       });
 
       it('creates an inline task with noOverlap option', function() {
@@ -240,11 +236,11 @@ describe('node-cron', function() {
           { noOverlap: true },
         ) as InlineScheduledTask;
 
-        assert.isDefined(task);
-        assert.instanceOf(task, InlineScheduledTask);
-        assert.equal(task.getStatus(), 'stopped');
-        assert.isDefined(task.runner.noOverlap);
-        assert.isTrue(task.runner.noOverlap);
+        expect(task).toBeDefined();
+        expect(task).toBeInstanceOf(InlineScheduledTask);
+        expect(task.getStatus()).toBe('stopped');
+        expect(task.runner.noOverlap).toBeDefined();
+        expect(task.runner.noOverlap).toBe(true);
       });
 
       it('creates an inline task with maxExecutions option', function() {
@@ -254,18 +250,18 @@ describe('node-cron', function() {
           { maxExecutions: 5 },
         ) as InlineScheduledTask;
 
-        assert.isDefined(task);
-        assert.instanceOf(task, InlineScheduledTask);
-        assert.equal(task.getStatus(), 'stopped');
-        assert.isDefined(task.runner.maxExecutions);
-        assert.equal(task.runner.maxExecutions, 5);
+        expect(task).toBeDefined();
+        expect(task).toBeInstanceOf(InlineScheduledTask);
+        expect(task.getStatus()).toBe('stopped');
+        expect(task.runner.maxExecutions).toBeDefined();
+        expect(task.runner.maxExecutions).toBe(5);
       });
 
       it('creates a background task', function(){
         const task = cron.createTask('* * * * *', '../test-assets/dummy-task.js');
-        assert.isDefined(task);
-        assert.isDefined(task.id);
-        assert.equal(task.getStatus(), 'stopped');
+        expect(task).toBeDefined();
+        expect(task.id).toBeDefined();
+        expect(task.getStatus()).toBe('stopped');
       });
     })
 
@@ -273,24 +269,24 @@ describe('node-cron', function() {
       it('should resolve an absolute path', function(){
         const path = '/home/usr/dir/script.js';
         const solvedPath = solvePath(path);
-        assert.isDefined(solvedPath);
-        assert.include(solvedPath, `file:///`);
-        assert.include(solvedPath, path);
+        expect(solvedPath).toBeDefined();
+        expect(solvedPath).toContain(`file:///`);
+        expect(solvedPath).toContain(path);
       });
 
       it('should resolve a file url', function(){
         const path = 'file:///home/usr/dir/script.js';
         const solvedPath = solvePath(path);
-        assert.isDefined(solvedPath);
-        assert.equal(solvedPath, `file:///home/usr/dir/script.js`);
+        expect(solvedPath).toBeDefined();
+        expect(solvedPath).toBe(`file:///home/usr/dir/script.js`);
       });
 
       it('should resolve a relative path', function(){
         const path = './home/usr/dir/script.js';
         const solvedPath = solvePath(path);
-        assert.isDefined(solvedPath);
-        assert.include(solvedPath, `file:///`);
-        assert.include(solvedPath, path.slice(1));
+        expect(solvedPath).toBeDefined();
+        expect(solvedPath).toContain(`file:///`);
+        expect(solvedPath).toContain(path.slice(1));
       });
     })
 });

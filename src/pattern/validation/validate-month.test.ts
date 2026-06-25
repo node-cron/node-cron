@@ -1,5 +1,3 @@
-import * as chai from 'chai';
-const { expect } = chai;
 import validate from './pattern-validation';
 
 describe('pattern-validation',  function() {
@@ -7,37 +5,37 @@ describe('pattern-validation',  function() {
         it('should fail with invalid month',  function() {
             expect( () => {
                 validate('* * * 13 *');
-            }).to.throw('13 is a invalid expression for month');
+            }).toThrow('13 is a invalid expression for month');
         });
 
         it('should fail with invalid month name',  function() {
             expect( () => {
                 validate('* * * foo *');
-            }).to.throw('foo is a invalid expression for month');
+            }).toThrow('foo is a invalid expression for month');
         });
 
         it('should not fail with valid month',  function() {
             expect( () => {
                 validate('* * * 10 *');
-            }).to.not.throw();
+            }).not.toThrow();
         });
 
         it('should not fail with valid month name',  function() {
             expect( () => {
                 validate('* * * September *');
-            }).to.not.throw();
+            }).not.toThrow();
         });
 
         it('should not fail with * for month',  function() {
             expect( () => {
                 validate('* * * * *');
-            }).to.not.throw();
+            }).not.toThrow();
         });
 
         it('should not fail with */2 for month',  function() {
             expect( () => {
                 validate('* * * */2 *');
-            }).to.not.throw();
+            }).not.toThrow();
         });
     });
 });

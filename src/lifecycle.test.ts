@@ -1,4 +1,3 @@
-import { assert } from 'chai';
 import { createTask } from './node-cron';
 import { ScheduledTask, TaskContext, TaskEvent } from './tasks/scheduled-task';
 import { EventEmitter } from 'events';
@@ -101,13 +100,13 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
 
     it('starts in stopped state', () => {
       task = factory();
-      assert.equal(task.getStatus(), 'stopped');
+      expect(task.getStatus()).toBe('stopped');
     });
 
     it('transitions to idle on start', async () => {
       task = factory();
       await task.start();
-      assert.equal(task.getStatus(), 'idle');
+      expect(task.getStatus()).toBe('idle');
     });
 
     it('emits task:started on start', async () => {
@@ -115,14 +114,14 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
       const event = waitFor(task, 'task:started');
       await task.start();
       const ctx = await event;
-      assert.isDefined(ctx.date);
+      expect(ctx.date).toBeDefined();
     });
 
     it('transitions to stopped on stop', async () => {
       task = factory();
       await task.start();
       await task.stop();
-      assert.equal(task.getStatus(), 'stopped');
+      expect(task.getStatus()).toBe('stopped');
     });
 
     it('emits task:stopped on stop', async () => {
@@ -137,16 +136,16 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
       task = factory();
       await task.start();
       await task.stop();
-      assert.equal(task.getStatus(), 'stopped');
+      expect(task.getStatus()).toBe('stopped');
       await task.start();
-      assert.equal(task.getStatus(), 'idle');
+      expect(task.getStatus()).toBe('idle');
     });
 
     it('transitions to destroyed on destroy', async () => {
       task = factory();
       await task.start();
       await task.destroy();
-      assert.equal(task.getStatus(), 'destroyed');
+      expect(task.getStatus()).toBe('destroyed');
     });
 
     it('emits task:destroyed on destroy', async () => {
@@ -162,7 +161,7 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
       await task.start();
       await task.destroy();
       await task.destroy();
-      assert.equal(task.getStatus(), 'destroyed');
+      expect(task.getStatus()).toBe('destroyed');
     });
 
     // -- execution --
@@ -177,15 +176,15 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
 
       await task.execute();
 
-      assert.include(events, 'execution:started');
-      assert.include(events, 'execution:finished');
+      expect(events).toContain('execution:started');
+      expect(events).toContain('execution:finished');
     });
 
     it('execute resolves with the task result', async () => {
       task = factory();
       await task.start();
       const result = await task.execute();
-      assert.equal(result, 'ok');
+      expect(result).toBe('ok');
     });
 
     it('emits execution:failed when task throws', async () => {
@@ -197,9 +196,9 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
 
       try { await task.execute(); } catch { /* expected */ }
 
-      assert.isDefined(failCtx);
-      assert.isDefined(failCtx!.execution?.error);
-      assert.equal(failCtx!.execution!.error!.message, 'task failed');
+      expect(failCtx).toBeDefined();
+      expect(failCtx!.execution?.error).toBeDefined();
+      expect(failCtx!.execution!.error!.message).toBe('task failed');
     });
 
     it('execute rejects when task throws', async () => {
@@ -208,24 +207,24 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
 
       try {
         await task.execute();
-        assert.fail('should have rejected');
+        expect.fail('should have rejected');
       } catch (err: any) {
-        assert.equal(err.message, 'task failed');
+        expect(err.message).toBe('task failed');
       }
     });
 
     it('records lastRun after successful execution', async () => {
       task = factory();
       await task.start();
-      assert.isNull(task.lastRun());
+      expect(task.lastRun()).toBeNull();
 
       await task.execute();
 
       const last = task.lastRun();
-      assert.isNotNull(last);
-      assert.instanceOf(last!.date, Date);
-      assert.equal(last!.result, 'ok');
-      assert.isUndefined(last!.error);
+      expect(last).not.toBeNull();
+      expect(last!.date).toBeInstanceOf(Date);
+      expect(last!.result).toBe('ok');
+      expect(last!.error).toBeUndefined();
     });
 
     it('records lastRun after failed execution', async () => {
@@ -235,8 +234,8 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
       try { await task.execute(); } catch { /* expected */ }
 
       const last = task.lastRun();
-      assert.isNotNull(last);
-      assert.isDefined(last!.error);
+      expect(last).not.toBeNull();
+      expect(last!.error).toBeDefined();
     });
 
     // -- no duplicate events --
@@ -246,7 +245,7 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
       let count = 0;
       task.on('task:started', () => count++);
       await task.start();
-      assert.equal(count, 1);
+      expect(count).toBe(1);
     });
 
     it('stop emits task:stopped exactly once', async () => {
@@ -255,7 +254,7 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
       let count = 0;
       task.on('task:stopped', () => count++);
       await task.stop();
-      assert.equal(count, 1);
+      expect(count).toBe(1);
     });
 
     it('destroy emits task:destroyed exactly once', async () => {
@@ -264,7 +263,7 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
       let count = 0;
       task.on('task:destroyed', () => count++);
       await task.destroy();
-      assert.equal(count, 1);
+      expect(count).toBe(1);
     });
 
     it('execute emits execution:started and execution:finished exactly once each', async () => {
@@ -275,8 +274,8 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
       task.on('execution:started', () => started++);
       task.on('execution:finished', () => finished++);
       await task.execute();
-      assert.equal(started, 1);
-      assert.equal(finished, 1);
+      expect(started).toBe(1);
+      expect(finished).toBe(1);
     });
 
     it('failed execute emits execution:started and execution:failed exactly once each', async () => {
@@ -287,34 +286,34 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
       task.on('execution:started', () => started++);
       task.on('execution:failed', () => failed++);
       try { await task.execute(); } catch { /* expected */ }
-      assert.equal(started, 1);
-      assert.equal(failed, 1);
+      expect(started).toBe(1);
+      expect(failed).toBe(1);
     });
 
     // -- introspection --
 
     it('returns the cron pattern', () => {
       task = factory({ expression: '*/5 * * * *' });
-      assert.equal(task.getPattern(), '*/5 * * * *');
+      expect(task.getPattern()).toBe('*/5 * * * *');
     });
 
     it('returns next run when started', async () => {
       task = factory();
       await task.start();
       const next = task.getNextRun();
-      assert.isNotNull(next);
-      assert.instanceOf(next, Date);
+      expect(next).not.toBeNull();
+      expect(next).toBeInstanceOf(Date);
     });
 
     it('returns null for next run when stopped', () => {
       task = factory();
-      assert.isNull(task.getNextRun());
+      expect(task.getNextRun()).toBeNull();
     });
 
     it('has an id', () => {
       task = factory();
-      assert.isDefined(task.id);
-      assert.isString(task.id);
+      expect(task.id).toBeDefined();
+      expect(typeof task.id).toBe('string');
     });
 
     // -- full lifecycle e2e --
@@ -323,35 +322,35 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
       task = factory();
 
       // created
-      assert.equal(task.getStatus(), 'stopped');
-      assert.isNull(task.lastRun());
+      expect(task.getStatus()).toBe('stopped');
+      expect(task.lastRun()).toBeNull();
 
       // start
       await task.start();
-      assert.equal(task.getStatus(), 'idle');
+      expect(task.getStatus()).toBe('idle');
 
       // first execution
       const result1 = await task.execute();
-      assert.equal(result1, 'ok');
-      assert.isNotNull(task.lastRun());
+      expect(result1).toBe('ok');
+      expect(task.lastRun()).not.toBeNull();
 
       // stop
       await task.stop();
-      assert.equal(task.getStatus(), 'stopped');
-      assert.isNull(task.getNextRun());
+      expect(task.getStatus()).toBe('stopped');
+      expect(task.getNextRun()).toBeNull();
 
       // restart
       await task.start();
-      assert.equal(task.getStatus(), 'idle');
-      assert.isNotNull(task.getNextRun());
+      expect(task.getStatus()).toBe('idle');
+      expect(task.getNextRun()).not.toBeNull();
 
       // second execution
       const result2 = await task.execute();
-      assert.equal(result2, 'ok');
+      expect(result2).toBe('ok');
 
       // destroy
       await task.destroy();
-      assert.equal(task.getStatus(), 'destroyed');
+      expect(task.getStatus()).toBe('destroyed');
     });
   });
 }

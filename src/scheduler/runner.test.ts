@@ -1,4 +1,3 @@
-import {assert} from 'chai';
 import { Runner, RunnerOptions } from './runner';
 import { TimeMatcher } from '../time/time-matcher';
 
@@ -7,12 +6,12 @@ import logger from '../logger';
 describe('scheduler/runner', function(){
   it('defaults the missed-execution tolerance to 1000ms', function(){
     const runner = createRunner(new TimeMatcher('* * * * * *'), 200);
-    assert.equal(runner.missedExecutionTolerance, 1000);
+    expect(runner.missedExecutionTolerance).toBe(1000);
   });
 
   it('honours a custom missed-execution tolerance', function(){
     const runner = createRunner(new TimeMatcher('* * * * * *'), 200, { missedExecutionTolerance: 0 });
-    assert.equal(runner.missedExecutionTolerance, 0);
+    expect(runner.missedExecutionTolerance).toBe(0);
   });
 
   it('starts running',  async function(){
@@ -20,15 +19,15 @@ describe('scheduler/runner', function(){
     const runner = createRunner(timeMatcher, 200);
     
 
-    assert.isFalse(runner.isStarted())
-    assert.isTrue(runner.isStopped())
+    expect(runner.isStarted()).toBe(false)
+    expect(runner.isStopped()).toBe(true)
     runner.start();
-    assert.isTrue(runner.isStarted())
-    assert.isFalse(runner.isStopped())
+    expect(runner.isStarted()).toBe(true)
+    expect(runner.isStopped()).toBe(false)
 
     await new Promise(resolve => { setTimeout(resolve, 1000)});
     runner.stop()
-    assert.isTrue(runner.runCount >= 1);
+    expect(runner.runCount >= 1).toBe(true);
 
   });
 
@@ -48,7 +47,7 @@ describe('scheduler/runner', function(){
     });
 
     const result = await errorCaught;
-    assert.equal(result.message, 'fail!');
+    expect(result.message).toBe('fail!');
   });
 
   it('allows handle task finished', async function(){
@@ -68,7 +67,7 @@ describe('scheduler/runner', function(){
     });
 
     const result = await resultCaught;
-    assert.equal(result, 'task finished');
+    expect(result).toBe('task finished');
   });
 
   it('allows handle before execute', async function(){
@@ -91,7 +90,7 @@ describe('scheduler/runner', function(){
     });
 
     const result = await resultCaught;
-    assert.equal(result, 'task finished');
+    expect(result).toBe('task finished');
   });
 
   it('allows manual execution', async function(){
@@ -114,7 +113,7 @@ describe('scheduler/runner', function(){
     });
 
     const result = await resultCaught;
-    assert.equal(result, 'task finished');
+    expect(result).toBe('task finished');
   });
 
   it('allows handle task error on manual execution', async function(){
@@ -133,7 +132,7 @@ describe('scheduler/runner', function(){
     });
 
     const error = await errorCaught;
-    assert.equal(error.message, 'task failed')
+    expect(error.message).toBe('task failed')
   });
 
   it('before execute prevents run', async function(){
@@ -151,8 +150,8 @@ describe('scheduler/runner', function(){
     runner.start();
     await new Promise(resolve => { setTimeout(resolve, 1000)});
     runner.stop();
-    assert.isTrue(boforeCalled);
-    assert.equal(runner.runCount, 0)
+    expect(boforeCalled).toBe(true);
+    expect(runner.runCount).toBe(0)
   });
 
   it('allows handle task error', async function(){
@@ -171,7 +170,7 @@ describe('scheduler/runner', function(){
     });
 
     const error = await errorCaught;
-    assert.equal(error.message, 'task failed')
+    expect(error.message).toBe('task failed')
   });
 
   it('does not break if onError was not set',  async function(){
@@ -202,11 +201,11 @@ describe('scheduler/runner', function(){
     // The next run is the next minute boundary: seconds/ms zeroed, and within
     // one minute of now. (Asserting `getMinutes() + 1` breaks at the :59 -> :00
     // rollover, where the next minute is 0, not 60.)
-    assert.equal(nextRun.getSeconds(), 0);
-    assert.equal(nextRun.getMilliseconds(), 0);
+    expect(nextRun.getSeconds()).toBe(0);
+    expect(nextRun.getMilliseconds()).toBe(0);
     const diff = nextRun.getTime() - now.getTime();
-    assert.isAbove(diff, 0);
-    assert.isAtMost(diff, 60000);
+    expect(diff).toBeGreaterThan(0);
+    expect(diff).toBeLessThanOrEqual(60000);
 
     runner.stop()
 
@@ -219,8 +218,8 @@ describe('scheduler/runner', function(){
       const onOverlap = (date: Date) => {
         try{
           runner.stop();
-          assert.isDefined(date);
-          assert.equal(runner.runCount, 1);
+          expect(date).toBeDefined();
+          expect(runner.runCount).toBe(1);
           resolve();
         } catch(error){
           reject(error);
@@ -238,7 +237,7 @@ describe('scheduler/runner', function(){
     runner.start();
     await new Promise(resolve => { setTimeout(resolve, 2000)});
 
-    assert.equal(runner.runCount, 1);
+    expect(runner.runCount).toBe(1);
 
     runner.stop();
   });
@@ -269,8 +268,8 @@ describe('scheduler/runner', function(){
     await new Promise(resolve => { setTimeout(resolve, 1200)});
 
     runner.stop()
-    assert.isNotNull(missedDate);
-    assert.equal(missedCount, 1)
+    expect(missedDate).not.toBeNull();
+    expect(missedCount).toBe(1)
 
   });
 
@@ -295,7 +294,7 @@ describe('scheduler/runner', function(){
     // Wait to confirm the jitter timeout was actually cleared
     await new Promise(resolve => { setTimeout(resolve, 2000) });
 
-    assert.isFalse(taskCalled, 'task should not run after stop() cancels the jitter timeout');
+    expect(taskCalled).toBe(false);
   });
 
   it('sets a max delay on heartbeat', function(){
@@ -305,7 +304,7 @@ describe('scheduler/runner', function(){
 
     const timeout: any = runner.heartBeatTimeout;
     
-    assert.equal(timeout._idleTimeout, 86400000);
+    expect(timeout._idleTimeout).toBe(86400000);
 
     runner.stop();
   });
@@ -332,7 +331,7 @@ describe('scheduler/runner', function(){
     // The runner should still be scheduling heartbeats (not stuck on a
     // permanently pending promise). With noOverlap this would previously
     // block all future executions.
-    assert.isTrue(errorCaught, 'onError should be called when beforeRun throws');
+    expect(errorCaught).toBe(true);
   });
 
   it('reports beforeRun errors via onError', async function(){
@@ -356,7 +355,7 @@ describe('scheduler/runner', function(){
     });
 
     await errorSeen;
-    assert.equal(caughtMessage, 'beforeRun exploded');
+    expect(caughtMessage).toBe('beforeRun exploded');
   });
 
   it('does not hang jitter promise when onError throws', async function(){
@@ -381,7 +380,7 @@ describe('scheduler/runner', function(){
     Math.random = origRandom;
     runner.stop();
 
-    assert.isAbove(onErrorCallCount, 1, 'onError should be called multiple times if jitter promise resolves properly');
+    expect(onErrorCallCount).toBeGreaterThan(1);
   });
 
   it('does not emit unhandled rejection when task throws', async function(){
@@ -408,7 +407,7 @@ describe('scheduler/runner', function(){
     await new Promise(resolve => setTimeout(resolve, 50));
     process.removeListener('unhandledRejection', handler);
 
-    assert.isFalse(unhandled, 'TrackedPromise rejection should be caught');
+    expect(unhandled).toBe(false);
   });
 
 });

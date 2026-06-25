@@ -1,4 +1,3 @@
-import { assert } from 'chai';
 import { EventEmitter } from 'events';
 import { IpcRunCoordinator } from './ipc-run-coordinator';
 
@@ -23,13 +22,13 @@ describe('IpcRunCoordinator', function () {
 
     const promise = coordinator.shouldRun('job:2026', 5000);
     const req = channel.sent[0];
-    assert.equal(req.type, 'coordinator:shouldRun');
-    assert.equal(req.key, 'job:2026');
-    assert.equal(req.ttlMs, 5000);
-    assert.isString(req.reqId);
+    expect(req.type).toBe('coordinator:shouldRun');
+    expect(req.key).toBe('job:2026');
+    expect(req.ttlMs).toBe(5000);
+    expect(typeof req.reqId).toBe('string');
 
     channel.reply({ type: 'coordinator:result', reqId: req.reqId, allowed: true });
-    assert.isTrue(await promise);
+    expect(await promise).toBe(true);
   });
 
   it('resolves false when not elected', async function () {
@@ -38,7 +37,7 @@ describe('IpcRunCoordinator', function () {
 
     const promise = coordinator.shouldRun('job:2026', 5000);
     channel.reply({ type: 'coordinator:result', reqId: channel.sent[0].reqId, allowed: false });
-    assert.isFalse(await promise);
+    expect(await promise).toBe(false);
   });
 
   it('rejects when the parent reports a coordinator error (fail-closed)', async function () {
@@ -50,7 +49,7 @@ describe('IpcRunCoordinator', function () {
 
     let error: Error | undefined;
     await promise.catch((e) => { error = e; });
-    assert.match(error!.message, /coordinator down/);
+    expect(error!.message).toMatch(/coordinator down/);
   });
 
   it('ignores unrelated messages and unknown request ids', async function () {
@@ -61,7 +60,7 @@ describe('IpcRunCoordinator', function () {
     channel.reply({ event: 'task:started' });
     channel.reply({ type: 'coordinator:result', reqId: 'nope', allowed: true });
     channel.reply({ type: 'coordinator:result', reqId: channel.sent[0].reqId, allowed: true });
-    assert.isTrue(await promise);
+    expect(await promise).toBe(true);
   });
 
   it('sends a coordinator:complete request', async function () {
@@ -69,13 +68,13 @@ describe('IpcRunCoordinator', function () {
     const coordinator = new IpcRunCoordinator(channel);
 
     await coordinator.onComplete('job:2026');
-    assert.deepEqual(channel.sent[0], { type: 'coordinator:complete', key: 'job:2026' });
+    expect(channel.sent[0]).toEqual({ type: 'coordinator:complete', key: 'job:2026' });
   });
 
   it('does not throw when the channel has no send (parent gone)', async function () {
     const coordinator = new IpcRunCoordinator({ on: () => {} });
     await coordinator.onComplete('job:2026');
     // shouldRun stays pending (no parent to reply); just assert it returns a promise.
-    assert.instanceOf(coordinator.shouldRun('job:2026', 1000), Promise);
+    expect(coordinator.shouldRun('job:2026', 1000)).toBeInstanceOf(Promise);
   });
 });

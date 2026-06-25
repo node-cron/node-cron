@@ -1,4 +1,3 @@
-import { assert } from 'chai';
 import { bind } from './daemon';
 import { IpcRunCoordinator } from '../../coordinator/ipc-run-coordinator';
 
@@ -29,8 +28,8 @@ describe('daemon - register', function () {
     const onMessge = listeners.find(l => l.event === 'message');
     const task = await onMessge.fn(message);
     
-    assert.isDefined(task);
-    assert.equal(task.name, 'dummy-task');
+    expect(task).toBeDefined();
+    expect(task.name).toBe('dummy-task');
     task.destroy();
   });
 
@@ -46,7 +45,7 @@ describe('daemon - register', function () {
     const onMessage = listeners.find(l => l.event === 'message');
     const task: any = await onMessage.fn(message);
 
-    assert.instanceOf(task.runner.runCoordinator, IpcRunCoordinator);
+    expect(task.runner.runCoordinator).toBeInstanceOf(IpcRunCoordinator);
     task.destroy();
   });
 
@@ -67,14 +66,14 @@ describe('daemon - register', function () {
     // reply. Wait (event-gated, not a fixed sleep) for the ask, reply "not
     // elected", then wait for the forwarded skip.
     const ask = await waitFor(() => messages.find(m => m?.type === 'coordinator:shouldRun'));
-    assert.isDefined(ask, 'daemon should ask the parent whether to run');
+    expect(ask).toBeDefined();
     listeners
       .filter(l => l.event === 'message')
       .forEach(l => l.fn({ type: 'coordinator:result', reqId: ask.reqId, allowed: false }));
 
     const skipped = await waitFor(() => messages.find(m => m.event === 'execution:skipped'));
-    assert.isDefined(skipped, 'daemon should forward execution:skipped');
-    assert.equal(skipped.context.reason, 'not-elected');
+    expect(skipped).toBeDefined();
+    expect(skipped.context.reason).toBe('not-elected');
     task.destroy();
   });
 
@@ -85,9 +84,9 @@ describe('daemon - register', function () {
     try {
       bind();
       const disconnect = listeners.filter(l => l.event === 'disconnect').pop();
-      assert.isDefined(disconnect, 'daemon should listen for parent disconnect');
+      expect(disconnect).toBeDefined();
       disconnect.fn();
-      assert.equal(exitedWith, 0);
+      expect(exitedWith).toBe(0);
     } finally {
       process.exit = realExit;
     }
@@ -122,10 +121,7 @@ describe('daemon - register', function () {
   
     const receivedEvents = messages.map(msg => msg.event);
     expectedEvents.forEach(expectedEvent => {
-      assert.ok(
-        receivedEvents.includes(expectedEvent), 
-        `Event '${expectedEvent}' not received. Events received: ${receivedEvents.join(', ')}`
-      );
+      expect(receivedEvents.includes(expectedEvent)).toBeTruthy();
     });
   });
 
@@ -147,10 +143,10 @@ describe('daemon - register', function () {
 
     task.destroy();
 
-    assert.isDefined(messages.find(m => m.event === 'daemon:started'), 'daemon:started should be sent');
-    assert.isDefined(messages.find(m => m.event === 'task:started'), 'task:started should be sent');
-    assert.isDefined(messages.find(m => m.event === 'execution:started'), 'execution:started should be sent');
-    assert.isDefined(messages.find(m => m.event === 'execution:failed'), 'execution:failed should be sent');
+    expect(messages.find(m => m.event === 'daemon:started')).toBeDefined();
+    expect(messages.find(m => m.event === 'task:started')).toBeDefined();
+    expect(messages.find(m => m.event === 'execution:started')).toBeDefined();
+    expect(messages.find(m => m.event === 'execution:failed')).toBeDefined();
   });
 
   it('should send overlap event', async function () {
@@ -171,10 +167,10 @@ describe('daemon - register', function () {
 
     task.destroy();
 
-    assert.isDefined(messages.find(m => m.event === 'daemon:started'), 'daemon:started should be sent');
-    assert.isDefined(messages.find(m => m.event === 'task:started'), 'task:started should be sent');
-    assert.isDefined(messages.find(m => m.event === 'execution:started'), 'execution:started should be sent');
-    assert.isDefined(messages.find(m => m.event === 'execution:overlap'), 'execution:overlap should be sent');
+    expect(messages.find(m => m.event === 'daemon:started')).toBeDefined();
+    expect(messages.find(m => m.event === 'task:started')).toBeDefined();
+    expect(messages.find(m => m.event === 'execution:started')).toBeDefined();
+    expect(messages.find(m => m.event === 'execution:overlap')).toBeDefined();
   });
 
   it('should send missed event', async function () {
@@ -199,7 +195,7 @@ describe('daemon - register', function () {
     task.destroy();
 
     const event = messages.find(m => m.event === 'execution:missed')
-    assert.isDefined(event);
+    expect(event).toBeDefined();
   });
 
   it('should handle task:stop command', async function () {
@@ -220,10 +216,10 @@ describe('daemon - register', function () {
     const stopMessage = { command: 'task:stop' };
     const result = await onMessage.fn(stopMessage);
     
-    assert.equal(result, task);
-    
+    expect(result).toBe(task);
+
     const stoppedEvent = messages.find(m => m.event === 'task:stopped');
-    assert.isDefined(stoppedEvent, 'task:stopped event should be sent');
+    expect(stoppedEvent).toBeDefined();
     task.destroy();
   });
 
@@ -245,10 +241,10 @@ describe('daemon - register', function () {
     const destroyMessage = { command: 'task:destroy' };
     const result = await onMessage.fn(destroyMessage);
     
-    assert.equal(result, task);
-    
+    expect(result).toBe(task);
+
     const destroyedEvent = messages.find(m => m.event === 'task:destroyed');
-    assert.isDefined(destroyedEvent, 'task:destroyed event should be sent');
+    expect(destroyedEvent).toBeDefined();
     task.destroy();
   });
 
@@ -270,9 +266,9 @@ describe('daemon - register', function () {
     task.destroy();
 
     const started = messages.find(m => m.event === 'execution:started');
-    assert.isDefined(started, 'execution:started should be sent');
-    assert.isDefined(started.context.task.state, 'task field should use "state" not "status"');
-    assert.isUndefined(started.context.task.status, 'task field should not use "status"');
+    expect(started).toBeDefined();
+    expect(started.context.task.state).toBeDefined();
+    expect(started.context.task.status).toBeUndefined();
   });
 
   it('should handle task:execute command', async function () {
@@ -294,10 +290,10 @@ describe('daemon - register', function () {
     await onMessage.fn(executeMessage);
     
     const startedEvent = messages.find(m => m.event === 'execution:started');
-    assert.isDefined(startedEvent, 'execution:started event should be sent');
-    
+    expect(startedEvent).toBeDefined();
+
     const finishedEvent = messages.find(m => m.event === 'execution:finished');
-    assert.isDefined(finishedEvent, 'execution:finished event should be sent');
+    expect(finishedEvent).toBeDefined();
     task.destroy();
   });;
 
@@ -319,10 +315,10 @@ describe('daemon - register', function () {
     const executeMessage = { command: 'task:execute' };
     await onMessage.fn(executeMessage);
 
-    const failedEvent = messages.find(m => m.event === 'execution:failed');    
-    assert.isDefined(failedEvent, 'execution:failed event should be sent');
-    assert.isDefined(failedEvent.jsonError, 'error should be serialized');
-    assert.equal(JSON.parse(failedEvent.jsonError).extra, 'extra');
+    const failedEvent = messages.find(m => m.event === 'execution:failed');
+    expect(failedEvent).toBeDefined();
+    expect(failedEvent.jsonError).toBeDefined();
+    expect(JSON.parse(failedEvent.jsonError).extra).toBe('extra');
     task.destroy();
   });
 
@@ -345,12 +341,12 @@ describe('daemon - register', function () {
     } catch {
       threw = true;
     }
-    assert.isFalse(threw, 'daemon should not throw when the task fails to load');
+    expect(threw).toBe(false);
 
     const errorMessage = messages.find(m => m.event === 'daemon:error');
-    assert.isDefined(errorMessage, 'daemon should send a daemon:error message');
-    assert.isDefined(errorMessage.jsonError, 'the real error should be serialized');
-    assert.match(JSON.parse(errorMessage.jsonError).message, /exist-484-xyz|find|module/i);
+    expect(errorMessage).toBeDefined();
+    expect(errorMessage.jsonError).toBeDefined();
+    expect(JSON.parse(errorMessage.jsonError).message).toMatch(/exist-484-xyz|find|module/i);
   });
 });
 
