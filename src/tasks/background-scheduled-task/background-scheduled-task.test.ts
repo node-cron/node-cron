@@ -1,6 +1,4 @@
-import { assert } from 'chai';
 import { fork } from 'child_process';
-import sinon from 'sinon';
 
 import BackgroundScheduledTask from "./background-scheduled-task";
 
@@ -12,12 +10,12 @@ vi.mock('child_process', () => ({ fork: vi.fn() }));
 
 describe('BackgroundScheduledTask', function() {
 
-  let fakeChildProcess: EventEmitter & { send: sinon.SinonStub; kill: sinon.SinonStub };
+  let fakeChildProcess: EventEmitter & { send: ReturnType<typeof vi.fn>; kill: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     fakeChildProcess = Object.assign(new EventEmitter(), {
-      send: sinon.stub(),
-      kill: sinon.stub(),
+      send: vi.fn(),
+      kill: vi.fn(),
       killed: false
     });
 
@@ -25,21 +23,20 @@ describe('BackgroundScheduledTask', function() {
   });
 
   afterEach(() => {
-    sinon.restore();
     vi.mocked(fork).mockReset();
   });
 
   it('creates a new background task', function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-      assert.match(task.id, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
-      assert.equal(task.id, task.name);
-      assert.equal(task.getStatus(), 'stopped');
+      expect(task.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+      expect(task.id).toBe(task.name);
+      expect(task.getStatus()).toBe('stopped');
   });
 
   describe('getNextRun', function(){
     it('returns next run', async function(){
       const task = new BackgroundScheduledTask('* * * * *', './test-assets/dummy-task.js');
-      fakeChildProcess.send.callsFake((msg: any)=>{
+      fakeChildProcess.send.mockImplementation((msg: any)=>{
         if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
         else task.emitter.emit('task:started');
       });
@@ -51,7 +48,7 @@ describe('BackgroundScheduledTask', function() {
       nextMinute.setSeconds(0);
       nextMinute.setMinutes(nextMinute.getMinutes() + 1);
 
-      assert.equal(task.getNextRun()?.getTime(), nextMinute.getTime());
+      expect(task.getNextRun()?.getTime()).toBe(nextMinute.getTime());
       await task.destroy();
     });
   });
@@ -60,88 +57,88 @@ describe('BackgroundScheduledTask', function() {
     it('do not fail if already started', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
       fakeChildProcess = Object.assign(new EventEmitter(), {
-        send: sinon.stub(),
-        kill: sinon.stub()
+        send: vi.fn(),
+        kill: vi.fn()
       });
       task.forkProcess = fakeChildProcess as any;
 
       const result = await task.start();
-      assert.isUndefined(result);
+      expect(result).toBeUndefined();
     });
 
     it('starts new fork', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-  
-      fakeChildProcess.send.callsFake(()=>{
+
+      fakeChildProcess.send.mockImplementation(()=>{
         task.emitter.emit('task:started');
       });
 
       const result = await task.start();
-      assert.isUndefined(result);
+      expect(result).toBeUndefined();
     });
 
     it('fails on fork failure', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
   
-      fakeChildProcess.send.callsFake(()=>{
+      fakeChildProcess.send.mockImplementation(()=>{
         fakeChildProcess.emit('error', new Error('fake error'));
       });
 
       try{
         await task.start();
-        assert.fail('should throw error no start')
+        expect.fail('should throw error no start')
       } catch (error: any){
-        assert.equal(error.message, 'Error on daemon: fake error');
+        expect(error.message).toBe('Error on daemon: fake error');
       }
     });
 
     it('fails on fork exception', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-  
-      fakeChildProcess.send.throws(new Error('fake error'));
+
+      fakeChildProcess.send.mockImplementation(() => { throw new Error('fake error'); });
 
       try{
         await task.start();
-        assert.fail('should throw error no start')
+        expect.fail('should throw error no start')
       } catch (error: any){
-        assert.equal(error.message, 'fake error');
+        expect(error.message).toBe('fake error');
       }
     });
 
     it('fails on fork exit with code', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
   
-      fakeChildProcess.send.callsFake(()=>{
+      fakeChildProcess.send.mockImplementation(()=>{
         fakeChildProcess.emit('exit', 9);
       });
       
       try{
         await task.start();
-        assert.fail('should throw error no start')
+        expect.fail('should throw error no start')
       } catch (error: any){
-        assert.equal(error.message, 'node-cron daemon exited with code 9');
+        expect(error.message).toBe('node-cron daemon exited with code 9');
       }
     });
 
     it('fails on fork exit with signal', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-  
-      fakeChildProcess.send.callsFake(()=>{
+
+      fakeChildProcess.send.mockImplementation(()=>{
         fakeChildProcess.emit('exit', 'SIGNAL');
       });
-      
+
       try{
         await task.start();
-        assert.fail('should throw error no start')
+        expect.fail('should throw error no start')
       } catch (error: any){
-        assert.equal(error.message, 'node-cron daemon exited with code SIGNAL');
+        expect(error.message).toBe('node-cron daemon exited with code SIGNAL');
       }
     });
 
     it('starts and bypass events', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
   
-      fakeChildProcess.send.callsFake(async ()=>{
+      fakeChildProcess.send.mockImplementation(async ()=>{
         task.emitter.emit('task:started');
         await wait(100);
         fakeChildProcess.emit('message', { event: 'execution:failed', context: { date: new Date(), task: {
@@ -158,10 +155,10 @@ describe('BackgroundScheduledTask', function() {
 
       await task.start();
       const event: any = await waitEvent;
-      assert.equal(event.execution?.error.message, 'task failed');
-      assert.equal(event.execution?.error.extra, 'extra');
-      assert.equal(event.execution?.error.stack, 'fake stack');
-      assert.equal(event.task.stateMachine.state, 'idle')
+      expect(event.execution?.error.message).toBe('task failed');
+      expect(event.execution?.error.extra).toBe('extra');
+      expect(event.execution?.error.stack).toBe('fake stack');
+      expect(event.task.stateMachine.state).toBe('idle')
     });
 
     it('fails on start timeout', async function(){
@@ -170,9 +167,9 @@ describe('BackgroundScheduledTask', function() {
 
       try {
         await task.start();
-        assert.fail("should fail before")
+        expect.fail("should fail before")
       } catch (error: any){
-        assert.match(error.message, /Start operation timed out/);
+        expect(error.message).toMatch(/Start operation timed out/);
       }
     });
 
@@ -182,10 +179,10 @@ describe('BackgroundScheduledTask', function() {
       const startedAt = Date.now();
       try {
         await task.start();
-        assert.fail("should time out");
+        expect.fail("should time out");
       } catch (error: any){
-        assert.isBelow(Date.now() - startedAt, 1000, 'should reject well before the 5s default');
-        assert.match(error.message, /Start operation timed out/);
+        expect(Date.now() - startedAt).toBeLessThan(1000);
+        expect(error.message).toMatch(/Start operation timed out/);
       }
     });
 
@@ -194,17 +191,17 @@ describe('BackgroundScheduledTask', function() {
 
       try {
         await task.start();
-        assert.fail("should time out");
+        expect.fail("should time out");
       } catch (error: any){
         // actionable hint, not just "timed out"
-        assert.match(error.message, /load|import|startTimeout/i);
+        expect(error.message).toMatch(/load|import|startTimeout/i);
       }
     });
 
     it('rejects start with the real cause when the daemon reports a load error', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { startTimeout: 200 });
 
-      fakeChildProcess.send.callsFake(()=>{
+      fakeChildProcess.send.mockImplementation(()=>{
         fakeChildProcess.emit('message', {
           event: 'daemon:error',
           jsonError: JSON.stringify({ name: 'SyntaxError', message: 'TypeScript enum is not supported in strip-only mode' })
@@ -213,16 +210,16 @@ describe('BackgroundScheduledTask', function() {
 
       try {
         await task.start();
-        assert.fail("should reject with the real cause");
+        expect.fail("should reject with the real cause");
       } catch (error: any){
-        assert.equal(error.message, 'TypeScript enum is not supported in strip-only mode');
+        expect(error.message).toBe('TypeScript enum is not supported in strip-only mode');
       }
     });
 
     it('kills the daemon and clears the fork on a failed start (no orphan)', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { startTimeout: 200 });
 
-      fakeChildProcess.send.callsFake(()=>{
+      fakeChildProcess.send.mockImplementation(()=>{
         fakeChildProcess.emit('message', {
           event: 'daemon:error',
           jsonError: JSON.stringify({ name: 'Error', message: 'boom' })
@@ -231,8 +228,8 @@ describe('BackgroundScheduledTask', function() {
 
       try { await task.start(); } catch { /* expected */ }
 
-      assert.isTrue(fakeChildProcess.kill.called, 'the daemon must be killed so it cannot keep running');
-      assert.isUndefined(task.forkProcess, 'forkProcess must be cleared after a failed start');
+      expect(fakeChildProcess.kill).toHaveBeenCalled();
+      expect(task.forkProcess).toBeUndefined();
     });
 
     it('kills the daemon when the start times out (no orphan)', async function(){
@@ -240,8 +237,8 @@ describe('BackgroundScheduledTask', function() {
 
       try { await task.start(); } catch { /* expected */ }
 
-      assert.isTrue(fakeChildProcess.kill.called, 'a daemon that started late must not be left running');
-      assert.isUndefined(task.forkProcess, 'forkProcess must be cleared after a timed-out start');
+      expect(fakeChildProcess.kill).toHaveBeenCalled();
+      expect(task.forkProcess).toBeUndefined();
     });
   });
 
@@ -250,19 +247,19 @@ describe('BackgroundScheduledTask', function() {
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
 
       const result = await task.stop();
-      assert.isUndefined(result);
+      expect(result).toBeUndefined();
     });
 
     it('stop the task', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
 
       task.forkProcess = fakeChildProcess as any;
-      fakeChildProcess.send.callsFake(()=>{
+      fakeChildProcess.send.mockImplementation(()=>{
         task.emitter.emit('task:stopped');
       });
 
       const result = await task.stop();
-      assert.isUndefined(result);
+      expect(result).toBeUndefined();
     });
 
     it('fails on stop timeout', async function(){
@@ -271,9 +268,9 @@ describe('BackgroundScheduledTask', function() {
 
       try {
         await task.stop();
-        assert.fail("should fail before")
+        expect.fail("should fail before")
       } catch (error: any){
-        assert.equal(error.message, 'Stop operation timed out');
+        expect(error.message).toBe('Stop operation timed out');
       }
     });
 
@@ -283,8 +280,8 @@ describe('BackgroundScheduledTask', function() {
 
       try { await task.stop(); } catch { /* expected timeout */ }
 
-      assert.isTrue(fakeChildProcess.kill.called, 'the daemon must be killed on stop timeout');
-      assert.isUndefined(task.forkProcess, 'forkProcess must be cleared after a timed-out stop');
+      expect(fakeChildProcess.kill).toHaveBeenCalled();
+      expect(task.forkProcess).toBeUndefined();
     });
   });
 
@@ -293,15 +290,15 @@ describe('BackgroundScheduledTask', function() {
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
 
       const result = await task.destroy();
-      assert.isUndefined(result);
+      expect(result).toBeUndefined();
     });
 
     it('transitions to destroyed when forkProcess is absent', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-      assert.equal(task.getStatus(), 'stopped');
+      expect(task.getStatus()).toBe('stopped');
 
       await task.destroy();
-      assert.equal(task.getStatus(), 'destroyed');
+      expect(task.getStatus()).toBe('destroyed');
     });
 
     it('emits task:destroyed when forkProcess is absent', async function(){
@@ -310,36 +307,36 @@ describe('BackgroundScheduledTask', function() {
       task.on('task:destroyed', () => { emitted = true; });
 
       await task.destroy();
-      assert.isTrue(emitted);
+      expect(emitted).toBe(true);
     });
 
     it('transitions to stopped on stop() when forkProcess is absent', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
       // Already stopped, should remain stopped without error
       await task.stop();
-      assert.equal(task.getStatus(), 'stopped');
+      expect(task.getStatus()).toBe('stopped');
     });
 
     it('is a no-op when already destroyed', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
       await task.destroy();
-      assert.equal(task.getStatus(), 'destroyed');
+      expect(task.getStatus()).toBe('destroyed');
 
       // Second destroy should not throw
       await task.destroy();
-      assert.equal(task.getStatus(), 'destroyed');
+      expect(task.getStatus()).toBe('destroyed');
     });
 
     it('destroys a task an kills the fork', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
       task.forkProcess = fakeChildProcess as any;
 
-      fakeChildProcess.send.callsFake(()=>{
+      fakeChildProcess.send.mockImplementation(()=>{
         task.emitter.emit('task:destroyed');
       });
 
       const result = await task.destroy();
-      assert.isUndefined(result);
+      expect(result).toBeUndefined();
     });
 
     it('fails on destriy timeout', async function(){
@@ -348,9 +345,9 @@ describe('BackgroundScheduledTask', function() {
 
       try {
         await task.destroy();
-        assert.fail("should fail before")
+        expect.fail("should fail before")
       } catch (error: any){
-        assert.equal(error.message, 'Destroy operation timed out');
+        expect(error.message).toBe('Destroy operation timed out');
       }
     });
 
@@ -360,8 +357,8 @@ describe('BackgroundScheduledTask', function() {
 
       try { await task.destroy(); } catch { /* expected timeout */ }
 
-      assert.isTrue(fakeChildProcess.kill.called, 'the daemon must be killed on destroy timeout');
-      assert.isUndefined(task.forkProcess, 'forkProcess must be cleared after a timed-out destroy');
+      expect(fakeChildProcess.kill).toHaveBeenCalled();
+      expect(task.forkProcess).toBeUndefined();
     });
   });
 
@@ -369,7 +366,7 @@ describe('BackgroundScheduledTask', function() {
     it('transitions to running when daemon reports execution:started', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
 
-      fakeChildProcess.send.callsFake((msg: any) => {
+      fakeChildProcess.send.mockImplementation((msg: any) => {
         if (msg.command === 'task:start') {
           task.emitter.emit('task:started');
         } else if (msg.command === 'task:execute') {
@@ -386,18 +383,18 @@ describe('BackgroundScheduledTask', function() {
       });
 
       await task.start();
-      assert.equal(task.getStatus(), 'idle');
+      expect(task.getStatus()).toBe('idle');
 
       task.execute().catch(() => {});
       await new Promise(r => setTimeout(r, 50));
 
-      assert.equal(task.getStatus(), 'running', 'should transition to running from daemon status');
+      expect(task.getStatus()).toBe('running');
     });
 
     it('transitions back to idle when daemon reports execution:finished', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
 
-      fakeChildProcess.send.callsFake((msg: any) => {
+      fakeChildProcess.send.mockImplementation((msg: any) => {
         if (msg.command === 'task:start') {
           task.emitter.emit('task:started');
         } else if (msg.command === 'task:execute') {
@@ -425,7 +422,7 @@ describe('BackgroundScheduledTask', function() {
 
       await task.start();
       await task.execute();
-      assert.equal(task.getStatus(), 'idle', 'should transition back to idle after execution');
+      expect(task.getStatus()).toBe('idle');
     });
   });
 
@@ -435,14 +432,14 @@ describe('BackgroundScheduledTask', function() {
       try {
         await task.execute();
       } catch(error: any){
-        assert.equal(error.message, "Cannot execute background task because it hasn't been started yet. Please initialize the task using the start() method before attempting to execute it.")
+        expect(error.message).toBe("Cannot execute background task because it hasn't been started yet. Please initialize the task using the start() method before attempting to execute it.")
       }
     });
 
     it('executes a task', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
 
-      fakeChildProcess.send.callsFake((obj)=>{
+      fakeChildProcess.send.mockImplementation((obj)=>{
         if(obj.command === 'task:execute'){
           task.emitter.emit('execution:finished', {execution: { result: "task result"}});
         } else {
@@ -453,13 +450,13 @@ describe('BackgroundScheduledTask', function() {
       await task.start();
       
       const result = await task.execute();
-      assert.equal(result, 'task result');
+      expect(result).toBe('task result');
     });
 
     it('throw error on execution fail', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
 
-      fakeChildProcess.send.callsFake((obj)=>{
+      fakeChildProcess.send.mockImplementation((obj)=>{
         if(obj.command === 'task:execute'){
           task.emitter.emit('execution:failed', {execution: { error: Error("task error")}});
         } else {
@@ -468,11 +465,11 @@ describe('BackgroundScheduledTask', function() {
       })
 
       await task.start();
-      
+
       try{
       await task.execute();
       } catch(error: any){
-        assert.equal(error.message, 'task error');
+        expect(error.message).toBe('task error');
       }
     });
 
@@ -481,7 +478,7 @@ describe('BackgroundScheduledTask', function() {
 
       // Only acknowledges start; never reports the execution back, so the
       // configured timeout is what ends execute().
-      fakeChildProcess.send.callsFake((obj)=>{
+      fakeChildProcess.send.mockImplementation((obj)=>{
         if(obj.command === 'task:start'){
           task.emitter.emit('task:started');
         }
@@ -491,9 +488,9 @@ describe('BackgroundScheduledTask', function() {
 
       try {
         await task.execute();
-        assert.fail("should fail before")
+        expect.fail("should fail before")
       } catch (error: any){
-        assert.equal(error.message, 'Execution timeout exceeded');
+        expect(error.message).toBe('Execution timeout exceeded');
       }
     });
 
@@ -502,7 +499,7 @@ describe('BackgroundScheduledTask', function() {
 
       // Report the result only after a delay; with no executeTimeout, execute()
       // must wait for it rather than rejecting.
-      fakeChildProcess.send.callsFake((obj)=>{
+      fakeChildProcess.send.mockImplementation((obj)=>{
         if(obj.command === 'task:execute'){
           setTimeout(() => task.emitter.emit('execution:finished', {execution: { result: "late result"}}), 50);
         } else {
@@ -513,46 +510,46 @@ describe('BackgroundScheduledTask', function() {
       await task.start();
 
       const result = await task.execute();
-      assert.equal(result, 'late result');
+      expect(result).toBe('late result');
     });
   });
 
   describe('introspection', function(){
     it('getPattern returns the expression', function(){
       const task = new BackgroundScheduledTask('0 0 12 * * *', './test-assets/dummy-task.js');
-      assert.equal(task.getPattern(), '0 0 12 * * *');
+      expect(task.getPattern()).toBe('0 0 12 * * *');
     });
 
     it('match and getNextRuns compute locally (no daemon needed)', function(){
       const task = new BackgroundScheduledTask('0 0 12 * * *', './test-assets/dummy-task.js', { timezone: 'Etc/UTC' });
-      assert.isTrue(task.match(new Date('2025-06-15T12:00:00Z')));
-      assert.isFalse(task.match(new Date('2025-06-15T12:00:01Z')));
+      expect(task.match(new Date('2025-06-15T12:00:00Z'))).toBe(true);
+      expect(task.match(new Date('2025-06-15T12:00:01Z'))).toBe(false);
       const runs = task.getNextRuns(3);
-      assert.lengthOf(runs, 3);
-      assert.isAbove(runs[1].getTime(), runs[0].getTime());
+      expect(runs).toHaveLength(3);
+      expect(runs[1].getTime()).toBeGreaterThan(runs[0].getTime());
     });
 
     it('runsLeft tracks executions reported by the daemon', function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { maxExecutions: 3 });
-      assert.equal(task.runsLeft(), 3);
+      expect(task.runsLeft()).toBe(3);
       task.emitter.emit('execution:started', {} as any);
       task.emitter.emit('execution:started', {} as any);
-      assert.equal(task.runsLeft(), 1);
+      expect(task.runsLeft()).toBe(1);
     });
 
     it('runsLeft is undefined without maxExecutions', function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-      assert.isUndefined(task.runsLeft());
+      expect(task.runsLeft()).toBeUndefined();
     });
 
     it('isBusy is false when not executing', function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-      assert.isFalse(task.isBusy());
+      expect(task.isBusy()).toBe(false);
     });
 
     it('lastRun is null before the first execution', function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-      assert.isNull(task.lastRun());
+      expect(task.lastRun()).toBeNull();
     });
 
     it('lastRun reports the execution time and result from the daemon', function(){
@@ -561,11 +558,11 @@ describe('BackgroundScheduledTask', function() {
       task.emitter.emit('execution:finished', { execution: { finishedAt, result: 'ok' } } as any);
 
       const last = task.lastRun();
-      assert.isNotNull(last);
-      assert.instanceOf(last!.date, Date);
-      assert.equal(last!.date.getTime(), finishedAt.getTime());
-      assert.equal(last!.result, 'ok');
-      assert.isUndefined(last!.error);
+      expect(last).not.toBeNull();
+      expect(last!.date).toBeInstanceOf(Date);
+      expect(last!.date.getTime()).toBe(finishedAt.getTime());
+      expect(last!.result).toBe('ok');
+      expect(last!.error).toBeUndefined();
     });
 
     it('lastRun reports the execution time and error from the daemon', function(){
@@ -575,10 +572,10 @@ describe('BackgroundScheduledTask', function() {
       task.emitter.emit('execution:failed', { execution: { finishedAt, error } } as any);
 
       const last = task.lastRun();
-      assert.isNotNull(last);
-      assert.equal(last!.date.getTime(), finishedAt.getTime());
-      assert.strictEqual(last!.error, error);
-      assert.isUndefined(last!.result);
+      expect(last).not.toBeNull();
+      expect(last!.date.getTime()).toBe(finishedAt.getTime());
+      expect(last!.error).toBe(error);
+      expect(last!.result).toBeUndefined();
     });
 
     it('lastRun coerces an ISO-string timestamp from IPC back to a Date', function(){
@@ -587,16 +584,16 @@ describe('BackgroundScheduledTask', function() {
       task.emitter.emit('execution:finished', { execution: { finishedAt: '2025-06-15T12:00:00.000Z', result: 1 } } as any);
 
       const last = task.lastRun();
-      assert.instanceOf(last!.date, Date);
-      assert.equal(last!.date.toISOString(), '2025-06-15T12:00:00.000Z');
+      expect(last!.date).toBeInstanceOf(Date);
+      expect(last!.date.toISOString()).toBe('2025-06-15T12:00:00.000Z');
     });
 
     it('lastRun updates to the most recent execution', function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
       task.emitter.emit('execution:finished', { execution: { finishedAt: new Date(), result: 'first' } } as any);
-      assert.equal(task.lastRun()!.result, 'first');
+      expect(task.lastRun()!.result).toBe('first');
       task.emitter.emit('execution:finished', { execution: { finishedAt: new Date(), result: 'second' } } as any);
-      assert.equal(task.lastRun()!.result, 'second');
+      expect(task.lastRun()!.result).toBe('second');
     });
 
     it('lastRun falls back to startedAt when finishedAt is absent', function(){
@@ -605,8 +602,8 @@ describe('BackgroundScheduledTask', function() {
       task.emitter.emit('execution:finished', { execution: { startedAt, result: 'ok' } } as any);
 
       const last = task.lastRun();
-      assert.equal(last!.date.getTime(), startedAt.getTime());
-      assert.equal(last!.result, 'ok');
+      expect(last!.date.getTime()).toBe(startedAt.getTime());
+      expect(last!.result).toBe('ok');
     });
 
     it('lastRun uses the current time when the execution carries no timestamp', function(){
@@ -616,29 +613,29 @@ describe('BackgroundScheduledTask', function() {
       const after = Date.now();
 
       const last = task.lastRun();
-      assert.instanceOf(last!.date, Date);
-      assert.isAtLeast(last!.date.getTime(), before);
-      assert.isAtMost(last!.date.getTime(), after);
+      expect(last!.date).toBeInstanceOf(Date);
+      expect(last!.date.getTime()).toBeGreaterThanOrEqual(before);
+      expect(last!.date.getTime()).toBeLessThanOrEqual(after);
     });
 
     it('lastRun ignores a forwarded event that carries no execution', function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
       task.emitter.emit('execution:finished', {} as any);
-      assert.isNull(task.lastRun());
+      expect(task.lastRun()).toBeNull();
     });
 
     it('msToNext is null when stopped and a positive number once started', async function(){
       const task = new BackgroundScheduledTask('* * * * *', './test-assets/dummy-task.js', { timezone: 'Etc/UTC' });
-      assert.isNull(task.msToNext());
+      expect(task.msToNext()).toBeNull();
 
-      fakeChildProcess.send.callsFake((msg: any)=>{
+      fakeChildProcess.send.mockImplementation((msg: any)=>{
         if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
         else task.emitter.emit('task:started');
       });
       await task.start();
       const ms = task.msToNext();
-      assert.isNotNull(ms);
-      assert.isAbove(ms as number, 0);
+      expect(ms).not.toBeNull();
+      expect(ms as number).toBeGreaterThan(0);
       await task.destroy();
     });
   });
@@ -659,7 +656,7 @@ describe('BackgroundScheduledTask', function() {
 
     async function startTask(options: any) {
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', options);
-      fakeChildProcess.send.callsFake((msg: any) => {
+      fakeChildProcess.send.mockImplementation((msg: any) => {
         if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
         else if (msg.command === 'task:start') task.emitter.emit('task:started');
       });
@@ -668,7 +665,7 @@ describe('BackgroundScheduledTask', function() {
     }
 
     const startDistributed = (coordinator: any) => startTask({ name: 'job', distributed: true, runCoordinator: coordinator });
-    const replyOf = () => fakeChildProcess.send.getCalls().map(c => c.args[0]).find((a: any) => a?.type === 'coordinator:result');
+    const replyOf = () => fakeChildProcess.send.mock.calls.map((c: any[]) => c[0]).find((a: any) => a?.type === 'coordinator:result');
 
     it('runs the coordinator and replies allowed:true on coordinator:shouldRun', async function () {
       const coordinator = makeCoordinator();
@@ -677,11 +674,11 @@ describe('BackgroundScheduledTask', function() {
       fakeChildProcess.emit('message', { type: 'coordinator:shouldRun', key: 'job:t', ttlMs: 5000, reqId: 'r1' });
       await wait(10);
 
-      assert.deepEqual(coordinator.calls.shouldRun, [{ key: 'job:t', ttl: 5000 }]);
+      expect(coordinator.calls.shouldRun).toEqual([{ key: 'job:t', ttl: 5000 }]);
       const reply = replyOf();
-      assert.equal(reply.reqId, 'r1');
-      assert.isTrue(reply.allowed);
-      assert.isUndefined(reply.error);
+      expect(reply.reqId).toBe('r1');
+      expect(reply.allowed).toBe(true);
+      expect(reply.error).toBeUndefined();
       await task.destroy();
     });
 
@@ -692,7 +689,7 @@ describe('BackgroundScheduledTask', function() {
       fakeChildProcess.emit('message', { type: 'coordinator:shouldRun', key: 'job:t', ttlMs: 5000, reqId: 'r2' });
       await wait(10);
 
-      assert.isFalse(replyOf().allowed);
+      expect(replyOf().allowed).toBe(false);
       await task.destroy();
     });
 
@@ -704,8 +701,8 @@ describe('BackgroundScheduledTask', function() {
       await wait(10);
 
       const reply = replyOf();
-      assert.isFalse(reply.allowed);
-      assert.match(reply.error, /coordinator down/);
+      expect(reply.allowed).toBe(false);
+      expect(reply.error).toMatch(/coordinator down/);
       await task.destroy();
     });
 
@@ -716,7 +713,7 @@ describe('BackgroundScheduledTask', function() {
       fakeChildProcess.emit('message', { type: 'coordinator:complete', key: 'job:t' });
       await wait(10);
 
-      assert.deepEqual(coordinator.calls.onComplete, ['job:t']);
+      expect(coordinator.calls.onComplete).toEqual(['job:t']);
       await task.destroy();
     });
 
@@ -728,7 +725,7 @@ describe('BackgroundScheduledTask', function() {
       fakeChildProcess.emit('message', { type: 'coordinator:shouldRun', key: 'job:t', ttlMs: 5000, reqId: 'r4' });
       await wait(10);
 
-      assert.isFalse(replyOf().allowed);
+      expect(replyOf().allowed).toBe(false);
       await task.destroy();
     });
   });
@@ -736,8 +733,8 @@ describe('BackgroundScheduledTask', function() {
   describe('unref / ref', function () {
     it('unref calls unref on the fork process', async function () {
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-      const unrefStub = sinon.stub();
-      fakeChildProcess.send.callsFake((msg: any) => {
+      const unrefStub = vi.fn();
+      fakeChildProcess.send.mockImplementation((msg: any) => {
         if (msg.command === 'task:start') task.emitter.emit('task:started');
         if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
       });
@@ -746,14 +743,14 @@ describe('BackgroundScheduledTask', function() {
       await task.start();
       task.unref();
 
-      assert.isTrue(unrefStub.calledOnce);
+      expect(unrefStub).toHaveBeenCalledOnce();
       await task.destroy();
     });
 
     it('ref calls ref on the fork process', async function () {
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
-      const refStub = sinon.stub();
-      fakeChildProcess.send.callsFake((msg: any) => {
+      const refStub = vi.fn();
+      fakeChildProcess.send.mockImplementation((msg: any) => {
         if (msg.command === 'task:start') task.emitter.emit('task:started');
         if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
       });
@@ -762,7 +759,7 @@ describe('BackgroundScheduledTask', function() {
       await task.start();
       task.ref();
 
-      assert.isTrue(refStub.calledOnce);
+      expect(refStub).toHaveBeenCalledOnce();
       await task.destroy();
     });
 

@@ -1,39 +1,37 @@
-import { assert } from 'chai';
-import sinon from 'sinon';
 import logger, { Logger, setLogger, resetLogger, noopLogger } from './logger';
 
 describe('Logger', () => {
-  let consoleInfoStub: sinon.SinonStub;
-  let consoleDebugStub: sinon.SinonStub;
-  let consoleWarnStub: sinon.SinonStub;
-  let consoleErrorStub: sinon.SinonStub;
+  let consoleInfoStub: ReturnType<typeof vi.spyOn>;
+  let consoleDebugStub: ReturnType<typeof vi.spyOn>;
+  let consoleWarnStub: ReturnType<typeof vi.spyOn>;
+  let consoleErrorStub: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     // Replace console methods with stubs
-    consoleInfoStub = sinon.stub(console, 'info');
-    consoleDebugStub = sinon.stub(console, 'debug');
-    consoleWarnStub = sinon.stub(console, 'warn');
-    consoleErrorStub = sinon.stub(console, 'error');
+    consoleInfoStub = vi.spyOn(console, 'info').mockImplementation(() => {});
+    consoleDebugStub = vi.spyOn(console, 'debug').mockImplementation(() => {});
+    consoleWarnStub = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    consoleErrorStub = vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
     // Restore original console methods
-    consoleInfoStub.restore();
-    consoleWarnStub.restore();
-    consoleErrorStub.restore();
-    consoleDebugStub.restore();
+    consoleInfoStub.mockRestore();
+    consoleWarnStub.mockRestore();
+    consoleErrorStub.mockRestore();
+    consoleDebugStub.mockRestore();
   });
 
   describe('info', () => {
     it('should call console.log with properly formatted message', () => {
       const message = 'Information test';
       logger.info(message);
-      assert.isTrue(consoleInfoStub.calledOnce);
-      const loggedMessage = consoleInfoStub.firstCall.args[0];
+      expect(consoleInfoStub).toHaveBeenCalledOnce();
+      const loggedMessage = consoleInfoStub.mock.calls[0][0];
       // Basic format checks
-      assert.include(loggedMessage, '[INFO]');
-      assert.include(loggedMessage, '[NODE-CRON]');
-      assert.include(loggedMessage, message);
+      expect(loggedMessage).toContain('[INFO]');
+      expect(loggedMessage).toContain('[NODE-CRON]');
+      expect(loggedMessage).toContain(message);
     });
   });
 
@@ -41,11 +39,11 @@ describe('Logger', () => {
     it('should call console.warn with properly formatted message', () => {
       const message = 'Warning test';
       logger.warn(message);
-      assert.isTrue(consoleWarnStub.calledOnce);
-      const loggedMessage = consoleWarnStub.firstCall.args[0];
-      assert.include(loggedMessage, '[WARN]');
-      assert.include(loggedMessage, '[NODE-CRON]');
-      assert.include(loggedMessage, message);
+      expect(consoleWarnStub).toHaveBeenCalledOnce();
+      const loggedMessage = consoleWarnStub.mock.calls[0][0];
+      expect(loggedMessage).toContain('[WARN]');
+      expect(loggedMessage).toContain('[NODE-CRON]');
+      expect(loggedMessage).toContain(message);
     });
   });
 
@@ -53,36 +51,36 @@ describe('Logger', () => {
     it('should call console.error with properly formatted message when passed string', () => {
       const message = 'Error test';
       logger.error(message);
-      assert.isTrue(consoleErrorStub.calledOnce);
-      const loggedMessage = consoleErrorStub.firstCall.args[0];
-      assert.include(loggedMessage, '[ERROR]');
-      assert.include(loggedMessage, '[NODE-CRON]');
-      assert.include(loggedMessage, message);
+      expect(consoleErrorStub).toHaveBeenCalledOnce();
+      const loggedMessage = consoleErrorStub.mock.calls[0][0];
+      expect(loggedMessage).toContain('[ERROR]');
+      expect(loggedMessage).toContain('[NODE-CRON]');
+      expect(loggedMessage).toContain(message);
     });
 
     it('should call console.error with properly formatted message when passed Error object', () => {
       const error = new Error('Error object test');
       logger.error(error);
-      assert.isTrue(consoleErrorStub.calledOnce);
-      const loggedMessage = consoleErrorStub.firstCall.args[0];
-      const loggedError = consoleErrorStub.firstCall.args[1];
-      assert.include(loggedMessage, '[ERROR]');
-      assert.include(loggedMessage, '[NODE-CRON]');
-      assert.include(loggedMessage, error.message);
-      assert.strictEqual(loggedError, error);
+      expect(consoleErrorStub).toHaveBeenCalledOnce();
+      const loggedMessage = consoleErrorStub.mock.calls[0][0];
+      const loggedError = consoleErrorStub.mock.calls[0][1];
+      expect(loggedMessage).toContain('[ERROR]');
+      expect(loggedMessage).toContain('[NODE-CRON]');
+      expect(loggedMessage).toContain(error.message);
+      expect(loggedError).toBe(error);
     });
 
     it('should call console.error with properly formatted message and additional error', () => {
       const message = 'Primary error message';
       const additionalError = new Error('Additional error details');
       logger.error(message, additionalError);
-      assert.isTrue(consoleErrorStub.calledOnce);
-      const loggedMessage = consoleErrorStub.firstCall.args[0];
-      const loggedError = consoleErrorStub.firstCall.args[1];
-      assert.include(loggedMessage, '[ERROR]');
-      assert.include(loggedMessage, '[NODE-CRON]');
-      assert.include(loggedMessage, message);
-      assert.strictEqual(loggedError, additionalError);
+      expect(consoleErrorStub).toHaveBeenCalledOnce();
+      const loggedMessage = consoleErrorStub.mock.calls[0][0];
+      const loggedError = consoleErrorStub.mock.calls[0][1];
+      expect(loggedMessage).toContain('[ERROR]');
+      expect(loggedMessage).toContain('[NODE-CRON]');
+      expect(loggedMessage).toContain(message);
+      expect(loggedError).toBe(additionalError);
     });
   });
 
@@ -90,36 +88,36 @@ describe('Logger', () => {
     it('should call console.log with properly formatted message when passed string', () => {
       const message = 'Debug test';
       logger.debug(message);
-      assert.isTrue(consoleDebugStub.calledOnce);
-      const loggedMessage = consoleDebugStub.firstCall.args[0];
-      assert.include(loggedMessage, '[DEBUG]');
-      assert.include(loggedMessage, '[NODE-CRON]');
-      assert.include(loggedMessage, message);
+      expect(consoleDebugStub).toHaveBeenCalledOnce();
+      const loggedMessage = consoleDebugStub.mock.calls[0][0];
+      expect(loggedMessage).toContain('[DEBUG]');
+      expect(loggedMessage).toContain('[NODE-CRON]');
+      expect(loggedMessage).toContain(message);
     });
 
     it('should call console.log with properly formatted message when passed Error object', () => {
       const error = new Error('Debug error test');
       logger.debug(error);
-      assert.isTrue(consoleDebugStub.calledOnce);
-      const loggedMessage = consoleDebugStub.firstCall.args[0];
-      const loggedError = consoleDebugStub.firstCall.args[1];
-      assert.include(loggedMessage, '[DEBUG]');
-      assert.include(loggedMessage, '[NODE-CRON]');
-      assert.include(loggedMessage, error.message);
-      assert.strictEqual(loggedError, error);
+      expect(consoleDebugStub).toHaveBeenCalledOnce();
+      const loggedMessage = consoleDebugStub.mock.calls[0][0];
+      const loggedError = consoleDebugStub.mock.calls[0][1];
+      expect(loggedMessage).toContain('[DEBUG]');
+      expect(loggedMessage).toContain('[NODE-CRON]');
+      expect(loggedMessage).toContain(error.message);
+      expect(loggedError).toBe(error);
     });
 
     it('should call console.log with properly formatted message and additional error', () => {
       const message = 'Primary debug message';
       const additionalError = new Error('Additional debug details');
       logger.debug(message, additionalError);
-      assert.isTrue(consoleDebugStub.calledOnce);
-      const loggedMessage = consoleDebugStub.firstCall.args[0];
-      const loggedError = consoleDebugStub.firstCall.args[1];
-      assert.include(loggedMessage, '[DEBUG]');
-      assert.include(loggedMessage, '[NODE-CRON]');
-      assert.include(loggedMessage, message);
-      assert.strictEqual(loggedError, additionalError);
+      expect(consoleDebugStub).toHaveBeenCalledOnce();
+      const loggedMessage = consoleDebugStub.mock.calls[0][0];
+      const loggedError = consoleDebugStub.mock.calls[0][1];
+      expect(loggedMessage).toContain('[DEBUG]');
+      expect(loggedMessage).toContain('[NODE-CRON]');
+      expect(loggedMessage).toContain(message);
+      expect(loggedError).toBe(additionalError);
     });
   });
 
@@ -146,13 +144,13 @@ describe('Logger', () => {
       logger.error('e');
       logger.debug('d');
 
-      assert.deepEqual(custom.calls.info, [['i']]);
-      assert.deepEqual(custom.calls.warn, [['w']]);
-      assert.equal(custom.calls.error.length, 1);
-      assert.equal(custom.calls.debug.length, 1);
-      assert.isTrue(consoleInfoStub.notCalled);
-      assert.isTrue(consoleWarnStub.notCalled);
-      assert.isTrue(consoleErrorStub.notCalled);
+      expect(custom.calls.info).toEqual([['i']]);
+      expect(custom.calls.warn).toEqual([['w']]);
+      expect(custom.calls.error.length).toBe(1);
+      expect(custom.calls.debug.length).toBe(1);
+      expect(consoleInfoStub).not.toHaveBeenCalled();
+      expect(consoleWarnStub).not.toHaveBeenCalled();
+      expect(consoleErrorStub).not.toHaveBeenCalled();
     });
 
     it('resetLogger restores the default console logger', () => {
@@ -160,13 +158,13 @@ describe('Logger', () => {
       resetLogger();
 
       logger.warn('back to console');
-      assert.isTrue(consoleWarnStub.calledOnce);
+      expect(consoleWarnStub).toHaveBeenCalledOnce();
     });
 
     it('falls back to the default logger when set to a nullish value', () => {
       setLogger(undefined as any);
       logger.warn('still works');
-      assert.isTrue(consoleWarnStub.calledOnce);
+      expect(consoleWarnStub).toHaveBeenCalledOnce();
     });
 
     it('noopLogger swallows everything', () => {
@@ -177,10 +175,10 @@ describe('Logger', () => {
       logger.error('x');
       logger.debug('x');
 
-      assert.isTrue(consoleInfoStub.notCalled);
-      assert.isTrue(consoleWarnStub.notCalled);
-      assert.isTrue(consoleErrorStub.notCalled);
-      assert.isTrue(consoleDebugStub.notCalled);
+      expect(consoleInfoStub).not.toHaveBeenCalled();
+      expect(consoleWarnStub).not.toHaveBeenCalled();
+      expect(consoleErrorStub).not.toHaveBeenCalled();
+      expect(consoleDebugStub).not.toHaveBeenCalled();
     });
   });
 
@@ -188,11 +186,11 @@ describe('Logger', () => {
     it('should correctly format timestamp and process ID', () => {
       const message = 'Timestamp test';
       logger.info(message);
-      assert.isTrue(consoleInfoStub.calledOnce);
-      const loggedMessage = consoleInfoStub.firstCall.args[0];
+      expect(consoleInfoStub).toHaveBeenCalledOnce();
+      const loggedMessage = consoleInfoStub.mock.calls[0][0];
       // Check for timestamp and PID format
-      assert.match(loggedMessage, /\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\]/); // ISO timestamp format
-      assert.match(loggedMessage, /\[PID: \d+\]/); // Process ID format
+      expect(loggedMessage).toMatch(/\[\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z\]/); // ISO timestamp format
+      expect(loggedMessage).toMatch(/\[PID: \d+\]/); // Process ID format
     });
 
     it('should use correct colors for different log levels', () => {
@@ -202,10 +200,10 @@ describe('Logger', () => {
       logger.warn('Warn message');
       logger.error('Error message');
       logger.debug('Debug message');
-      assert.isTrue(consoleInfoStub.calledOnce);
-      assert.isTrue(consoleWarnStub.calledOnce);
-      assert.isTrue(consoleErrorStub.calledOnce);
-      assert.isTrue(consoleDebugStub.calledOnce);
+      expect(consoleInfoStub).toHaveBeenCalledOnce();
+      expect(consoleWarnStub).toHaveBeenCalledOnce();
+      expect(consoleErrorStub).toHaveBeenCalledOnce();
+      expect(consoleDebugStub).toHaveBeenCalledOnce();
     });
   });
 });

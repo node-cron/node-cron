@@ -1,218 +1,217 @@
-import { assert } from 'chai';
 import { TimeMatcher } from './time-matcher';
 
 describe('TimeMatcher', function() {
     describe('wildcard', function() {
         it('should accept wildcard for second', function() {
             const matcher = new TimeMatcher('* * * * * *');
-            assert.isTrue(matcher.match(new Date()));
+            expect(matcher.match(new Date())).toBe(true);
         });
 
         it('should accept wildcard for minute', function() {
             const matcher = new TimeMatcher('0 * * * * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 10, 20, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 1, 10, 20, 1)));
+            expect(matcher.match(new Date(2018, 0, 1, 10, 20, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 10, 20, 1))).toBe(false);
         });
 
         it('should accept wildcard for hour', function() {
             const matcher = new TimeMatcher('0 0 * * * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 10, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 1, 10, 1, 0)));
+            expect(matcher.match(new Date(2018, 0, 1, 10, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 10, 1, 0))).toBe(false);
         });
 
         it('should accept wildcard for day', function() {
             const matcher = new TimeMatcher('0 0 0 * * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 1, 1, 0, 0)));
+            expect(matcher.match(new Date(2018, 0, 1, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 1, 0, 0))).toBe(false);
         });
 
         it('should accept wildcard for month', function() {
             const matcher = new TimeMatcher('0 0 0 1 * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 2, 0, 0, 0)));
+            expect(matcher.match(new Date(2018, 0, 1, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 2, 0, 0, 0))).toBe(false);
         });
 
         it('should accept wildcard for week day', function() {
             const matcher = new TimeMatcher('0 0 0 1 4 *');
-            assert.isTrue(matcher.match(new Date(2018, 3, 1, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 3, 2, 0, 0, 0)));
+            expect(matcher.match(new Date(2018, 3, 1, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 3, 2, 0, 0, 0))).toBe(false);
         });
     });
 
     describe('single value', function() {
         it('should accept single value for second', function() {
             const matcher = new TimeMatcher('5 * * * * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 0, 5)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 1, 0, 0, 6)));
+            expect(matcher.match(new Date(2018, 0, 1, 0, 0, 5))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 0, 0, 6))).toBe(false);
         });
 
         it('should accept single value for minute', function() {
             const matcher = new TimeMatcher('0 5 * * * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 5, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 1, 0, 6, 0)));
+            expect(matcher.match(new Date(2018, 0, 1, 0, 5, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 0, 6, 0))).toBe(false);
         });
 
         it('should accept single value for hour', function() {
             const matcher = new TimeMatcher('0 0 5 * * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 5, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 1, 6, 0, 0)));
+            expect(matcher.match(new Date(2018, 0, 1, 5, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 6, 0, 0))).toBe(false);
         });
 
         it('should accept single value for day', function() {
             const matcher = new TimeMatcher('0 0 0 5 * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 5, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 6, 0, 0, 0)));
+            expect(matcher.match(new Date(2018, 0, 5, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 6, 0, 0, 0))).toBe(false);
         });
 
         it('should accept single value for month', function() {
             const matcher = new TimeMatcher('0 0 0 1 5 *');
-            assert.isTrue(matcher.match(new Date(2018, 4, 1, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 5, 1, 0, 0, 0)));
+            expect(matcher.match(new Date(2018, 4, 1, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 5, 1, 0, 0, 0))).toBe(false);
         });
 
         it('should accept single value for week day', function() {
             const matcher = new TimeMatcher('0 0 0 * * monday');
-            assert.isTrue(matcher.match(new Date(2018, 4, 7, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 4, 8, 0, 0, 0)));
+            expect(matcher.match(new Date(2018, 4, 7, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 4, 8, 0, 0, 0))).toBe(false);
         });
     });
 
     describe('multiple values', function() {
         it('should accept multiple values for second', function() {
             const matcher = new TimeMatcher('5,6 * * * * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 0, 5)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 0, 6)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 1, 0, 0, 7)));
+            expect(matcher.match(new Date(2018, 0, 1, 0, 0, 5))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 0, 0, 6))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 0, 0, 7))).toBe(false);
         });
 
         it('should accept multiple values for minute', function() {
             const matcher = new TimeMatcher('0 5,6 * * * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 5, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 6, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 1, 0, 7, 0)));
+            expect(matcher.match(new Date(2018, 0, 1, 0, 5, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 0, 6, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 0, 7, 0))).toBe(false);
         });
-        
+
         it('should accept multiple values for hour', function() {
             const matcher = new TimeMatcher('0 0 5,6 * * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 5, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 6, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 1, 7, 0, 0)));
+            expect(matcher.match(new Date(2018, 0, 1, 5, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 6, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 7, 0, 0))).toBe(false);
         });
 
         it('should accept multiple values for day', function() {
             const matcher = new TimeMatcher('0 0 0 5,6 * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 5, 0, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 6, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 7, 0, 0, 0)));
+            expect(matcher.match(new Date(2018, 0, 5, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 6, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 7, 0, 0, 0))).toBe(false);
         });
 
         it('should accept multiple values for month', function() {
             const matcher = new TimeMatcher('0 0 0 1 may,june *');
-            assert.isTrue(matcher.match(new Date(2018, 4, 1, 0, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 5, 1, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 6, 1, 0, 0, 0)));
+            expect(matcher.match(new Date(2018, 4, 1, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 5, 1, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 6, 1, 0, 0, 0))).toBe(false);
         });
 
         it('should accept multiple values for week day', function() {
             const matcher = new TimeMatcher('0 0 0 * * monday,tue');
-            assert.isTrue(matcher.match(new Date(2018, 4, 7, 0, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 4, 8, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 4, 9, 0, 0, 0)));
+            expect(matcher.match(new Date(2018, 4, 7, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 4, 8, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 4, 9, 0, 0, 0))).toBe(false);
         });
     });
 
     describe('range', function() {
         it('should accept range for second', function() {
             const matcher = new TimeMatcher('5-7 * * * * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 0, 5)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 0, 6)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 0, 7)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 1, 0, 0, 8)));
+            expect(matcher.match(new Date(2018, 0, 1, 0, 0, 5))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 0, 0, 6))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 0, 0, 7))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 0, 0, 8))).toBe(false);
         });
 
         it('should accept range for minute', function() {
             const matcher = new TimeMatcher('0 5-7 * * * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 5, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 6, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 7, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 1, 0, 8, 0)));
+            expect(matcher.match(new Date(2018, 0, 1, 0, 5, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 0, 6, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 0, 7, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 0, 8, 0))).toBe(false);
         });
 
         it('should accept range for hour', function() {
             const matcher = new TimeMatcher('0 0 5-7 * * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 5, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 6, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 7, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 1, 8, 0, 0)));
+            expect(matcher.match(new Date(2018, 0, 1, 5, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 6, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 7, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 8, 0, 0))).toBe(false);
         });
 
         it('should accept range for day', function() {
             const matcher = new TimeMatcher('0 0 0 5-7 * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 5, 0, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 6, 0, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 7, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 8, 0, 0, 0)));
+            expect(matcher.match(new Date(2018, 0, 5, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 6, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 7, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 8, 0, 0, 0))).toBe(false);
         });
 
         it('should accept range for month', function() {
             const matcher = new TimeMatcher('0 0 0 1 may-july *');
-            assert.isTrue(matcher.match(new Date(2018, 4, 1, 0, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 5, 1, 0, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 6, 1, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 7, 1, 0, 0, 0)));
+            expect(matcher.match(new Date(2018, 4, 1, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 5, 1, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 6, 1, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 7, 1, 0, 0, 0))).toBe(false);
         });
 
         it('should accept range for week day', function() {
             const matcher = new TimeMatcher('0 0 0 * * monday-wed');
-            assert.isTrue(matcher.match(new Date(2018, 4, 7, 0, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 4, 8, 0, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 4, 9, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 4, 10, 0, 0, 0)));
+            expect(matcher.match(new Date(2018, 4, 7, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 4, 8, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 4, 9, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 4, 10, 0, 0, 0))).toBe(false);
         });
     });
 
     describe('step values', function() {
         it('should accept step values for second', function() {
             const matcher = new TimeMatcher('*/2 * * * * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 0, 2)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 0, 6)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 1, 0, 0, 7)));
+            expect(matcher.match(new Date(2018, 0, 1, 0, 0, 2))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 0, 0, 6))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 0, 0, 7))).toBe(false);
         });
 
         it('should accept step values for minute', function() {
             const matcher = new TimeMatcher('0 */2 * * * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 2, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 6, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 1, 0, 7, 0)));
+            expect(matcher.match(new Date(2018, 0, 1, 0, 2, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 0, 6, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 0, 7, 0))).toBe(false);
         });
-        
+
         it('should accept step values for hour', function() {
             const matcher = new TimeMatcher('0 0 */2 * * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 2, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 6, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 1, 7, 0, 0)));
+            expect(matcher.match(new Date(2018, 0, 1, 2, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 6, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 1, 7, 0, 0))).toBe(false);
         });
 
         it('should accept step values for day', function() {
             const matcher = new TimeMatcher('0 0 0 */2 * *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 3, 0, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 0, 5, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 0, 6, 0, 0, 0)));
+            expect(matcher.match(new Date(2018, 0, 1, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 3, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 5, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 0, 6, 0, 0, 0))).toBe(false);
         });
 
         it('should accept step values for month', function() {
             const matcher = new TimeMatcher('0 0 0 1 */2 *');
-            assert.isTrue(matcher.match(new Date(2018, 0, 1, 0, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 2, 1, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 5, 1, 0, 0, 0)));
+            expect(matcher.match(new Date(2018, 0, 1, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 2, 1, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 5, 1, 0, 0, 0))).toBe(false);
         });
 
         it('should accept step values for week day', function() {
             const matcher = new TimeMatcher('0 0 0 * * */2');
-            assert.isTrue(matcher.match(new Date(2018, 4, 6, 0, 0, 0)));
-            assert.isTrue(matcher.match(new Date(2018, 4, 8, 0, 0, 0)));
-            assert.isFalse(matcher.match(new Date(2018, 4, 9, 0, 0, 0)));
+            expect(matcher.match(new Date(2018, 4, 6, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 4, 8, 0, 0, 0))).toBe(true);
+            expect(matcher.match(new Date(2018, 4, 9, 0, 0, 0))).toBe(false);
         });
     });
 
@@ -220,13 +219,13 @@ describe('TimeMatcher', function() {
         it('should match with timezone America/Sao_Paulo', function() {
             const matcher = new TimeMatcher('0 0 0 * * *', 'America/Sao_Paulo');
             const utcTime = new Date('Thu Oct 11 2018 03:00:00Z');
-            assert.isTrue(matcher.match(utcTime));
+            expect(matcher.match(utcTime)).toBe(true);
         });
 
         it('should match with timezone Europe/Rome', function() {
             const matcher = new TimeMatcher('0 0 0 * * *', 'Europe/Rome');
             const utcTime = new Date('Thu Oct 11 2018 22:00:00Z');
-            assert.isTrue(matcher.match(utcTime));
+            expect(matcher.match(utcTime)).toBe(true);
         });
     });
 
@@ -235,7 +234,7 @@ describe('TimeMatcher', function() {
         const matcher = new TimeMatcher('1 0 * * *', 'Etc/UTC');
         const nextMatch = matcher.getNextMatch(new Date(Date.UTC(2025, 4, 20, 18, 0, 0)));
         const expected = new Date(Date.UTC(2025, 4, 21, 0, 1, 0))
-        assert.deepEqual(nextMatch, expected)
+        expect(nextMatch).toEqual(expected);
       })
 
       it('should return a future date near DST spring-forward boundary', ()=>{
@@ -244,21 +243,21 @@ describe('TimeMatcher', function() {
 
         const everyMinute = new TimeMatcher('* * * * *');
         const next1 = everyMinute.getNextMatch(baseDate);
-        assert.isTrue(next1 > baseDate, 'every-minute next match must be in the future');
+        expect(next1 > baseDate).toBe(true);
 
         const every5 = new TimeMatcher('*/5 * * * *');
         const next2 = every5.getNextMatch(baseDate);
-        assert.isTrue(next2 > baseDate, 'every-5-min next match must be in the future');
+        expect(next2 > baseDate).toBe(true);
       })
 
       it('should return next day for daily schedule across DST boundary with timezone', ()=>{
-        // 2026-03-07 22:32:42 EST — next 7am ET should be ~8.5 hours away, not months
+        // 2026-03-07 22:32:42 EST -- next 7am ET should be ~8.5 hours away, not months
         const baseDate = new Date('2026-03-08T03:32:42Z');
         const matcher = new TimeMatcher('0 7 * * *', 'America/New_York');
         const next = matcher.getNextMatch(baseDate);
         const hoursAway = (next.getTime() - baseDate.getTime()) / (1000 * 60 * 60);
-        assert.isTrue(next > baseDate, 'next match must be in the future');
-        assert.isTrue(hoursAway < 48, `next 7am should be within 48 hours, got ${hoursAway.toFixed(1)}h`);
+        expect(next > baseDate).toBe(true);
+        expect(hoursAway < 48).toBe(true);
       })
 
       it('should never return a past date during the spring-forward skipped hour', ()=>{
@@ -277,10 +276,7 @@ describe('TimeMatcher', function() {
           for (const base of bases) {
             const baseDate = new Date(base);
             const next = new TimeMatcher(expression, 'America/New_York').getNextMatch(baseDate);
-            assert.isTrue(
-              next > baseDate,
-              `"${expression}" at ${base} must return a future date, got ${next.toISOString()}`
-            );
+            expect(next > baseDate).toBe(true);
           }
         }
       })
@@ -289,14 +285,14 @@ describe('TimeMatcher', function() {
         // 2026-11-01: clocks fall back 02:00 EDT -> 01:00 EST at 06:00Z.
         const baseDate = new Date('2026-11-01T05:30:00Z');
         const next = new TimeMatcher('* * * * *', 'America/New_York').getNextMatch(baseDate);
-        assert.isTrue(next > baseDate, `expected future date, got ${next.toISOString()}`);
+        expect(next > baseDate).toBe(true);
       })
 
       it('should skip the day when the scheduled time falls in the spring-forward gap', ()=>{
         // 2026-03-08 New York: 02:00-02:59 do not exist. "30 2 * * *" cannot run
         // that day, so the next run is 02:30 the following day, not next year.
         const next = new TimeMatcher('30 2 * * *', 'America/New_York').getNextMatch(new Date('2026-03-08T06:30:00Z'));
-        assert.equal(next.toISOString(), '2026-03-09T06:30:00.000Z');
+        expect(next.toISOString()).toBe('2026-03-09T06:30:00.000Z');
       })
 
       it('should return the next occurrence for weekday-constrained schedules without overshooting', ()=>{
@@ -310,77 +306,76 @@ describe('TimeMatcher', function() {
         };
         for (const [expr, want] of Object.entries(expected)) {
           const next = new TimeMatcher(expr, 'America/New_York').getNextMatch(base);
-          assert.equal(next.toISOString(), want, `expr ${expr}`);
+          expect(next.toISOString()).toBe(want);
         }
       })
 
       it('should jump across years for a Feb 29 schedule', ()=>{
         const next = new TimeMatcher('0 0 29 2 *', 'Etc/UTC').getNextMatch(new Date('2026-03-01T00:00:00Z'));
-        assert.equal(next.toISOString(), '2028-02-29T00:00:00.000Z');
+        expect(next.toISOString()).toBe('2028-02-29T00:00:00.000Z');
       })
 
       it('should skip months that do not have day 31', ()=>{
         const next = new TimeMatcher('0 0 31 * *', 'Etc/UTC').getNextMatch(new Date('2026-04-15T00:00:00Z'));
-        assert.equal(next.toISOString(), '2026-05-31T00:00:00.000Z');
+        expect(next.toISOString()).toBe('2026-05-31T00:00:00.000Z');
       })
 
       it('should throw for an expression that can never match', ()=>{
         // Feb 31 does not exist, so there is no next run.
-        assert.throws(
-          () => new TimeMatcher('0 0 31 2 *', 'Etc/UTC').getNextMatch(new Date('2026-01-01T00:00:00Z')),
-          'Could not find next matching date within reasonable time range'
-        );
+        expect(
+          () => new TimeMatcher('0 0 31 2 *', 'Etc/UTC').getNextMatch(new Date('2026-01-01T00:00:00Z'))
+        ).toThrow('Could not find next matching date within reasonable time range');
       })
 
       it('should return the first occurrence of a time in the fall-back repeated hour', ()=>{
         // 2026-11-01 New York: 01:00-01:59 happen twice (02:00 EDT -> 01:00 EST at 06:00Z).
         // 01:30 daily resolves to the first occurrence (EDT), strictly after the base.
         const next = new TimeMatcher('30 1 * * *', 'America/New_York').getNextMatch(new Date('2026-11-01T04:00:00Z'));
-        assert.equal(next.toISOString(), '2026-11-01T05:30:00.000Z');
+        expect(next.toISOString()).toBe('2026-11-01T05:30:00.000Z');
       })
     })
 
     describe('last day of month (L)', function() {
       it('matches the last day of each month', function() {
         const matcher = new TimeMatcher('0 0 12 L * *');
-        assert.isTrue(matcher.match(new Date(2025, 0, 31, 12, 0, 0)));  // Jan 31
-        assert.isTrue(matcher.match(new Date(2025, 1, 28, 12, 0, 0)));  // Feb 28 (common year)
-        assert.isTrue(matcher.match(new Date(2024, 1, 29, 12, 0, 0)));  // Feb 29 (leap year)
-        assert.isTrue(matcher.match(new Date(2025, 3, 30, 12, 0, 0)));  // Apr 30
+        expect(matcher.match(new Date(2025, 0, 31, 12, 0, 0))).toBe(true);  // Jan 31
+        expect(matcher.match(new Date(2025, 1, 28, 12, 0, 0))).toBe(true);  // Feb 28 (common year)
+        expect(matcher.match(new Date(2024, 1, 29, 12, 0, 0))).toBe(true);  // Feb 29 (leap year)
+        expect(matcher.match(new Date(2025, 3, 30, 12, 0, 0))).toBe(true);  // Apr 30
       });
 
       it('does not match a non-last day', function() {
         const matcher = new TimeMatcher('0 0 12 L * *');
-        assert.isFalse(matcher.match(new Date(2025, 0, 30, 12, 0, 0)));  // Jan 30
-        assert.isFalse(matcher.match(new Date(2025, 1, 27, 12, 0, 0)));  // Feb 27
-        assert.isFalse(matcher.match(new Date(2024, 1, 28, 12, 0, 0)));  // Feb 28 in a leap year
+        expect(matcher.match(new Date(2025, 0, 30, 12, 0, 0))).toBe(false);  // Jan 30
+        expect(matcher.match(new Date(2025, 1, 27, 12, 0, 0))).toBe(false);  // Feb 27
+        expect(matcher.match(new Date(2024, 1, 28, 12, 0, 0))).toBe(false);  // Feb 28 in a leap year
       });
 
       it('accepts a lowercase l', function() {
         const matcher = new TimeMatcher('0 0 12 l * *');
-        assert.isTrue(matcher.match(new Date(2025, 0, 31, 12, 0, 0)));
+        expect(matcher.match(new Date(2025, 0, 31, 12, 0, 0))).toBe(true);
       });
 
       it('supports L combined with explicit days', function() {
         const matcher = new TimeMatcher('0 0 12 15,L * *');
-        assert.isTrue(matcher.match(new Date(2025, 0, 15, 12, 0, 0)));
-        assert.isTrue(matcher.match(new Date(2025, 0, 31, 12, 0, 0)));
-        assert.isFalse(matcher.match(new Date(2025, 0, 20, 12, 0, 0)));
+        expect(matcher.match(new Date(2025, 0, 15, 12, 0, 0))).toBe(true);
+        expect(matcher.match(new Date(2025, 0, 31, 12, 0, 0))).toBe(true);
+        expect(matcher.match(new Date(2025, 0, 20, 12, 0, 0))).toBe(false);
       });
 
       it('getNextMatch finds the last day of the current month', function() {
         const next = new TimeMatcher('0 0 12 L * *', 'Etc/UTC').getNextMatch(new Date('2025-01-10T00:00:00Z'));
-        assert.equal(next.toISOString(), '2025-01-31T12:00:00.000Z');
+        expect(next.toISOString()).toBe('2025-01-31T12:00:00.000Z');
       });
 
       it('getNextMatch rolls over to the next month-end', function() {
         const next = new TimeMatcher('0 0 12 L * *', 'Etc/UTC').getNextMatch(new Date('2025-02-01T00:00:00Z'));
-        assert.equal(next.toISOString(), '2025-02-28T12:00:00.000Z');
+        expect(next.toISOString()).toBe('2025-02-28T12:00:00.000Z');
       });
 
       it('getNextMatch resolves Feb 29 on a leap year', function() {
         const next = new TimeMatcher('0 0 12 L * *', 'Etc/UTC').getNextMatch(new Date('2024-02-01T00:00:00Z'));
-        assert.equal(next.toISOString(), '2024-02-29T12:00:00.000Z');
+        expect(next.toISOString()).toBe('2024-02-29T12:00:00.000Z');
       });
     })
 
@@ -388,71 +383,71 @@ describe('TimeMatcher', function() {
       // June 2026: Tuesdays fall on 2, 9, 16, 23, 30 (the 16th is the 3rd).
       it('matches only the 3rd Tuesday at 12:00 for 2#3', function() {
         const matcher = new TimeMatcher('0 0 12 * * 2#3', 'Etc/UTC');
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 16, 12, 0, 0))));
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 2, 12, 0, 0))));  // 1st Tuesday
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 9, 12, 0, 0))));  // 2nd Tuesday
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 23, 12, 0, 0)))); // 4th Tuesday
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 30, 12, 0, 0)))); // 5th Tuesday
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 16, 12, 0, 0)))).toBe(true);
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 2, 12, 0, 0)))).toBe(false);  // 1st Tuesday
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 9, 12, 0, 0)))).toBe(false);  // 2nd Tuesday
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 23, 12, 0, 0)))).toBe(false); // 4th Tuesday
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 30, 12, 0, 0)))).toBe(false); // 5th Tuesday
       });
 
       it('does not match the right occurrence at the wrong time', function() {
         const matcher = new TimeMatcher('0 0 12 * * 2#3', 'Etc/UTC');
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 16, 11, 0, 0))));
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 16, 13, 0, 0))));
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 16, 11, 0, 0)))).toBe(false);
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 16, 13, 0, 0)))).toBe(false);
       });
 
       it('matches the first Monday for 1#1', function() {
         // Weekday numbering follows cron: 0/7 = Sunday, so 1 = Monday.
         const matcher = new TimeMatcher('0 0 12 * * 1#1', 'Etc/UTC');
         // June 2026: first Monday is the 1st.
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 1, 12, 0, 0))));
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 8, 12, 0, 0)))); // 2nd Monday
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 1, 12, 0, 0)))).toBe(true);
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 8, 12, 0, 0)))).toBe(false); // 2nd Monday
       });
 
       it('matches the first Sunday for 0#1', function() {
         const matcher = new TimeMatcher('0 0 12 * * 0#1', 'Etc/UTC');
         // June 2026: first Sunday is the 7th.
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 7, 12, 0, 0))));
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 14, 12, 0, 0)))); // 2nd Sunday
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 7, 12, 0, 0)))).toBe(true);
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 14, 12, 0, 0)))).toBe(false); // 2nd Sunday
       });
 
       it('treats 7#1 as the first Sunday (7 = Sunday)', function() {
         const matcher = new TimeMatcher('0 0 12 * * 7#1', 'Etc/UTC');
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 7, 12, 0, 0))));
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 7, 12, 0, 0)))).toBe(true);
       });
 
       it('never matches #5 in a month with only four occurrences', function() {
         // February 2026: Sundays fall on 1, 8, 15, 22 (only four).
         const matcher = new TimeMatcher('0 0 12 * * 0#5', 'Etc/UTC');
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 1, 22, 12, 0, 0)))); // 4th & last Sunday
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 1, 1, 12, 0, 0))));
+        expect(matcher.match(new Date(Date.UTC(2026, 1, 22, 12, 0, 0)))).toBe(false); // 4th & last Sunday
+        expect(matcher.match(new Date(Date.UTC(2026, 1, 1, 12, 0, 0)))).toBe(false);
       });
 
       it('getNextMatch advances across months', function() {
         const matcher = new TimeMatcher('0 0 12 * * 2#3', 'Etc/UTC');
         // Starting before the 3rd Tuesday of January 2026 (the 20th).
         const jan = matcher.getNextMatch(new Date('2026-01-01T00:00:00Z'));
-        assert.equal(jan.toISOString(), '2026-01-20T12:00:00.000Z');
+        expect(jan.toISOString()).toBe('2026-01-20T12:00:00.000Z');
         // From just after, it rolls to February's 3rd Tuesday (the 17th).
         const feb = matcher.getNextMatch(jan);
-        assert.equal(feb.toISOString(), '2026-02-17T12:00:00.000Z');
+        expect(feb.toISOString()).toBe('2026-02-17T12:00:00.000Z');
         const mar = matcher.getNextMatch(feb);
-        assert.equal(mar.toISOString(), '2026-03-17T12:00:00.000Z');
+        expect(mar.toISOString()).toBe('2026-03-17T12:00:00.000Z');
       });
 
       it('getNextMatch skips months without a 5th occurrence', function() {
         const matcher = new TimeMatcher('0 0 12 * * 0#5', 'Etc/UTC');
         // February 2026 has only four Sundays, so the next 5th Sunday is in March.
         const next = matcher.getNextMatch(new Date('2026-02-01T00:00:00Z'));
-        assert.equal(next.toISOString(), '2026-03-29T12:00:00.000Z');
+        expect(next.toISOString()).toBe('2026-03-29T12:00:00.000Z');
       });
 
       it('matches when combined with a plain weekday', function() {
         // Either any Friday (5) or the 3rd Tuesday.
         const matcher = new TimeMatcher('0 0 12 * * 5,2#3', 'Etc/UTC');
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 5, 12, 0, 0))));  // a Friday
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 16, 12, 0, 0)))); // 3rd Tuesday
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 9, 12, 0, 0))));  // 2nd Tuesday, not Friday
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 5, 12, 0, 0)))).toBe(true);  // a Friday
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 16, 12, 0, 0)))).toBe(true); // 3rd Tuesday
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 9, 12, 0, 0)))).toBe(false);  // 2nd Tuesday, not Friday
       });
     });
 
@@ -460,57 +455,57 @@ describe('TimeMatcher', function() {
       // June 2026: Fridays fall on 5, 12, 19, 26; Sundays on 7, 14, 21, 28.
       it('matches only the last Friday of the month', function () {
         const matcher = new TimeMatcher('0 0 12 * * 5L', 'Etc/UTC');
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 5, 12, 0, 0))));
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 12, 12, 0, 0))));
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 19, 12, 0, 0))));
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 26, 12, 0, 0))));
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 5, 12, 0, 0)))).toBe(false);
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 12, 12, 0, 0)))).toBe(false);
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 19, 12, 0, 0)))).toBe(false);
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 26, 12, 0, 0)))).toBe(true);
       });
 
       it('does not match a Friday that is not the last Friday', function () {
         const matcher = new TimeMatcher('0 0 12 * * 5L', 'Etc/UTC');
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 19, 12, 0, 0))));
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 19, 12, 0, 0)))).toBe(false);
       });
 
       it('does not match the last Friday at the wrong time', function () {
         const matcher = new TimeMatcher('0 0 12 * * 5L', 'Etc/UTC');
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 26, 13, 0, 0))));
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 26, 13, 0, 0)))).toBe(false);
       });
 
       it('matches the last Sunday for both 0L and 7L', function () {
         for (const expr of ['0 0 12 * * 0L', '0 0 12 * * 7L']) {
           const matcher = new TimeMatcher(expr, 'Etc/UTC');
-          assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 21, 12, 0, 0))), expr);
-          assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 28, 12, 0, 0))), expr);
+          expect(matcher.match(new Date(Date.UTC(2026, 5, 21, 12, 0, 0)))).toBe(false);
+          expect(matcher.match(new Date(Date.UTC(2026, 5, 28, 12, 0, 0)))).toBe(true);
         }
       });
 
       it('accepts a lowercase l', function () {
         const matcher = new TimeMatcher('0 0 12 * * 5l', 'Etc/UTC');
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 26, 12, 0, 0))));
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 26, 12, 0, 0)))).toBe(true);
       });
 
       it('supports a token combined with explicit weekdays', function () {
         // last Friday or any Monday (June 2026 Mondays: 1, 8, 15, 22, 29).
         const matcher = new TimeMatcher('0 0 12 * * 5L,1', 'Etc/UTC');
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 26, 12, 0, 0))));  // last Friday
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 22, 12, 0, 0))));  // a Monday
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 5, 19, 12, 0, 0)))); // non-last Friday
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 26, 12, 0, 0)))).toBe(true);  // last Friday
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 22, 12, 0, 0)))).toBe(true);  // a Monday
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 19, 12, 0, 0)))).toBe(false); // non-last Friday
       });
 
       it('getNextMatch finds the last Friday of the current month', function () {
         const next = new TimeMatcher('0 0 12 * * 5L', 'Etc/UTC').getNextMatch(new Date('2026-06-20T00:00:00Z'));
-        assert.equal(next.toISOString(), '2026-06-26T12:00:00.000Z');
+        expect(next.toISOString()).toBe('2026-06-26T12:00:00.000Z');
       });
 
       it('getNextMatch advances across the month boundary', function () {
         // After the last Friday of June, the next is the last Friday of July (31).
         const next = new TimeMatcher('0 0 12 * * 5L', 'Etc/UTC').getNextMatch(new Date('2026-06-27T00:00:00Z'));
-        assert.equal(next.toISOString(), '2026-07-31T12:00:00.000Z');
+        expect(next.toISOString()).toBe('2026-07-31T12:00:00.000Z');
       });
 
       it('getNextMatch finds the last Sunday for 7L', function () {
         const next = new TimeMatcher('0 0 12 * * 7L', 'Etc/UTC').getNextMatch(new Date('2026-06-01T00:00:00Z'));
-        assert.equal(next.toISOString(), '2026-06-28T12:00:00.000Z');
+        expect(next.toISOString()).toBe('2026-06-28T12:00:00.000Z');
       });
     })
 
@@ -519,69 +514,69 @@ describe('TimeMatcher', function() {
       // Jun 30 = Tue, Oct 31 = Sat.
       it('shifts 15W off a Saturday to the previous Friday', function () {
         const matcher = new TimeMatcher('0 0 12 15W * *', 'Etc/UTC');
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 7, 14, 12, 0, 0))));  // Fri 14
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 7, 15, 12, 0, 0)))); // the Saturday
+        expect(matcher.match(new Date(Date.UTC(2026, 7, 14, 12, 0, 0)))).toBe(true);  // Fri 14
+        expect(matcher.match(new Date(Date.UTC(2026, 7, 15, 12, 0, 0)))).toBe(false); // the Saturday
       });
 
       it('keeps 1W inside the month when the 1st is a weekend', function () {
         const matcher = new TimeMatcher('0 0 12 1W * *', 'Etc/UTC');
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 7, 3, 12, 0, 0))));  // Aug 1 = Sat -> Mon 3
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 7, 1, 12, 0, 0))));
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 2, 2, 12, 0, 0))));  // Mar 1 = Sun -> Mon 2
+        expect(matcher.match(new Date(Date.UTC(2026, 7, 3, 12, 0, 0)))).toBe(true);  // Aug 1 = Sat -> Mon 3
+        expect(matcher.match(new Date(Date.UTC(2026, 7, 1, 12, 0, 0)))).toBe(false);
+        expect(matcher.match(new Date(Date.UTC(2026, 2, 2, 12, 0, 0)))).toBe(true);  // Mar 1 = Sun -> Mon 2
       });
 
       it('matches the last weekday of the month for LW', function () {
         const matcher = new TimeMatcher('0 0 12 LW * *', 'Etc/UTC');
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 4, 29, 12, 0, 0))));  // May 31 = Sun -> Fri 29
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 4, 31, 12, 0, 0))));
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 5, 30, 12, 0, 0))));  // Jun 30 = Tue -> 30
+        expect(matcher.match(new Date(Date.UTC(2026, 4, 29, 12, 0, 0)))).toBe(true);  // May 31 = Sun -> Fri 29
+        expect(matcher.match(new Date(Date.UTC(2026, 4, 31, 12, 0, 0)))).toBe(false);
+        expect(matcher.match(new Date(Date.UTC(2026, 5, 30, 12, 0, 0)))).toBe(true);  // Jun 30 = Tue -> 30
       });
 
       it('does not match a non-existent target day (31W in a 30-day month)', function () {
         const matcher = new TimeMatcher('0 0 12 31W * *', 'Etc/UTC');
         for (let day = 1; day <= 30; day++) {
-          assert.isFalse(matcher.match(new Date(Date.UTC(2026, 8, day, 12, 0, 0)))); // September
+          expect(matcher.match(new Date(Date.UTC(2026, 8, day, 12, 0, 0)))).toBe(false); // September
         }
       });
 
       it('getNextMatch resolves nW across the month boundary', function () {
         // Aug 15 2026 is a Saturday -> the nearest weekday is Fri 14.
         const next = new TimeMatcher('0 0 12 15W * *', 'Etc/UTC').getNextMatch(new Date('2026-08-01T00:00:00Z'));
-        assert.equal(next.toISOString(), '2026-08-14T12:00:00.000Z');
+        expect(next.toISOString()).toBe('2026-08-14T12:00:00.000Z');
       });
 
       it('getNextMatch advances LW to the next month', function () {
         // After May's last business day (Fri 29), the next is June's (Tue 30).
         const next = new TimeMatcher('0 0 12 LW * *', 'Etc/UTC').getNextMatch(new Date('2026-05-30T00:00:00Z'));
-        assert.equal(next.toISOString(), '2026-06-30T12:00:00.000Z');
+        expect(next.toISOString()).toBe('2026-06-30T12:00:00.000Z');
       });
 
       it('resolves the fire time correctly across a DST transition', function () {
         // March 2026: DST starts Mar 8; Mar 31 (a Tuesday) is the last business
         // day. Noon America/New_York that day is EDT (UTC-4) -> 16:00Z.
         const next = new TimeMatcher('0 0 12 LW * *', 'America/New_York').getNextMatch(new Date('2026-03-01T00:00:00Z'));
-        assert.equal(next.toISOString(), '2026-03-31T16:00:00.000Z');
+        expect(next.toISOString()).toBe('2026-03-31T16:00:00.000Z');
       });
     })
 
     describe('offset from last day (L-n)', function() {
       it('matches the nth-to-last day of the month', function () {
         const matcher = new TimeMatcher('0 0 12 L-3 * *', 'Etc/UTC');
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 0, 28, 12, 0, 0))));  // Jan (31) -> 28
-        assert.isFalse(matcher.match(new Date(Date.UTC(2026, 0, 31, 12, 0, 0))));
-        assert.isTrue(matcher.match(new Date(Date.UTC(2026, 1, 25, 12, 0, 0))));  // Feb (28) -> 25
+        expect(matcher.match(new Date(Date.UTC(2026, 0, 28, 12, 0, 0)))).toBe(true);  // Jan (31) -> 28
+        expect(matcher.match(new Date(Date.UTC(2026, 0, 31, 12, 0, 0)))).toBe(false);
+        expect(matcher.match(new Date(Date.UTC(2026, 1, 25, 12, 0, 0)))).toBe(true);  // Feb (28) -> 25
       });
 
       it('getNextMatch resolves L-3 within the month', function () {
         const next = new TimeMatcher('0 0 12 L-3 * *', 'Etc/UTC').getNextMatch(new Date('2026-01-01T00:00:00Z'));
-        assert.equal(next.toISOString(), '2026-01-28T12:00:00.000Z');
+        expect(next.toISOString()).toBe('2026-01-28T12:00:00.000Z');
       });
 
       it('getNextMatch skips months where the offset reaches before the 1st', function () {
         // L-30 needs a 31-day month; Feb 2026 (28 days) has no match, so the next
         // fire after Feb 1 is Mar 1 (31 - 30).
         const next = new TimeMatcher('0 0 12 L-30 * *', 'Etc/UTC').getNextMatch(new Date('2026-02-01T00:00:00Z'));
-        assert.equal(next.toISOString(), '2026-03-01T12:00:00.000Z');
+        expect(next.toISOString()).toBe('2026-03-01T12:00:00.000Z');
       });
     })
 
@@ -591,13 +586,13 @@ describe('TimeMatcher', function() {
       it('treats ? as * in the day-of-week field', function () {
         const withQuestion = new TimeMatcher('0 0 12 15 * ?', 'Etc/UTC').getNextMatch(base);
         const withStar = new TimeMatcher('0 0 12 15 * *', 'Etc/UTC').getNextMatch(base);
-        assert.equal(withQuestion.toISOString(), withStar.toISOString());
+        expect(withQuestion.toISOString()).toBe(withStar.toISOString());
       });
 
       it('treats ? as * in the day-of-month field', function () {
         const withQuestion = new TimeMatcher('0 0 12 ? * 1', 'Etc/UTC').getNextMatch(base);
         const withStar = new TimeMatcher('0 0 12 * * 1', 'Etc/UTC').getNextMatch(base);
-        assert.equal(withQuestion.toISOString(), withStar.toISOString());
+        expect(withQuestion.toISOString()).toBe(withStar.toISOString());
       });
     })
 });

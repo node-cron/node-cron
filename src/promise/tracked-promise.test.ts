@@ -1,23 +1,22 @@
-import {assert} from 'chai'
 import { TrackedPromise } from './tracked-promise';
 
 describe('Tracked Promise', function(){
   it('wraps a promise', function(){
     const tp = new TrackedPromise((resolve) => { resolve('promise run') });
-    assert.isDefined(tp.getPromise())
-    assert.equal(tp.getState(), 'fulfilled');
-    assert.isTrue(tp.isFulfilled());
-    assert.isFalse(tp.isPending());
-    assert.isFalse(tp.isRejected());
-    assert.equal(tp.getValue(), 'promise run');
+    expect(tp.getPromise()).toBeDefined();
+    expect(tp.getState()).toBe('fulfilled');
+    expect(tp.isFulfilled()).toBe(true);
+    expect(tp.isPending()).toBe(false);
+    expect(tp.isRejected()).toBe(false);
+    expect(tp.getValue()).toBe('promise run');
   });
 
   it('returns pending status', function(){
     const tp = new TrackedPromise((resolve) => { setTimeout(() => {resolve('promise run')}, 500) });
-    assert.equal(tp.getState(), 'pending');
-    assert.isFalse(tp.isFulfilled());
-    assert.isTrue(tp.isPending());
-    assert.isFalse(tp.isRejected());
+    expect(tp.getState()).toBe('pending');
+    expect(tp.isFulfilled()).toBe(false);
+    expect(tp.isPending()).toBe(true);
+    expect(tp.isRejected()).toBe(false);
   });
 
   it('returns rejected status', async function(){
@@ -25,39 +24,39 @@ describe('Tracked Promise', function(){
     try {
       await tp;
     } catch(error: any){
-      assert.equal(error.message, 'promise error');
+      expect(error.message).toBe('promise error');
     }
-    assert.equal(tp.getState(), 'rejected');
-    assert.isFalse(tp.isFulfilled());
-    assert.isFalse(tp.isPending());
-    assert.isTrue(tp.isRejected());
-    assert.isDefined(tp.getError());
+    expect(tp.getState()).toBe('rejected');
+    expect(tp.isFulfilled()).toBe(false);
+    expect(tp.isPending()).toBe(false);
+    expect(tp.isRejected()).toBe(true);
+    expect(tp.getError()).toBeDefined();
   });
   
 
   it('allows await', async function(){
     const result = await new TrackedPromise((resolve) => { resolve('promise run') });
-    assert.equal(result, 'promise run');
+    expect(result).toBe('promise run');
   });
 
   it('allows try catch', async function(){
     try{
       await new TrackedPromise((resolve, reject) => { reject(new Error('promise error')) });
-      assert.fail('should fail before');
+      expect.fail('should fail before');
     } catch(error: any) {
-      assert.equal(error.message, 'promise error');
+      expect(error.message).toBe('promise error');
     }
   });
 
   it('allows use then', function(){
     return new TrackedPromise((resolve) => { resolve('promise run') }).then(result => {
-      assert.equal(result, 'promise run');
+      expect(result).toBe('promise run');
     })
   })
 
   it('allows use catch', function(){
     return new TrackedPromise((resolve, reject) => { reject(new Error('promise error')) }).catch(error => {
-      assert.equal(error.message, 'promise error');
+      expect(error.message).toBe('promise error');
     });
   });
 
@@ -68,7 +67,7 @@ describe('Tracked Promise', function(){
   it('sets the state to rejected on fail', function(){
     const p = new TrackedPromise((resolve, reject) => { reject(new Error('promise error')) });
     p.catch(() => {});
-    assert.equal(p.getState(), 'rejected')
+    expect(p.getState()).toBe('rejected')
   });
 
   it('sets the state to pending when running', function(){
@@ -76,6 +75,6 @@ describe('Tracked Promise', function(){
       await new Promise(resolve => setTimeout(resolve, 1000));
       resolve(true);
     });
-    assert.equal(p.getState(), 'pending')
+    expect(p.getState()).toBe('pending')
   });
 });

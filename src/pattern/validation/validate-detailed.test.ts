@@ -1,119 +1,118 @@
-import { assert } from 'chai';
 import { parse, validateDetailed } from './pattern-validation';
 
 describe('validateDetailed', function () {
   it('returns valid with the decomposed fields for a valid expression', function () {
     const result = validateDetailed('0 30 9 * * 1-5');
-    assert.isTrue(result.valid);
-    assert.deepEqual(result.errors, []);
-    assert.deepEqual(result.fields?.second, [0]);
-    assert.deepEqual(result.fields?.minute, [30]);
-    assert.deepEqual(result.fields?.hour, [9]);
-    assert.deepEqual(result.fields?.dayOfWeek, [1, 2, 3, 4, 5]);
+    expect(result.valid).toBe(true);
+    expect(result.errors).toEqual([]);
+    expect(result.fields?.second).toEqual([0]);
+    expect(result.fields?.minute).toEqual([30]);
+    expect(result.fields?.hour).toEqual([9]);
+    expect(result.fields?.dayOfWeek).toEqual([1, 2, 3, 4, 5]);
   });
 
   it('defaults the seconds field for a 5-field expression', function () {
     const result = validateDetailed('30 9 * * *');
-    assert.isTrue(result.valid);
-    assert.deepEqual(result.fields?.second, [0]);
-    assert.deepEqual(result.fields?.minute, [30]);
+    expect(result.valid).toBe(true);
+    expect(result.fields?.second).toEqual([0]);
+    expect(result.fields?.minute).toEqual([30]);
   });
 
   it('keeps the L token in day-of-month', function () {
     const result = validateDetailed('0 0 12 L * *');
-    assert.isTrue(result.valid);
-    assert.include(result.fields?.dayOfMonth as any[], 'L');
+    expect(result.valid).toBe(true);
+    expect(result.fields?.dayOfMonth as any[]).toContain('L');
   });
 
   it('keeps the <weekday>L token in day-of-week', function () {
     const result = validateDetailed('0 0 12 * * 5L');
-    assert.isTrue(result.valid);
-    assert.include(result.fields?.dayOfWeek as any[], '5L');
+    expect(result.valid).toBe(true);
+    expect(result.fields?.dayOfWeek as any[]).toContain('5L');
   });
 
   it('normalises 7L to 0L in day-of-week', function () {
     const result = validateDetailed('0 0 12 * * 7L');
-    assert.isTrue(result.valid);
-    assert.include(result.fields?.dayOfWeek as any[], '0L');
+    expect(result.valid).toBe(true);
+    expect(result.fields?.dayOfWeek as any[]).toContain('0L');
   });
 
   it('keeps the nW / LW tokens in day-of-month', function () {
     const result = validateDetailed('0 0 12 15W,LW * *');
-    assert.isTrue(result.valid);
-    assert.includeMembers(result.fields?.dayOfMonth as any[], ['15W', 'LW']);
+    expect(result.valid).toBe(true);
+    expect(result.fields?.dayOfMonth as any[]).toEqual(expect.arrayContaining(['15W', 'LW']));
   });
 
   it('reports W used in a range as invalid day-of-month', function () {
     const result = validateDetailed('0 0 12 1-15W * *');
-    assert.isFalse(result.valid);
-    assert.equal(result.errors[0].field, 'dayOfMonth');
-    assert.equal(result.errors[0].value, '1-15W');
+    expect(result.valid).toBe(false);
+    expect(result.errors[0].field).toBe('dayOfMonth');
+    expect(result.errors[0].value).toBe('1-15W');
   });
 
   it('keeps the L-n token in day-of-month', function () {
     const result = validateDetailed('0 0 12 L-3 * *');
-    assert.isTrue(result.valid);
-    assert.include(result.fields?.dayOfMonth as any[], 'L-3');
+    expect(result.valid).toBe(true);
+    expect(result.fields?.dayOfMonth as any[]).toContain('L-3');
   });
 
   it('reports an out-of-range L-n token', function () {
     const result = validateDetailed('0 0 12 L-40 * *');
-    assert.isFalse(result.valid);
-    assert.equal(result.errors[0].field, 'dayOfMonth');
-    assert.equal(result.errors[0].value, 'L-40');
+    expect(result.valid).toBe(false);
+    expect(result.errors[0].field).toBe('dayOfMonth');
+    expect(result.errors[0].value).toBe('L-40');
   });
 
   it('reports an invalid <weekday>L token', function () {
     const result = validateDetailed('0 0 12 * * 8L');
-    assert.isFalse(result.valid);
-    assert.equal(result.errors[0].field, 'dayOfWeek');
+    expect(result.valid).toBe(false);
+    expect(result.errors[0].field).toBe('dayOfWeek');
   });
 
   it('reports an out-of-range field with its name and value', function () {
     const result = validateDetailed('0 0 99 * * *'); // 6 fields: hour = 99
-    assert.isFalse(result.valid);
-    assert.isUndefined(result.fields);
-    assert.lengthOf(result.errors, 1);
-    assert.equal(result.errors[0].field, 'hour');
-    assert.equal(result.errors[0].value, '99');
-    assert.match(result.errors[0].message, /99/);
+    expect(result.valid).toBe(false);
+    expect(result.fields).toBeUndefined();
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors[0].field).toBe('hour');
+    expect(result.errors[0].value).toBe('99');
+    expect(result.errors[0].message).toMatch(/99/);
   });
 
   it('collects errors from multiple invalid fields', function () {
     const result = validateDetailed('99 0 99 * * *'); // bad second and bad hour
-    assert.isFalse(result.valid);
+    expect(result.valid).toBe(false);
     const fields = result.errors.map(e => e.field);
-    assert.includeMembers(fields, ['second', 'hour']);
+    expect(fields).toEqual(expect.arrayContaining(['second', 'hour']));
   });
 
   it('rejects illegal characters', function () {
     const result = validateDetailed('0 0 12 * * $');
-    assert.isFalse(result.valid);
-    assert.equal(result.errors[0].field, 'expression');
+    expect(result.valid).toBe(false);
+    expect(result.errors[0].field).toBe('expression');
   });
 
   it('rejects a wrong number of fields', function () {
     const result = validateDetailed('* * *');
-    assert.isFalse(result.valid);
-    assert.equal(result.errors[0].field, 'expression');
-    assert.match(result.errors[0].message, /5 or 6 fields/);
+    expect(result.valid).toBe(false);
+    expect(result.errors[0].field).toBe('expression');
+    expect(result.errors[0].message).toMatch(/5 or 6 fields/);
   });
 
   it('rejects a non-string', function () {
     const result = validateDetailed(123 as any);
-    assert.isFalse(result.valid);
-    assert.equal(result.errors[0].field, 'expression');
+    expect(result.valid).toBe(false);
+    expect(result.errors[0].field).toBe('expression');
   });
 });
 
 describe('parse', function () {
   it('returns the decomposed fields for a valid expression', function () {
     const fields = parse('0 30 9 * * *');
-    assert.deepEqual(fields.minute, [30]);
-    assert.deepEqual(fields.hour, [9]);
+    expect(fields.minute).toEqual([30]);
+    expect(fields.hour).toEqual([9]);
   });
 
   it('throws with a useful message for an invalid expression', function () {
-    assert.throws(() => parse('0 0 99 * * *'), /99 is a invalid expression for hour/);
+    expect(() => parse('0 0 99 * * *')).toThrow(/99 is a invalid expression for hour/);
   });
 });

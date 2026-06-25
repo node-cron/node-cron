@@ -1,5 +1,3 @@
-import { assert } from 'chai';
-
 import { TaskRegistry } from './task-registry';
 import { InlineScheduledTask } from './tasks/inline-scheduled-task';
 import { ScheduledTask } from './tasks/scheduled-task';
@@ -14,36 +12,36 @@ describe('TaskRegistry', function(){
   it('adds a new task', function(){
     const task = createTask();
     registry.add(task);
-    assert.isTrue(registry.has(task.id));
+    expect(registry.has(task.id)).toBe(true);
   });
 
   it('does not add a task twice', function(){
     const task = createTask();
     registry.add(task);
-    assert.throws(()=>{
+    expect(()=>{
       registry.add(task);
-    }, `task ${task.id} already registered!`)
+    }).toThrow(`task ${task.id} already registered!`)
   });
 
   it('removes a task', function(){
     const task = createTask();
     registry.add(task);
-    assert.isTrue(registry.has(task.id));
+    expect(registry.has(task.id)).toBe(true);
     registry.remove(task);
-    assert.isFalse(registry.has(task.id));
+    expect(registry.has(task.id)).toBe(false);
   });
 
   it('does nothing when removing a task that is not registered', function(){
     const task = createTask();
-    assert.doesNotThrow(() => registry.remove(task));
-    assert.isFalse(registry.has(task.id));
+    expect(() => registry.remove(task)).not.toThrow();
+    expect(registry.has(task.id)).toBe(false);
   });
 
   it('removes a task when task is destroyed', function(){
     const task = createTask();
     registry.add(task);
     task.destroy();
-    assert.isFalse(registry.has(task.id));
+    expect(registry.has(task.id)).toBe(false);
   });
 
   it('gets a task', function(){
@@ -52,17 +50,17 @@ describe('TaskRegistry', function(){
 
     const storedTask = registry.get(task.id);
 
-    assert.equal(task.id, storedTask?.id);
+    expect(task.id).toBe(storedTask?.id);
   });
 
   it('checks it has task by id', function(){
     const task = createTask();
     registry.add(task);
-    assert.isTrue(registry.has(task.id));
+    expect(registry.has(task.id)).toBe(true);
   });
 
   it('checks it has task by id when task does not exist', function(){
-    assert.isFalse(registry.has('invalid-id'));
+    expect(registry.has('invalid-id')).toBe(false);
   });
 
   it('returns all task', function(){
@@ -71,7 +69,7 @@ describe('TaskRegistry', function(){
     registry.add(createTask());
 
     const tasks = registry.all();
-    assert.lengthOf(tasks, 3);
+    expect(tasks).toHaveLength(3);
   });
 
   it('calls destroy exactly once when remove is called', function(){
@@ -86,8 +84,8 @@ describe('TaskRegistry', function(){
     };
 
     registry.remove(task);
-    assert.equal(destroyCount, 1, 'destroy should be called exactly once');
-    assert.isFalse(registry.has(task.id));
+    expect(destroyCount).toBe(1);
+    expect(registry.has(task.id)).toBe(false);
   });
 
   it('kills all tasks', function() {
@@ -99,7 +97,7 @@ describe('TaskRegistry', function(){
     registry.killAll();
 
     tasks.forEach(t => {
-      assert.equal(t.getStatus(), 'destroyed');
+      expect(t.getStatus()).toBe('destroyed');
     })
   })
 })

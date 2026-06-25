@@ -1,4 +1,3 @@
-import { assert } from 'chai';
 import { createTask, getTasks, shutdown } from './node-cron';
 import { ScheduledTask } from './tasks/scheduled-task';
 
@@ -67,8 +66,8 @@ describe('shutdown', () => {
 
     await shutdown();
 
-    assert.equal(t1.getStatus(), 'destroyed');
-    assert.equal(t2.getStatus(), 'destroyed');
+    expect(t1.getStatus()).toBe('destroyed');
+    expect(t2.getStatus()).toBe('destroyed');
   });
 
   it('registry is empty after shutdown', async () => {
@@ -77,7 +76,7 @@ describe('shutdown', () => {
 
     await shutdown();
 
-    assert.equal(getTasks().size, 0);
+    expect(getTasks().size).toBe(0);
   });
 
   it('waits for a busy task to finish before destroying', async () => {
@@ -85,14 +84,14 @@ describe('shutdown', () => {
 
     // Wait for the scheduled execution to actually start
     await waitUntilBusy(task);
-    assert.isTrue(task.isBusy());
+    expect(task.isBusy()).toBe(true);
 
     // Unblock the task after a short delay
     setTimeout(unblock, 20);
 
     await shutdown(500);
 
-    assert.equal(task.getStatus(), 'destroyed');
+    expect(task.getStatus()).toBe('destroyed');
   });
 
   it('waits for multiple busy tasks to finish', async () => {
@@ -102,16 +101,16 @@ describe('shutdown', () => {
     await waitUntilBusy(b1.task);
     await waitUntilBusy(b2.task);
 
-    assert.isTrue(b1.task.isBusy());
-    assert.isTrue(b2.task.isBusy());
+    expect(b1.task.isBusy()).toBe(true);
+    expect(b2.task.isBusy()).toBe(true);
 
     setTimeout(b1.unblock, 10);
     setTimeout(b2.unblock, 30);
 
     await shutdown(500);
 
-    assert.equal(b1.task.getStatus(), 'destroyed');
-    assert.equal(b2.task.getStatus(), 'destroyed');
+    expect(b1.task.getStatus()).toBe('destroyed');
+    expect(b2.task.getStatus()).toBe('destroyed');
   });
 
   it('destroys tasks after timeout even when still busy', async () => {
@@ -119,15 +118,15 @@ describe('shutdown', () => {
     const { task } = makeBusyTask();
 
     await waitUntilBusy(task);
-    assert.isTrue(task.isBusy());
+    expect(task.isBusy()).toBe(true);
 
     const start = Date.now();
     await shutdown(50);
     const elapsed = Date.now() - start;
 
-    assert.isAbove(elapsed, 40, 'should wait for at least the timeout');
-    assert.isBelow(elapsed, 500, 'should not wait much longer than the timeout');
-    assert.equal(task.getStatus(), 'destroyed');
+    expect(elapsed).toBeGreaterThan(40);
+    expect(elapsed).toBeLessThan(500);
+    expect(task.getStatus()).toBe('destroyed');
   });
 
   it('uses 5000 ms as the default timeout (does not hang on short busy tasks)', async () => {
@@ -142,8 +141,8 @@ describe('shutdown', () => {
     await shutdown(); // no timeout arg - uses default 5000
     const elapsed = Date.now() - start;
 
-    assert.isBelow(elapsed, 1000);
-    assert.equal(task.getStatus(), 'destroyed');
+    expect(elapsed).toBeLessThan(1000);
+    expect(task.getStatus()).toBe('destroyed');
   });
 
   it('is safe to call when no tasks exist', async () => {

@@ -1,4 +1,3 @@
-import { assert } from 'chai';
 import { InlineScheduledTask } from './inline-scheduled-task';
 import { TaskContext } from './scheduled-task';
 
@@ -6,16 +5,16 @@ describe('InlineScheduledTask', function() {
   it('builds with default values', function(){
     const task = new InlineScheduledTask('* * * * * *', ()=> {});
 
-   assert.match(task.id, /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
-   assert.equal(task.id, task.name);
-   assert.isDefined(task.runner);
-   assert.equal(task.getStatus(), 'stopped')
+   expect(task.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+   expect(task.id).toBe(task.name);
+   expect(task.runner).toBeDefined();
+   expect(task.getStatus()).toBe('stopped')
   });
 
   it('starts', function(){
     const task = new InlineScheduledTask('* * * * * *', ()=> {});
     task.start();
-    assert.equal(task.getStatus(), 'idle');
+    expect(task.getStatus()).toBe('idle');
     task.destroy();
   });
 
@@ -28,40 +27,40 @@ describe('InlineScheduledTask', function() {
     nextMinute.setSeconds(0);
     nextMinute.setMinutes(nextMinute.getMinutes() + 1);
 
-    assert.equal(task.getNextRun()?.getTime(), nextMinute.getTime());
+    expect(task.getNextRun()?.getTime()).toBe(nextMinute.getTime());
     task.destroy();
   });
 
   it('stops', function(){
     const task = new InlineScheduledTask('* * * * * *', ()=> {});
     task.start();
-    assert.equal(task.getStatus(), 'idle');
+    expect(task.getStatus()).toBe('idle');
     task.stop();
-    assert.equal(task.getStatus(), 'stopped');
+    expect(task.getStatus()).toBe('stopped');
     task.destroy();
   });
 
   it('destroys', function(){
     const task = new InlineScheduledTask('* * * * * *', ()=> {});
     task.start();
-    assert.equal(task.getStatus(), 'idle');
+    expect(task.getStatus()).toBe('idle');
     task.destroy();
-    assert.equal(task.getStatus(), 'destroyed');
+    expect(task.getStatus()).toBe('destroyed');
   });
 
   it('executes', async function(){
     const task = new InlineScheduledTask('* * * * * *', async () => { return "task result" });
     const result = await task.execute();
-    assert.equal(result, "task result");
+    expect(result).toBe("task result");
   });
 
   it('executes and fails', async function(){
     const task = new InlineScheduledTask('* * * * * *', async ()=> { throw new Error("task error") });
     try{
       await task.execute();
-      assert.fail('should fail before')
+      expect.fail('should fail before')
     } catch(error: any){
-      assert.equal(error.message, 'task error')
+      expect(error.message).toBe('task error')
     }
   });
 
@@ -70,7 +69,7 @@ describe('InlineScheduledTask', function() {
       throw new Error('fail');
     });
     try { await task.execute(); } catch { /* expected */ }
-    assert.equal(task.emitter.listenerCount('execution:finished'), 0);
+    expect(task.emitter.listenerCount('execution:finished')).toBe(0);
     task.destroy();
   });
 
@@ -83,8 +82,8 @@ describe('InlineScheduledTask', function() {
     });
     task.start();
     const event = await eventCaught;
-    assert.isDefined(event?.date)
-    assert.isDefined(event?.triggeredAt)
+    expect(event?.date).toBeDefined()
+    expect(event?.triggeredAt).toBeDefined()
     task.destroy();
   });
 
@@ -98,8 +97,8 @@ describe('InlineScheduledTask', function() {
     task.start();
     task.stop();
     const event = await eventCaught;
-    assert.isDefined(event?.date)
-    assert.isDefined(event?.triggeredAt)
+    expect(event?.date).toBeDefined()
+    expect(event?.triggeredAt).toBeDefined()
     task.destroy();
   });
 
@@ -112,8 +111,8 @@ describe('InlineScheduledTask', function() {
     });
     task.destroy();
     const event = await eventCaught;
-    assert.isDefined(event?.date)
-    assert.isDefined(event?.triggeredAt)
+    expect(event?.date).toBeDefined()
+    expect(event?.triggeredAt).toBeDefined()
   });
 
   it('emmits execution:started', async function(){
@@ -125,11 +124,11 @@ describe('InlineScheduledTask', function() {
     });
     task.start();
     const event = await eventCaught;
-    assert.isDefined(event?.date)
-    assert.isDefined(event?.triggeredAt)
-    assert.isDefined(event?.execution)
-    assert.isDefined(event?.execution.id)
-    assert.isUndefined(event?.execution.result)
+    expect(event?.date).toBeDefined()
+    expect(event?.triggeredAt).toBeDefined()
+    expect(event?.execution).toBeDefined()
+    expect(event?.execution.id).toBeDefined()
+    expect(event?.execution.result).toBeUndefined()
     task.destroy();
   });
 
@@ -142,12 +141,12 @@ describe('InlineScheduledTask', function() {
     });
     task.start();
     const event = await eventCaught;
-    assert.isDefined(event?.date)
-    assert.isDefined(event?.triggeredAt)
-    assert.isDefined(event?.execution)
-    assert.isDefined(event?.execution.id)
-    assert.isDefined(event?.execution.result)
-    assert.isUndefined(event?.execution.error)
+    expect(event?.date).toBeDefined()
+    expect(event?.triggeredAt).toBeDefined()
+    expect(event?.execution).toBeDefined()
+    expect(event?.execution.id).toBeDefined()
+    expect(event?.execution.result).toBeDefined()
+    expect(event?.execution.error).toBeUndefined()
     task.destroy();
   });
 
@@ -160,12 +159,12 @@ describe('InlineScheduledTask', function() {
     });
     task.start();
     const event = await eventCaught;
-    assert.isDefined(event?.date)
-    assert.isDefined(event?.triggeredAt)
-    assert.isDefined(event?.execution)
-    assert.isDefined(event?.execution.id)
-    assert.isUndefined(event?.execution.result)
-    assert.isDefined(event?.execution.error)
+    expect(event?.date).toBeDefined()
+    expect(event?.triggeredAt).toBeDefined()
+    expect(event?.execution).toBeDefined()
+    expect(event?.execution.id).toBeDefined()
+    expect(event?.execution.result).toBeUndefined()
+    expect(event?.execution.error).toBeDefined()
     task.destroy();
   });
 
@@ -178,8 +177,8 @@ describe('InlineScheduledTask', function() {
     });
     task.start();
     const event = await eventCaught;
-    assert.isDefined(event?.date)
-    assert.isDefined(event?.triggeredAt)
+    expect(event?.date).toBeDefined()
+    expect(event?.triggeredAt).toBeDefined()
     task.destroy();
   });
 
@@ -197,8 +196,8 @@ describe('InlineScheduledTask', function() {
     await new Promise(resolve => { setTimeout(resolve, 1200)});
 
     const event = await eventCaught;
-    assert.isDefined(event?.date)
-    assert.isDefined(event?.triggeredAt)
+    expect(event?.date).toBeDefined()
+    expect(event?.triggeredAt).toBeDefined()
     task.destroy();
   });
 
@@ -214,8 +213,8 @@ describe('InlineScheduledTask', function() {
     await new Promise(resolve => { setTimeout(resolve, 1000)});
 
     const event = await eventCaught;
-    assert.isDefined(event?.date)
-    assert.isDefined(event?.triggeredAt)
+    expect(event?.date).toBeDefined()
+    expect(event?.triggeredAt).toBeDefined()
     task.destroy();
   });
 
@@ -223,7 +222,7 @@ describe('InlineScheduledTask', function() {
     const captured = makeLogger();
     const task = new InlineScheduledTask('* * * * * *', async () => { throw new Error('boom'); }, { logger: captured });
     try { await task.execute(); } catch { /* execute() rejects on failure */ }
-    assert.equal(captured.errors.length, 1, 'task logger should receive the error');
+    expect(captured.errors.length).toBe(1);
     task.destroy();
   });
 
@@ -232,7 +231,7 @@ describe('InlineScheduledTask', function() {
     const task = new InlineScheduledTask('* * * * * *', async () => {}, { logger: captured });
     task.start();
     await wait(1000); blockIO(2000); await wait(1200);
-    assert.isTrue(captured.warnings.some(w => w.includes('missed execution')), 'expected a missed-execution warning');
+    expect(captured.warnings.some(w => w.includes('missed execution'))).toBe(true);
     task.destroy();
   });
 
@@ -243,8 +242,8 @@ describe('InlineScheduledTask', function() {
     task.on('execution:missed', () => { missedFired = true; });
     task.start();
     await wait(1000); blockIO(2000); await wait(1200);
-    assert.isTrue(missedFired, 'a missed execution should have occurred');
-    assert.isFalse(captured.warnings.some(w => w.includes('missed execution')), 'warning should be suppressed when handled');
+    expect(missedFired).toBe(true);
+    expect(captured.warnings.some(w => w.includes('missed execution'))).toBe(false);
     task.destroy();
   });
 
@@ -255,7 +254,7 @@ describe('InlineScheduledTask', function() {
     const task = new InlineScheduledTask('* * * * * *', async () => {}, { logger: captured, suppressMissedWarning: true });
     task.start();
     await wait(1000); blockIO(2000); await wait(1200);
-    assert.isFalse(captured.warnings.some(w => w.includes('missed execution')), 'warning should be suppressed by the flag');
+    expect(captured.warnings.some(w => w.includes('missed execution'))).toBe(false);
     task.destroy();
   });
 });

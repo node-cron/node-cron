@@ -1,19 +1,18 @@
-import { assert } from 'chai';
 import { InlineScheduledTask } from './inline-scheduled-task';
 
 describe('task introspection', function () {
   describe('getPattern', function () {
     it('returns the original cron expression', function () {
       const task = new InlineScheduledTask('0 0 12 * * *', () => {});
-      assert.equal(task.getPattern(), '0 0 12 * * *');
+      expect(task.getPattern()).toBe('0 0 12 * * *');
     });
   });
 
   describe('match', function () {
     it('reports whether a date matches the expression', function () {
       const task = new InlineScheduledTask('0 0 12 * * *', () => {}, { timezone: 'Etc/UTC' });
-      assert.isTrue(task.match(new Date('2025-06-15T12:00:00Z')));
-      assert.isFalse(task.match(new Date('2025-06-15T12:00:01Z')));
+      expect(task.match(new Date('2025-06-15T12:00:00Z'))).toBe(true);
+      expect(task.match(new Date('2025-06-15T12:00:01Z'))).toBe(false);
     });
   });
 
@@ -21,16 +20,16 @@ describe('task introspection', function () {
     it('returns the next N runs, strictly increasing, each matching', function () {
       const task = new InlineScheduledTask('0 0 12 * * *', () => {}, { timezone: 'Etc/UTC' });
       const runs = task.getNextRuns(3);
-      assert.lengthOf(runs, 3);
+      expect(runs).toHaveLength(3);
       for (let i = 0; i < runs.length; i++) {
-        assert.isTrue(task.match(runs[i]), `run ${i} should match`);
-        if (i > 0) assert.isAbove(runs[i].getTime(), runs[i - 1].getTime());
+        expect(task.match(runs[i])).toBe(true);
+        if (i > 0) expect(runs[i].getTime()).toBeGreaterThan(runs[i - 1].getTime());
       }
     });
 
     it('returns an empty array for a non-positive count', function () {
       const task = new InlineScheduledTask('0 0 12 * * *', () => {});
-      assert.deepEqual(task.getNextRuns(0), []);
+      expect(task.getNextRuns(0)).toEqual([]);
     });
   });
 
@@ -39,22 +38,22 @@ describe('task introspection', function () {
       const task = new InlineScheduledTask('0 0 12 * * *', () => {}, { timezone: 'Etc/UTC' });
       task.start();
       const ms = task.msToNext();
-      assert.isNotNull(ms);
-      assert.isAbove(ms as number, 0);
-      assert.closeTo((ms as number), (task.getNextRun() as Date).getTime() - Date.now(), 1000);
+      expect(ms).not.toBeNull();
+      expect(ms as number).toBeGreaterThan(0);
+      expect(Math.abs((ms as number) - ((task.getNextRun() as Date).getTime() - Date.now()))).toBeLessThanOrEqual(1000);
       task.stop();
     });
 
     it('returns null when the task is stopped', function () {
       const task = new InlineScheduledTask('0 0 12 * * *', () => {});
-      assert.isNull(task.msToNext());
+      expect(task.msToNext()).toBeNull();
     });
   });
 
   describe('isBusy', function () {
     it('is false when the task is not executing', function () {
       const task = new InlineScheduledTask('0 0 12 * * *', () => {});
-      assert.isFalse(task.isBusy());
+      expect(task.isBusy()).toBe(false);
     });
 
     it('is true while an execution is in progress', async function () {
@@ -68,7 +67,7 @@ describe('task introspection', function () {
 
       task.start();
       await started;
-      assert.isTrue(task.isBusy());
+      expect(task.isBusy()).toBe(true);
 
       release();
       task.stop();
@@ -78,19 +77,19 @@ describe('task introspection', function () {
   describe('runsLeft', function () {
     it('returns the remaining executions when maxExecutions is set', function () {
       const task = new InlineScheduledTask('* * * * * *', () => {}, { maxExecutions: 3 });
-      assert.equal(task.runsLeft(), 3);
+      expect(task.runsLeft()).toBe(3);
     });
 
     it('returns undefined when maxExecutions is not set', function () {
       const task = new InlineScheduledTask('* * * * * *', () => {});
-      assert.isUndefined(task.runsLeft());
+      expect(task.runsLeft()).toBeUndefined();
     });
   });
 
   describe('lastRun', function () {
     it('returns null before the first execution', function () {
       const task = new InlineScheduledTask('* * * * * *', () => {});
-      assert.isNull(task.lastRun());
+      expect(task.lastRun()).toBeNull();
     });
 
     it('returns the execution date and result after a successful run', async function () {
@@ -98,10 +97,10 @@ describe('task introspection', function () {
       await task.execute();
 
       const last = task.lastRun();
-      assert.isNotNull(last);
-      assert.instanceOf(last!.date, Date);
-      assert.equal(last!.result, 'done');
-      assert.isUndefined(last!.error);
+      expect(last).not.toBeNull();
+      expect(last!.date).toBeInstanceOf(Date);
+      expect(last!.result).toBe('done');
+      expect(last!.error).toBeUndefined();
     });
 
     it('returns the execution date and error after a failing run', async function () {
@@ -114,10 +113,10 @@ describe('task introspection', function () {
       }
 
       const last = task.lastRun();
-      assert.isNotNull(last);
-      assert.instanceOf(last!.date, Date);
-      assert.strictEqual(last!.error, boom);
-      assert.isUndefined(last!.result);
+      expect(last).not.toBeNull();
+      expect(last!.date).toBeInstanceOf(Date);
+      expect(last!.error).toBe(boom);
+      expect(last!.result).toBeUndefined();
     });
 
     it('reflects the actual execution time, not a tick check', async function () {
@@ -132,10 +131,10 @@ describe('task introspection', function () {
       const after = Date.now();
 
       const last = task.lastRun();
-      assert.isNotNull(last);
+      expect(last).not.toBeNull();
       const ranAt = last!.date.getTime();
-      assert.isAtLeast(ranAt, before);
-      assert.isAtMost(ranAt, after);
+      expect(ranAt).toBeGreaterThanOrEqual(before);
+      expect(ranAt).toBeLessThanOrEqual(after);
     });
 
     it('updates to the most recent execution on each run', async function () {
@@ -143,11 +142,11 @@ describe('task introspection', function () {
       const task = new InlineScheduledTask('* * * * * *', () => value);
 
       await task.execute();
-      assert.equal(task.lastRun()!.result, 'first');
+      expect(task.lastRun()!.result).toBe('first');
 
       value = 'second';
       await task.execute();
-      assert.equal(task.lastRun()!.result, 'second');
+      expect(task.lastRun()!.result).toBe('second');
     });
   });
 });

@@ -1,4 +1,3 @@
-import { assert } from 'chai';
 import { Runner } from './runner';
 import { TimeMatcher } from '../time/time-matcher';
 import { createTask } from '../node-cron';
@@ -9,7 +8,7 @@ describe('scheduler/runner unref', function () {
     const runner = new Runner(timeMatcher, async () => {});
     runner.start();
 
-    assert.isTrue(runner.heartBeatTimeout!.hasRef());
+    expect(runner.heartBeatTimeout!.hasRef()).toBe(true);
 
     runner.stop();
   });
@@ -19,7 +18,7 @@ describe('scheduler/runner unref', function () {
     const runner = new Runner(timeMatcher, async () => {}, { unref: true });
     runner.start();
 
-    assert.isFalse(runner.heartBeatTimeout!.hasRef());
+    expect(runner.heartBeatTimeout!.hasRef()).toBe(false);
 
     runner.stop();
   });
@@ -29,11 +28,11 @@ describe('scheduler/runner unref', function () {
     const runner = new Runner(timeMatcher, async () => {}, { unref: true });
 
     runner.start();
-    assert.isFalse(runner.heartBeatTimeout!.hasRef());
+    expect(runner.heartBeatTimeout!.hasRef()).toBe(false);
     runner.stop();
 
     runner.start();
-    assert.isFalse(runner.heartBeatTimeout!.hasRef());
+    expect(runner.heartBeatTimeout!.hasRef()).toBe(false);
     runner.stop();
   });
 
@@ -42,9 +41,9 @@ describe('scheduler/runner unref', function () {
     const runner = new Runner(timeMatcher, async () => {});
     runner.start();
 
-    assert.isTrue(runner.heartBeatTimeout!.hasRef());
+    expect(runner.heartBeatTimeout!.hasRef()).toBe(true);
     runner.setUnref(true);
-    assert.isFalse(runner.heartBeatTimeout!.hasRef());
+    expect(runner.heartBeatTimeout!.hasRef()).toBe(false);
 
     runner.stop();
   });
@@ -54,9 +53,9 @@ describe('scheduler/runner unref', function () {
     const runner = new Runner(timeMatcher, async () => {}, { unref: true });
     runner.start();
 
-    assert.isFalse(runner.heartBeatTimeout!.hasRef());
+    expect(runner.heartBeatTimeout!.hasRef()).toBe(false);
     runner.setUnref(false);
-    assert.isTrue(runner.heartBeatTimeout!.hasRef());
+    expect(runner.heartBeatTimeout!.hasRef()).toBe(true);
 
     runner.stop();
   });
@@ -94,7 +93,7 @@ describe('scheduler/runner unref', function () {
     Math.random = origRandom;
     runner.stop();
 
-    assert.isTrue(jitterUnrefed, 'jitter timeout should be unref\'d when unref option is true');
+    expect(jitterUnrefed).toBe(true);
   });
 
   it('setUnref(false) re-refs jitter timeout when active', async function () {
@@ -115,7 +114,7 @@ describe('scheduler/runner unref', function () {
       setTimeout(() => {
         const jt = (runner as any).jitterTimeout;
         if (jt) {
-          assert.isFalse(jt.hasRef());
+          expect(jt.hasRef()).toBe(false);
           runner.setUnref(false);
           jitterRefed = jt.hasRef();
         }
@@ -128,7 +127,7 @@ describe('scheduler/runner unref', function () {
     Math.random = origRandom;
     runner.stop();
 
-    assert.isTrue(jitterRefed, 'jitter timeout should be re-ref\'d after setUnref(false)');
+    expect(jitterRefed).toBe(true);
   });
 });
 
@@ -139,9 +138,9 @@ describe('task.unref() / task.ref()', function () {
     const task: any = createTask('* * * * * *', () => {}, { logger: noopLogger });
     task.start();
 
-    assert.isTrue(task.runner.heartBeatTimeout!.hasRef());
+    expect(task.runner.heartBeatTimeout!.hasRef()).toBe(true);
     task.unref();
-    assert.isFalse(task.runner.heartBeatTimeout!.hasRef());
+    expect(task.runner.heartBeatTimeout!.hasRef()).toBe(false);
 
     task.destroy();
   });
@@ -150,9 +149,9 @@ describe('task.unref() / task.ref()', function () {
     const task: any = createTask('* * * * * *', () => {}, { logger: noopLogger, unref: true });
     task.start();
 
-    assert.isFalse(task.runner.heartBeatTimeout!.hasRef());
+    expect(task.runner.heartBeatTimeout!.hasRef()).toBe(false);
     task.ref();
-    assert.isTrue(task.runner.heartBeatTimeout!.hasRef());
+    expect(task.runner.heartBeatTimeout!.hasRef()).toBe(true);
 
     task.destroy();
   });
