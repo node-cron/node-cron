@@ -90,7 +90,8 @@ export class InlineScheduledTask implements ScheduledTask {
       coordinatorTtl: options?.distributedLease,
       onSkipped: (date: Date, reason: SkipReason) => {
         this.emitter.emit('execution:skipped', this.createContext(date, undefined, reason));
-      }
+      },
+      unref: options?.unref
     }
     
     this.runner = new Runner(this.timeMatcher, (date, execution) => {
@@ -180,6 +181,14 @@ export class InlineScheduledTask implements ScheduledTask {
 
   getStatus(): string {
     return this.stateMachine.state;
+  }
+
+  unref(): void {
+    this.runner.setUnref(true);
+  }
+
+  ref(): void {
+    this.runner.setUnref(false);
   }
   
   destroy(): void {

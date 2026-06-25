@@ -732,6 +732,50 @@ describe('BackgroundScheduledTask', function() {
       await task.destroy();
     });
   });
+
+  describe('unref / ref', function () {
+    it('unref calls unref on the fork process', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      const unrefStub = sinon.stub();
+      fakeChildProcess.send.callsFake((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      (fakeChildProcess as any).unref = unrefStub;
+
+      await task.start();
+      task.unref();
+
+      assert.isTrue(unrefStub.calledOnce);
+      await task.destroy();
+    });
+
+    it('ref calls ref on the fork process', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      const refStub = sinon.stub();
+      fakeChildProcess.send.callsFake((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      (fakeChildProcess as any).ref = refStub;
+
+      await task.start();
+      task.ref();
+
+      assert.isTrue(refStub.calledOnce);
+      await task.destroy();
+    });
+
+    it('unref is safe to call before start', function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      task.unref();
+    });
+
+    it('ref is safe to call before start', function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      task.ref();
+    });
+  });
 });
 
 

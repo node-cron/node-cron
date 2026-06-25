@@ -45,6 +45,12 @@ export type RunnerOptions = {
   coordinatorKeyPrefix?: string
   coordinatorTtl?: number
   onSkipped?: OnSkippedFn
+  /**
+   * When true, the internal heartbeat (and jitter) setTimeout handles are
+   * unref'd so the Node.js process can exit naturally when only this timer
+   * remains. Useful for CLI tools and scripts.
+   */
+  unref?: boolean
 }
 
 const DEFAULT_COORDINATOR_TTL = 30000;
@@ -74,6 +80,7 @@ export class Runner {
   coordinatorKeyPrefix: string;
   coordinatorTtl: number;
   onSkipped: OnSkippedFn;
+  unref: boolean;
 
   constructor(timeMatcher: TimeMatcher, onMatch: OnMatch, options?: RunnerOptions){
       this.timeMatcher = timeMatcher;
@@ -97,6 +104,7 @@ export class Runner {
       this.coordinatorKeyPrefix = options?.coordinatorKeyPrefix || '';
       this.coordinatorTtl = options?.coordinatorTtl ?? DEFAULT_COORDINATOR_TTL;
       this.onSkipped = options?.onSkipped || emptySkipFn;
+      this.unref = options?.unref ?? false;
 
       this.runCount = 0;
       this.running = false;
@@ -158,6 +166,7 @@ export class Runner {
       if (this.running) {
         clearTimeout(this.heartBeatTimeout);
         this.heartBeatTimeout = setTimeout(heartBeat, getDelay(expectedNextExecution));
+        if (this.unref) this.heartBeatTimeout.unref();
       }
     };
 
@@ -212,6 +221,7 @@ export class Runner {
           this.jitterTimeout = setTimeout(() => {
             execute().then(() => resolve(), () => resolve());
           }, randomDelay);
+          if (this.unref) this.jitterTimeout!.unref();
         });
       } else {
         await execute();
@@ -291,6 +301,18 @@ export class Runner {
 
   isStopped(){
     return !this.isStarted();
+  }
+
+  setUnref(value: boolean){
+    this.unref = value;
+    if (this.heartBeatTimeout) {
+      if (value) this.heartBeatTimeout.unref();
+      else this.heartBeatTimeout.ref();
+    }
+    if (this.jitterTimeout) {
+      if (value) this.jitterTimeout.unref();
+      else this.jitterTimeout.ref();
+    }
   }
 
   async execute(){
