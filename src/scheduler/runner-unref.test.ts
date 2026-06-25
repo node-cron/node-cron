@@ -96,6 +96,40 @@ describe('scheduler/runner unref', function () {
 
     assert.isTrue(jitterUnrefed, 'jitter timeout should be unref\'d when unref option is true');
   });
+
+  it('setUnref(false) re-refs jitter timeout when active', async function () {
+    const origRandom = Math.random;
+    Math.random = () => 0.999;
+
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let jitterRefed = false;
+
+    const runner = new Runner(timeMatcher, async () => {}, {
+      maxRandomDelay: 30000,
+      unref: true,
+    });
+
+    const origStart = runner.start.bind(runner);
+    runner.start = function () {
+      origStart();
+      setTimeout(() => {
+        const jt = (runner as any).jitterTimeout;
+        if (jt) {
+          assert.isFalse(jt.hasRef());
+          runner.setUnref(false);
+          jitterRefed = jt.hasRef();
+        }
+      }, 1500);
+    };
+
+    runner.start();
+
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    Math.random = origRandom;
+    runner.stop();
+
+    assert.isTrue(jitterRefed, 'jitter timeout should be re-ref\'d after setUnref(false)');
+  });
 });
 
 const noopLogger: any = { error() {}, warn() {}, info() {}, debug() {} };
