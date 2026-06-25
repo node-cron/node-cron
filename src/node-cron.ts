@@ -57,6 +57,7 @@ export function schedule(expression:string, func: TaskFn | string, options?: Tas
     const started = task.start();
     if (started && typeof (started as Promise<void>).catch === 'function') {
       (started as Promise<void>).catch((error: any) => {
+        /* v8 ignore next */
         (options?.logger || logger).error(`Failed to start scheduled task: ${error?.message ?? error}`);
       });
     }

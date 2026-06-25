@@ -410,6 +410,120 @@ describe('scheduler/runner', function(){
     expect(unhandled).toBe(false);
   });
 
+  it('execute skips the task when beforeRun returns false', async function () {
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let taskCalled = false;
+
+    const runner = new Runner(timeMatcher, async () => {
+      taskCalled = true;
+    }, {
+      beforeRun() { return false; }
+    });
+
+    await runner.execute();
+    expect(taskCalled).toBe(false);
+    expect(runner.runCount).toBe(0);
+  });
+
+  it('skips execution when coordinator declines (not elected)', async function () {
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let skipReason: string | undefined;
+
+    const coordinator = {
+      async shouldRun() { return false; },
+      async onComplete() {},
+    };
+
+    const runner = new Runner(timeMatcher, async () => {}, {
+      runCoordinator: coordinator,
+      coordinatorKeyPrefix: 'test',
+      onSkipped(date, reason) { skipReason = reason; },
+    });
+
+    runner.start();
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    runner.stop();
+
+    expect(skipReason).toBe('not-elected');
+    expect(runner.runCount).toBe(0);
+  });
+
+  it('skips execution when coordinator throws (fail-closed)', async function () {
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let skipReason: string | undefined;
+
+    const coordinator = {
+      async shouldRun() { throw new Error('redis down'); },
+      async onComplete() {},
+    };
+
+    const runner = new Runner(timeMatcher, async () => {}, {
+      runCoordinator: coordinator,
+      coordinatorKeyPrefix: 'test',
+      onSkipped(date, reason) { skipReason = reason; },
+    });
+
+    runner.start();
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    runner.stop();
+
+    expect(skipReason).toBe('coordinator-error');
+    expect(runner.runCount).toBe(0);
+  });
+
+  it('uses default no-op onSkipped when coordinator declines', async function () {
+    const timeMatcher = new TimeMatcher('* * * * * *');
+
+    const coordinator = {
+      async shouldRun() { return false; },
+      async onComplete() {},
+    };
+
+    const runner = new Runner(timeMatcher, async () => {}, {
+      runCoordinator: coordinator,
+      coordinatorKeyPrefix: 'test',
+    });
+
+    runner.start();
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    runner.stop();
+
+    expect(runner.runCount).toBe(0);
+  });
+
+  it('runs coordinator onComplete after task finishes', async function () {
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let completedKey: string | undefined;
+
+    const coordinator = {
+      async shouldRun() { return true; },
+      async onComplete(key: string) { completedKey = key; },
+    };
+
+    const runner = new Runner(timeMatcher, async () => 'done', {
+      runCoordinator: coordinator,
+      coordinatorKeyPrefix: 'test',
+    });
+
+    runner.start();
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    runner.stop();
+
+    expect(completedKey).toBeDefined();
+    expect(completedKey).toMatch(/^test:/);
+  });
+
+  it('catches rejection when beforeRun and onError both throw', async function () {
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    const runner = new Runner(timeMatcher, async () => {}, {
+      beforeRun: () => { throw new Error('beforeRun failed'); },
+      onError: () => { throw new Error('onError also failed'); },
+    });
+    runner.start();
+
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    runner.stop();
+  });
 });
 
 function blockIO(ms: number) {

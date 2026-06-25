@@ -1,4 +1,4 @@
-import logger, { Logger, setLogger, resetLogger, noopLogger } from './logger';
+import logger, { Logger, setLogger, resetLogger, getLogger, noopLogger } from './logger';
 
 describe('Logger', () => {
   let consoleInfoStub: ReturnType<typeof vi.spyOn>;
@@ -204,6 +204,22 @@ describe('Logger', () => {
       expect(consoleWarnStub).toHaveBeenCalledOnce();
       expect(consoleErrorStub).toHaveBeenCalledOnce();
       expect(consoleDebugStub).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('getLogger', () => {
+    it('returns the active logger', () => {
+      const custom: Logger = { info() {}, warn() {}, error() {}, debug() {} };
+      setLogger(custom);
+      expect(getLogger()).toBe(custom);
+      resetLogger();
+    });
+
+    it('returns the default logger after reset', () => {
+      const before = getLogger();
+      setLogger(noopLogger);
+      resetLogger();
+      expect(getLogger()).toBe(before);
     });
   });
 });

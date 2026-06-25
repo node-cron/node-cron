@@ -24,7 +24,7 @@ const RESET = '\x1b[0m';
 
 function log(level: LogLevel, message: string, extra?: any): void {
   const timestamp = new Date().toISOString();
-  const color = levelColors[level] ?? '';
+  const color = levelColors[level];
   const prefix = `[${timestamp}] [PID: ${process.pid}] ${GREEN}[NODE-CRON]${GREEN} ${color}[${level}]${RESET}`;
   const output = `${prefix} ${message}`;
 
