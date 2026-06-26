@@ -150,6 +150,21 @@ See [Scheduling Options](https://nodecron.com/scheduling-options) for the full l
 
 v4 is a TypeScript rewrite with a smarter scheduler and a streamlined API. See the [Migration Guide](https://nodecron.com/migrating-from-v3).
 
+## Sponsors
+
+node-cron is zero-dependency infrastructure used in production by 220,000+ repositories. If it is part of your stack, sponsoring helps keep it tested, DST-correct, and maintained.
+
+<!-- sponsors:begin -->
+<!-- auto-generated from sponsors.tpl.md by @goreleaser/sponsors, do not edit by hand -->
+<div align="center">
+  <p><strong>Silver sponsors</strong><br/> <a href="https://easysaas.at" target="_blank" rel="noopener sponsored"><img src="https://avatars.githubusercontent.com/u/24415042?s=64&v=4" alt="easySAAS" height="52"/></a>
+  </p>
+</div>
+
+<!-- sponsors:end -->
+
+[**Become a sponsor &rarr;**](https://github.com/sponsors/node-cron)
+
 ## Issues
 
 Feel free to submit issues and enhancement requests [here](https://github.com/node-cron/node-cron/issues).
