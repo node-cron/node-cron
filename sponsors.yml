@@ -1,0 +1,38 @@
+# Config for @goreleaser/sponsors
+# See current sponsors:
+#   export GITHUB_TOKEN=ghp_...      (classic PAT, scope read:org; you must be a node-cron org owner)
+#   npx -y @goreleaser/sponsors generate --config sponsors.yml sponsors.json
+#   cat sponsors.json | jq '.ByTier'
+#
+# Render into a file:
+#   npx -y @goreleaser/sponsors apply sponsors.json README.tpl.md README.md
+
+github_user: node-cron        # the org/user that receives the sponsorship (matches .github/FUNDING.yml)
+opencollective_slug: node-cron   # uncomment if you also collect via OpenCollective
+
+tiers:
+  - id: gold
+    name: Gold
+    monthly_rate: 50
+  - id: silver
+    name: Silver
+    monthly_rate: 25
+  - id: bronze
+    name: Bronze
+    monthly_rate: 10
+  - id: backer
+    name: Backer
+    monthly_rate: 5
+
+# Optional: sponsors paid outside GitHub (invoice, etc.)
+# external_sponsors:
+#   - name: Acme Corp
+#     id: acme-corp
+#     source: github
+#     website: https://acme.com
+#     image: https://github.com/acme-corp.png
+#     tier: gold
+
+# Optional: redirect one login to another account
+# aliases:
+#   some-login: acme-corp

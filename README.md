@@ -1,9 +1,12 @@
 # Node Cron
 
-[![npm](https://img.shields.io/npm/l/node-cron.svg)](https://github.com/node-cron/node-cron/blob/main/LICENSE.md)
-[![npm](https://img.shields.io/npm/v/node-cron.svg)](https://img.shields.io/npm/v/node-cron.svg)
-![NPM Downloads](https://img.shields.io/npm/dm/node-cron)
-[![Coverage Status](https://coveralls.io/repos/github/node-cron/node-cron/badge.svg?branch=main)](https://coveralls.io/github/node-cron/node-cron?branch=main)
+[![npm version](https://img.shields.io/npm/v/node-cron.svg?color=2f9d5f)](https://www.npmjs.com/package/node-cron)
+[![npm downloads](https://img.shields.io/npm/dm/node-cron.svg?color=2f9d5f)](https://www.npmjs.com/package/node-cron)
+[![used by](https://img.shields.io/badge/used%20by-220k%2B%20repos-2f9d5f)](https://github.com/node-cron/node-cron/network/dependents)
+[![coverage](https://coveralls.io/repos/github/node-cron/node-cron/badge.svg?branch=main)](https://coveralls.io/github/node-cron/node-cron?branch=main)
+[![zero dependencies](https://img.shields.io/badge/dependencies-0-2f9d5f)](https://www.npmjs.com/package/node-cron?activeTab=dependencies)
+[![license](https://img.shields.io/npm/l/node-cron.svg?color=2f9d5f)](https://github.com/node-cron/node-cron/blob/main/LICENSE.md)
+[![sponsor](https://img.shields.io/badge/%E2%9D%A4%20sponsor-2f9d5f)](https://github.com/sponsors/node-cron)
 
 Job scheduling for Node.js with overlap prevention, distributed coordination, and background tasks. Schedule recurring tasks with cron expressions, prevent overlapping runs, coordinate across multiple instances, and run heavy jobs in isolated background processes. Zero dependencies, written in TypeScript.
 
@@ -149,6 +152,15 @@ See [Scheduling Options](https://nodecron.com/scheduling-options) for the full l
 ## Migrating from v3
 
 v4 is a TypeScript rewrite with a smarter scheduler and a streamlined API. See the [Migration Guide](https://nodecron.com/migrating-from-v3).
+
+## Sponsors
+
+node-cron is zero-dependency infrastructure used in production by 220,000+ repositories. If it is part of your stack, sponsoring helps keep it tested, DST-correct, and maintained.
+
+<!-- sponsors:begin -->
+<!-- sponsors:end -->
+
+Become a sponsor on [**GitHub Sponsors**](https://github.com/sponsors/node-cron) or [**Open Collective**](https://opencollective.com/node-cron).
 
 ## Issues
 

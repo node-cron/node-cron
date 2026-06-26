@@ -1,0 +1,35 @@
+name: Update sponsors
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # daily at 06:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sponsors:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate sponsors.json
+        run: npx -y @goreleaser/sponsors generate --config sponsors.yml sponsors.json
+        env:
+          # PAT with access to read the node-cron org's sponsorships. The default
+          # GITHUB_TOKEN cannot read the Sponsors GraphQL API. Store as a secret.
+          GITHUB_TOKEN: ${{ secrets.SPONSORS_TOKEN }}
+
+      - name: Apply template to README (replaces content between the sponsors markers)
+        run: npx -y @goreleaser/sponsors apply sponsors.json sponsors.tpl.md README.md
+
+      - name: Open a PR if the sponsor list changed
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: update sponsors"
+          title: "chore: update sponsors"
+          body: "Automated sponsor list refresh."
+          branch: chore/update-sponsors
+          delete-branch: true
