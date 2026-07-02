@@ -152,6 +152,10 @@ cron.schedule('0 3 * * *', task, {
 
 See [Scheduling Options](https://nodecron.com/scheduling-options) for the full list.
 
+## Timezones and DST
+
+Schedules match wall-clock time in the task's `timezone`. Across a daylight-saving fall-back the repeated hour runs once, so a sub-hourly schedule (for example `*/15`) can pause for up to the length of the DST shift during that hour. If you need a fixed interval to keep firing uninterrupted across DST transitions, use a zone without DST, for example `timezone: 'UTC'`. See [Timezones & DST](https://nodecron.com/timezones-and-dst) for the full model.
+
 ## Migrating from v3
 
 v4 is a TypeScript rewrite with a smarter scheduler and a streamlined API. See the [Migration Guide](https://nodecron.com/migrating-from-v3).
