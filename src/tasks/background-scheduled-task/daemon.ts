@@ -1,10 +1,10 @@
 import { fileURLToPath } from "url";
 import logger, { noopLogger } from "../../logger";
 import { InlineScheduledTask } from "../inline-scheduled-task";
-import { ScheduledTask, TaskContext, TaskEvent, TaskOptions } from "../scheduled-task";
+import { TaskContext, TaskEvent, TaskOptions } from "../scheduled-task";
 import { IpcRunCoordinator } from "../../coordinator/ipc-run-coordinator";
 
-export async function startDaemon(message: any): Promise<ScheduledTask> {
+export async function startDaemon(message: any): Promise<InlineScheduledTask> {
     const script = await importTaskModule(message.path);
 
     // The inline task in the daemon stays silent; the parent process logs from
@@ -135,7 +135,7 @@ function safelySerializeContext(context: TaskContext): TaskContext {
 
 
 export function bind(){
-  let task: ScheduledTask;
+  let task: InlineScheduledTask;
 
   process.on('message', async (message: any) => {
     switch(message.command){
@@ -157,7 +157,9 @@ export function bind(){
       return task;
     case 'task:execute':
       try {
-        if (task) await task.execute();
+        // Threads the parent's correlation id through so its execute() can
+        // match the forwarded event to this call, not a concurrent scheduled fire.
+        if (task) await task.execute(message.executionId);
       } catch(error: any){
         logger.debug('Daemon task:execute failed:', error);
       }

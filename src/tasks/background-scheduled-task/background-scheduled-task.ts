@@ -61,7 +61,13 @@ class BackgroundScheduledTask implements ScheduledTask{
     // events so runsLeft() works across the process boundary.
     this.timeMatcher = new TimeMatcher(cronExpression, options?.timezone);
     this.runCount = 0;
-    this.on('execution:started', (context) => { this.runCount++; this.executing = true; this.currentExecution = context?.execution; });
+    // Only scheduled fires count toward maxExecutions; a manual execute() must
+    // not (see runner.ts execute()).
+    this.on('execution:started', (context) => {
+      if (context?.execution?.reason === 'scheduled') this.runCount++;
+      this.executing = true;
+      this.currentExecution = context?.execution;
+    });
     // Mirror the last actual execution from the daemon's events. Both carry the
     // execution's own timestamps, so lastRun reflects the real run time.
     this.on('execution:finished', (context) => { this.executing = false; this.currentExecution = undefined; this.recordLastRun(context.execution); });
@@ -422,12 +428,17 @@ class BackgroundScheduledTask implements ScheduledTask{
     });
   }
 
+  // Correlated by an id echoed through the daemon (task:execute -> its
+  // execution -> the forwarded event), so a scheduled fire in the daemon that
+  // settles while this manual run is still in flight cannot resolve it.
   execute(): Promise<any> {
     return new Promise((resolve, reject) => {
       if (!this.forkProcess) {
         return reject(new Error('Cannot execute background task because it hasn\'t been started yet. Please initialize the task using the start() method before attempting to execute it.'));
       }
-      
+
+      const executionId = createID();
+
       // No timeout by default: wait for the task to actually finish or fail.
       // An optional `executeTimeout` (ms) opts into a guard against a daemon
       // that never reports back.
@@ -444,22 +455,25 @@ class BackgroundScheduledTask implements ScheduledTask{
         this.off('execution:finished', onFinished);
         this.off('execution:failed', onFail);
       };
-      
+
       const onFinished = (context: TaskContext) => {
+        if (context.execution?.id !== executionId) return;
         cleanupListeners();
         resolve(context.execution?.result);
       };
-      
+
       const onFail = (context: TaskContext) => {
+        if (context.execution?.id !== executionId) return;
         cleanupListeners();
         reject(context.execution?.error || new Error('Execution failed without specific error'));
       };
 
-      this.once('execution:finished', onFinished);
-      this.once('execution:failed', onFail);
-      
+      this.on('execution:finished', onFinished);
+      this.on('execution:failed', onFail);
+
       this.forkProcess.send({
-        command: 'task:execute'
+        command: 'task:execute',
+        executionId
       });
     });
   }

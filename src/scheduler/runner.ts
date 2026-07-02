@@ -194,12 +194,6 @@ export class Runner {
           const result = await this.onMatch(date, execution);
           execution.finishedAt = new Date();
           execution.result = result;
-          this.onFinished(date, execution);
-
-          if (this.maxExecutions && this.runCount >= this.maxExecutions) {
-            this.onMaxExecutions(date);
-            this.stop();
-          }
         } catch (error: any) {
           execution.finishedAt = new Date();
           execution.error = error;
@@ -208,6 +202,20 @@ export class Runner {
           } catch (hookError: any) {
             this.onErrorFallback(date, hookError);
           }
+          return;
+        }
+
+        // A throwing/rejecting onFinished hook must not reclassify this
+        // successful run as failed.
+        try {
+          await this.onFinished(date, execution);
+        } catch (hookError: any) {
+          this.onErrorFallback(date, hookError);
+        }
+
+        if (this.maxExecutions && this.runCount >= this.maxExecutions) {
+          this.onMaxExecutions(date);
+          this.stop();
         }
       };
 
@@ -320,26 +328,34 @@ export class Runner {
     }
   }
 
-  async execute(){
+  // A manual run never counts toward maxExecutions and is never blocked by it;
+  // only scheduled fires do (see runCount++ in runTask above). `executionId`
+  // lets callers that cross a process boundary (background tasks) correlate
+  // the settled event with the run they invoked, rather than any other one.
+  async execute(executionId?: string){
     const date = new Date();
     const execution: Execution = {
-      id: createID(),
+      id: executionId ?? createID(),
       reason: 'invoked'
     }
     try {
       const shouldExecute = await this.beforeRun(date, execution);
-      if(shouldExecute){
-        this.runCount++;
-        execution.startedAt = new Date();
-        const result = await this.onMatch(date, execution);
-        execution.finishedAt = new Date();
-        execution.result = result;
-        this.onFinished(date, execution);
-      }
+      if(!shouldExecute) return;
+      execution.startedAt = new Date();
+      const result = await this.onMatch(date, execution);
+      execution.finishedAt = new Date();
+      execution.result = result;
     } catch (error: any){
       execution.finishedAt = new Date();
       execution.error = error;
       this.onError(date, error, execution);
+      return;
+    }
+
+    try {
+      await this.onFinished(date, execution);
+    } catch (hookError: any) {
+      this.onErrorFallback(date, hookError);
     }
   }
 }

@@ -551,6 +551,105 @@ describe('scheduler/runner', function(){
     await new Promise(resolve => setTimeout(resolve, 1200));
     runner.stop();
   });
+
+  it('isolates a throwing onFinished hook from a successful scheduled run (does not call onError)', async function () {
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let onErrorCalled = false;
+    let onFinishedCalled = false;
+
+    const runner = new Runner(timeMatcher, async () => 'ok', {
+      onFinished() {
+        onFinishedCalled = true;
+        throw new Error('hook boom');
+      },
+      onError() {
+        onErrorCalled = true;
+      },
+    });
+    runner.start();
+
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    runner.stop();
+
+    expect(onFinishedCalled).toBe(true);
+    expect(onErrorCalled).toBe(false);
+  });
+
+  it('does not crash on a rejecting onFinished hook for a scheduled run', async function () {
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let onErrorCalled = false;
+
+    const runner = new Runner(timeMatcher, async () => 'ok', {
+      onFinished() {
+        return Promise.reject(new Error('async hook boom'));
+      },
+      onError() {
+        onErrorCalled = true;
+      },
+    });
+    runner.start();
+
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    runner.stop();
+
+    expect(onErrorCalled).toBe(false);
+  });
+
+  it('isolates a throwing onFinished hook from a successful manual execute()', async function () {
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let onErrorCalled = false;
+
+    const runner = new Runner(timeMatcher, async () => 'ok', {
+      onFinished() {
+        throw new Error('hook boom');
+      },
+      onError() {
+        onErrorCalled = true;
+      },
+    });
+
+    await runner.execute();
+
+    expect(onErrorCalled).toBe(false);
+  });
+
+  it('manual execute() does not count toward maxExecutions and is not gated by it', async function () {
+    const timeMatcher = new TimeMatcher('* * * * * *');
+    let onMaxExecutionsCalled = false;
+
+    const runner = new Runner(timeMatcher, async () => 'ok', {
+      maxExecutions: 2,
+      onMaxExecutions() { onMaxExecutionsCalled = true; },
+    });
+
+    await runner.execute();
+    await runner.execute();
+    await runner.execute();
+
+    expect(runner.runCount).toBe(0);
+    expect(onMaxExecutionsCalled).toBe(false);
+  });
+
+  it('manual execute() still runs after the task auto-stopped from maxExecutions', async function () {
+    const timeMatcher = new TimeMatcher('* * * * * *');
+
+    const runner = new Runner(timeMatcher, async () => 'manual after stop', {
+      maxExecutions: 1,
+    });
+
+    runner.start();
+    await new Promise(resolve => setTimeout(resolve, 1200));
+    expect(runner.isStopped()).toBe(true);
+    expect(runner.runCount).toBe(1);
+
+    let manualResult: any;
+    runner.onFinished = (_date, execution) => { manualResult = execution.result; return true; };
+    await runner.execute();
+
+    expect(manualResult).toBe('manual after stop');
+    // Still not counted toward maxExecutions.
+    expect(runner.runCount).toBe(1);
+  });
 });
 
 function blockIO(ms: number) {

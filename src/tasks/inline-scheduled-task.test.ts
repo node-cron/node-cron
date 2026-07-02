@@ -275,6 +275,91 @@ describe('InlineScheduledTask', function() {
     task.stop();
     expect(task.getStatus()).toBe('destroyed');
   });
+
+  it('execute() resolves with the invoked run\'s own result, not a concurrent scheduled run\'s', async function(){
+    const task = new InlineScheduledTask('* * * * * *', async (ctx) => {
+      if (ctx.execution?.reason === 'invoked') {
+        await wait(1500);
+        return 'invoked';
+      }
+      return 'scheduled';
+    });
+
+    task.start();
+    const result = await task.execute();
+    task.destroy();
+
+    expect(result).toBe('invoked');
+  });
+
+  it('execute() ignores a concurrent scheduled run\'s failure while the invoked run is still in flight', async function(){
+    const task = new InlineScheduledTask('* * * * * *', async (ctx) => {
+      if (ctx.execution?.reason === 'invoked') {
+        await wait(1500);
+        return 'invoked';
+      }
+      throw new Error('scheduled boom');
+    });
+    task.on('execution:failed', () => {});
+
+    task.start();
+    const result = await task.execute();
+    task.destroy();
+
+    expect(result).toBe('invoked');
+  });
+
+  it('a throwing execution:finished listener does not reclassify the run as failed', async function(){
+    const task = new InlineScheduledTask('* * * * * *', async () => 'ok');
+    let failedFired = false;
+    task.on('execution:failed', () => { failedFired = true; });
+    task.on('execution:finished', () => { throw new Error('listener boom'); });
+
+    const result = await task.execute();
+
+    expect(result).toBe('ok');
+    expect(failedFired).toBe(false);
+    expect(task.lastRun()?.result).toBe('ok');
+    expect(task.lastRun()?.error).toBeUndefined();
+  });
+
+  it('an async execution:finished listener that rejects does not crash the process', async function(){
+    const captured = makeLogger();
+    const task = new InlineScheduledTask('* * * * * *', async () => 'ok', { logger: captured });
+    task.on('execution:finished', async () => { throw new Error('async listener boom'); });
+
+    const result = await task.execute();
+    await wait(20);
+
+    expect(result).toBe('ok');
+    expect(captured.errors.length).toBeGreaterThan(0);
+  });
+
+  it('manual execute() does not count toward maxExecutions or get blocked by it', async function(){
+    const task = new InlineScheduledTask('* * * * * *', async () => 'ok', { maxExecutions: 2 });
+
+    await task.execute();
+    await task.execute();
+    await task.execute();
+
+    expect(task.runsLeft()).toBe(2);
+    expect(task.getStatus()).not.toBe('destroyed');
+  });
+
+  it('two scheduled fires still stop the task at maxExecutions, and execute() still runs after', async function(){
+    const task = new InlineScheduledTask('* * * * * *', async () => 'ok', { maxExecutions: 2 });
+    const maxReached = new Promise<void>(resolve => task.on('execution:maxReached', () => resolve()));
+
+    task.start();
+    await maxReached;
+
+    expect(task.getStatus()).toBe('destroyed');
+    expect(task.runsLeft()).toBe(0);
+
+    const result = await task.execute();
+    expect(result).toBe('ok');
+    expect(task.runsLeft()).toBe(0);
+  });
 });
 
 function makeLogger(){

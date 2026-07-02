@@ -10,6 +10,19 @@ import { resolveRunCoordinator, SkipReason } from "../coordinator/run-coordinato
 
 class TaskEmitter extends EventEmitter{}
 
+// Isolates user listeners from the task's own control flow: a listener that
+// throws synchronously or returns a rejecting promise must not affect the
+// execution it was notified about (see InlineScheduledTask event emission).
+function safeEmit(emitter: TaskEmitter, event: TaskEvent, context: TaskContext, onError: (error: Error) => void): void {
+  for (const listener of emitter.listeners(event)) {
+    try {
+      Promise.resolve((listener as (context: TaskContext) => any)(context)).catch(onError);
+    } catch (error: any) {
+      onError(error);
+    }
+  }
+}
+
 export class InlineScheduledTask implements ScheduledTask {
   emitter: TaskEmitter;
   cronExpression: string;
@@ -49,7 +62,7 @@ export class InlineScheduledTask implements ScheduledTask {
         if(execution.reason === 'scheduled'){
           this.changeState('running');
         }
-        this.emitter.emit('execution:started', this.createContext(date, execution));
+        this.emit('execution:started', this.createContext(date, execution));
         return true;
       },
       onFinished: (date: Date, execution: Execution) => {
@@ -57,17 +70,17 @@ export class InlineScheduledTask implements ScheduledTask {
           this.changeState('idle');
         }
         this.recordLastRun(execution);
-        this.emitter.emit('execution:finished', this.createContext(date, execution));
+        this.emit('execution:finished', this.createContext(date, execution));
         return true;
       },
       onError: (date: Date, error: Error, execution: Execution) => {
         this.logger.error(error);
         this.recordLastRun(execution);
-        this.emitter.emit('execution:failed', this.createContext(date, execution));
+        this.emit('execution:failed', this.createContext(date, execution));
         this.changeState('idle');
       },
       onOverlap: (date: Date) => {
-        this.emitter.emit('execution:overlap', this.createContext(date));
+        this.emit('execution:overlap', this.createContext(date));
       },
       onMissedExecution: (date: Date) => {
         // Warn only when the caller is not handling the missed execution
@@ -76,10 +89,10 @@ export class InlineScheduledTask implements ScheduledTask {
         if(!this.suppressMissedWarning && !handled){
           this.logger.warn(`missed execution at ${date}! Possible blocking IO or high CPU user at the same process used by node-cron.`);
         }
-        this.emitter.emit('execution:missed', this.createContext(date));
+        this.emit('execution:missed', this.createContext(date));
       },
       onMaxExecutions: (date: Date) => {
-        this.emitter.emit('execution:maxReached', this.createContext(date));
+        this.emit('execution:maxReached', this.createContext(date));
         this.destroy();
       },
       // Distributed coordination: only wired when this task opted in
@@ -89,7 +102,7 @@ export class InlineScheduledTask implements ScheduledTask {
       coordinatorKeyPrefix: this.name,
       coordinatorTtl: options?.distributedLease,
       onSkipped: (date: Date, reason: SkipReason) => {
-        this.emitter.emit('execution:skipped', this.createContext(date, undefined, reason));
+        this.emit('execution:skipped', this.createContext(date, undefined, reason));
       },
       unref: options?.unref
     }
@@ -157,6 +170,11 @@ export class InlineScheduledTask implements ScheduledTask {
     this._lastRun = lastRun;
   }
 
+  // Isolates user listeners from the task's own control flow (see safeEmit).
+  private emit(event: TaskEvent, context: TaskContext): void {
+    safeEmit(this.emitter, event, context, (error) => this.logger.error(error));
+  }
+
   private changeState(state){
     if(this.runner.isStarted()){
       this.stateMachine.changeState(state);
@@ -170,7 +188,7 @@ export class InlineScheduledTask implements ScheduledTask {
     if(this.runner.isStopped()){
       this.runner.start();
       this.stateMachine.changeState('idle');
-      this.emitter.emit('task:started', this.createContext(new Date()));
+      this.emit('task:started', this.createContext(new Date()));
     } 
   }
   
@@ -178,7 +196,7 @@ export class InlineScheduledTask implements ScheduledTask {
     if(this.runner.isStarted()) { 
       this.runner.stop();
       this.stateMachine.changeState('stopped');
-      this.emitter.emit('task:stopped', this.createContext(new Date()));
+      this.emit('task:stopped', this.createContext(new Date()));
     }
   }
 
@@ -199,25 +217,32 @@ export class InlineScheduledTask implements ScheduledTask {
 
     this.stop();
     this.stateMachine.changeState('destroyed');
-    this.emitter.emit('task:destroyed', this.createContext(new Date()));
+    this.emit('task:destroyed', this.createContext(new Date()));
   }
   
-  execute() {
+  // Correlated by the execution id the runner invokes: a scheduled fire that
+  // settles while this manual run is still in flight must not resolve it.
+  execute(executionId?: string) {
+    const id = executionId ?? createID();
     return new Promise<any>((resolve, reject) => {
       const onFail = (context: TaskContext) => {
+        if (context.execution?.id !== id) return;
         this.off('execution:finished', onFinished);
+        this.off('execution:failed', onFail);
         reject(context.execution?.error)
       };
 
       const onFinished = (context: TaskContext) => {
+        if (context.execution?.id !== id) return;
+        this.off('execution:finished', onFinished);
         this.off('execution:failed', onFail);
         resolve(context.execution?.result)
       }
 
-      this.once('execution:finished', onFinished);
-      this.once('execution:failed', onFail);
+      this.on('execution:finished', onFinished);
+      this.on('execution:failed', onFail);
 
-      this.runner.execute();
+      this.runner.execute(id);
     })
   }
 

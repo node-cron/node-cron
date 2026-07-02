@@ -697,7 +697,7 @@ describe('BackgroundScheduledTask', function() {
             context: {
               date: now,
               task: { id: task.id, name: task.name, state: 'running' },
-              execution: { id: 'e1', reason: 'invoked', startedAt: now }
+              execution: { id: msg.executionId, reason: 'invoked', startedAt: now }
             }
           });
         }
@@ -725,7 +725,7 @@ describe('BackgroundScheduledTask', function() {
             context: {
               date: now,
               task: { id: task.id, name: task.name, state: 'running' },
-              execution: { id: 'e1', reason: 'invoked', startedAt: now }
+              execution: { id: msg.executionId, reason: 'invoked', startedAt: now }
             }
           });
           queueMicrotask(() => {
@@ -734,7 +734,7 @@ describe('BackgroundScheduledTask', function() {
               context: {
                 date: now,
                 task: { id: task.id, name: task.name, state: 'idle' },
-                execution: { id: 'e1', reason: 'invoked', startedAt: now, finishedAt: now, result: 'ok' }
+                execution: { id: msg.executionId, reason: 'invoked', startedAt: now, finishedAt: now, result: 'ok' }
               }
             });
           });
@@ -762,14 +762,14 @@ describe('BackgroundScheduledTask', function() {
 
       fakeChildProcess.send.mockImplementation((obj)=>{
         if(obj.command === 'task:execute'){
-          task.emitter.emit('execution:finished', {execution: { result: "task result"}});
+          task.emitter.emit('execution:finished', {execution: { id: obj.executionId, result: "task result"}});
         } else {
           task.emitter.emit('task:started');
         }
       })
 
       await task.start();
-      
+
       const result = await task.execute();
       expect(result).toBe('task result');
     });
@@ -779,7 +779,7 @@ describe('BackgroundScheduledTask', function() {
 
       fakeChildProcess.send.mockImplementation((obj)=>{
         if(obj.command === 'task:execute'){
-          task.emitter.emit('execution:failed', {execution: { error: Error("task error")}});
+          task.emitter.emit('execution:failed', {execution: { id: obj.executionId, error: Error("task error")}});
         } else {
           task.emitter.emit('task:started');
         }
@@ -799,7 +799,7 @@ describe('BackgroundScheduledTask', function() {
 
       fakeChildProcess.send.mockImplementation((obj: any) => {
         if(obj.command === 'task:execute'){
-          task.emitter.emit('execution:failed', { execution: {} });
+          task.emitter.emit('execution:failed', { execution: { id: obj.executionId } });
         } else {
           task.emitter.emit('task:started');
         }
@@ -843,7 +843,7 @@ describe('BackgroundScheduledTask', function() {
       // must wait for it rather than rejecting.
       fakeChildProcess.send.mockImplementation((obj)=>{
         if(obj.command === 'task:execute'){
-          setTimeout(() => task.emitter.emit('execution:finished', {execution: { result: "late result"}}), 50);
+          setTimeout(() => task.emitter.emit('execution:finished', {execution: { id: obj.executionId, result: "late result"}}), 50);
         } else {
           task.emitter.emit('task:started');
         }
@@ -853,6 +853,46 @@ describe('BackgroundScheduledTask', function() {
 
       const result = await task.execute();
       expect(result).toBe('late result');
+    });
+
+    it('resolves with the invoked run\'s result, not a concurrent scheduled run\'s', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+
+      fakeChildProcess.send.mockImplementation((obj: any) => {
+        if (obj.command === 'task:execute') {
+          // A concurrent scheduled fire in the daemon settles first, with a
+          // different execution id.
+          task.emitter.emit('execution:finished', { execution: { id: 'scheduled-1', reason: 'scheduled', result: 'scheduled' } });
+          setTimeout(() => {
+            task.emitter.emit('execution:finished', { execution: { id: obj.executionId, reason: 'invoked', result: 'invoked' } });
+          }, 10);
+        } else {
+          task.emitter.emit('task:started');
+        }
+      });
+
+      await task.start();
+      const result = await task.execute();
+      expect(result).toBe('invoked');
+    });
+
+    it('ignores a concurrent scheduled run\'s failure while the invoked run is still in flight', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+
+      fakeChildProcess.send.mockImplementation((obj: any) => {
+        if (obj.command === 'task:execute') {
+          task.emitter.emit('execution:failed', { execution: { id: 'scheduled-1', reason: 'scheduled', error: new Error('scheduled boom') } });
+          setTimeout(() => {
+            task.emitter.emit('execution:finished', { execution: { id: obj.executionId, reason: 'invoked', result: 'invoked' } });
+          }, 10);
+        } else {
+          task.emitter.emit('task:started');
+        }
+      });
+
+      await task.start();
+      const result = await task.execute();
+      expect(result).toBe('invoked');
     });
   });
 
@@ -871,12 +911,19 @@ describe('BackgroundScheduledTask', function() {
       expect(runs[1].getTime()).toBeGreaterThan(runs[0].getTime());
     });
 
-    it('runsLeft tracks executions reported by the daemon', function(){
+    it('runsLeft tracks scheduled executions reported by the daemon', function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { maxExecutions: 3 });
       expect(task.runsLeft()).toBe(3);
-      task.emitter.emit('execution:started', {} as any);
-      task.emitter.emit('execution:started', {} as any);
+      task.emitter.emit('execution:started', { execution: { reason: 'scheduled' } } as any);
+      task.emitter.emit('execution:started', { execution: { reason: 'scheduled' } } as any);
       expect(task.runsLeft()).toBe(1);
+    });
+
+    it('runsLeft is not affected by a manually invoked execution reported by the daemon', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', { maxExecutions: 3 });
+      task.emitter.emit('execution:started', { execution: { reason: 'invoked' } } as any);
+      task.emitter.emit('execution:started', { execution: { reason: 'invoked' } } as any);
+      expect(task.runsLeft()).toBe(3);
     });
 
     it('runsLeft is undefined without maxExecutions', function(){

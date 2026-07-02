@@ -49,7 +49,7 @@ function makeFakeChild(opts?: { fail?: boolean }) {
         context: { date: now }
       }));
     } else if (msg.command === 'task:execute') {
-      const id = 'exec-' + Math.floor(Math.random() * 1e9);
+      const id = msg.executionId ?? ('exec-' + Math.floor(Math.random() * 1e9));
       queueMicrotask(() => {
         child.emit('message', {
           event: 'execution:started',

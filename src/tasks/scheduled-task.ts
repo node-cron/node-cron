@@ -62,11 +62,14 @@ export type TaskOptions = {
    */
   distributedLease?: number,
   /**
-   * Stop the task after this many executions. Counted per instance: combined
-   * with `distributed` and a per-fire coordinator (e.g. a Redis lock), each
-   * instance counts only the fires it won, so the total across the fleet can
-   * exceed this number. With the default single-runner coordinator it behaves
-   * as expected (only the designated instance runs and counts).
+   * Stop the task after this many scheduled executions. Only scheduled fires
+   * count; manual `execute()` calls never count toward it and are never
+   * blocked by it, even after the task has auto-stopped. Counted per
+   * instance: combined with `distributed` and a per-fire coordinator (e.g. a
+   * Redis lock), each instance counts only the fires it won, so the total
+   * across the fleet can exceed this number. With the default single-runner
+   * coordinator it behaves as expected (only the designated instance runs and
+   * counts).
    */
   maxExecutions?: number,
   maxRandomDelay?: number,
@@ -162,7 +165,7 @@ export interface ScheduledTask {
   msToNext(): number | null;
   /** Whether an execution is currently in progress. */
   isBusy(): boolean;
-  /** Remaining executions when `maxExecutions` is set, otherwise `undefined`. */
+  /** Remaining scheduled executions when `maxExecutions` is set, otherwise `undefined`. Manual `execute()` calls do not affect this. */
   runsLeft(): number | undefined;
   /** The original cron expression. */
   getPattern(): string;
