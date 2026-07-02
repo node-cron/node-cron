@@ -105,6 +105,58 @@ describe('validateDetailed', function () {
   });
 });
 
+describe('inverted ranges wrap around instead of swapping', function () {
+  it('accepts and wraps an inverted hour range (22-2), does not contain noon', function () {
+    const result = validateDetailed('0 0 22-2 * * *');
+    expect(result.valid).toBe(true);
+    expect(result.fields?.hour).toEqual([22, 23, 0, 1, 2]);
+    expect(result.fields?.hour).not.toContain(12);
+  });
+
+  it('steps over a wrapped hour range in order (22-2/2)', function () {
+    const result = validateDetailed('0 0 22-2/2 * * *');
+    expect(result.valid).toBe(true);
+    expect(result.fields?.hour).toEqual([22, 0, 2]);
+  });
+
+  it('wraps a named weekday range through the week boundary (sat-sun)', function () {
+    const result = validateDetailed('0 0 0 * * sat-sun');
+    expect(result.valid).toBe(true);
+    expect(result.fields?.dayOfWeek).toEqual([6, 0]);
+  });
+
+  it('wraps a named weekday range spanning Friday to Monday (fri-mon)', function () {
+    const result = validateDetailed('0 0 0 * * fri-mon');
+    expect(result.valid).toBe(true);
+    expect(result.fields?.dayOfWeek).toEqual([5, 6, 0, 1]);
+  });
+
+  it('leaves the ascending numeric weekday range 6-7 as Sat,Sun (no full-week wrap)', function () {
+    const result = validateDetailed('0 0 0 * * 6-7');
+    expect(result.valid).toBe(true);
+    expect(result.fields?.dayOfWeek).toEqual([6, 0]);
+  });
+
+  it('wraps a named month range through the year boundary (nov-feb)', function () {
+    const result = validateDetailed('0 0 0 1 nov-feb *');
+    expect(result.valid).toBe(true);
+    expect(result.fields?.month).toEqual([11, 12, 1, 2]);
+  });
+
+  it('wraps an inverted day-of-month range through the end of the month (28-2)', function () {
+    const result = validateDetailed('0 0 0 28-2 * *');
+    expect(result.valid).toBe(true);
+    expect(result.fields?.dayOfMonth).toEqual([28, 29, 30, 31, 1, 2]);
+  });
+
+  it('leaves the L, W and # tokens unaffected in the day fields', function () {
+    const result = validateDetailed('0 0 12 L,15W * 5L,2#3');
+    expect(result.valid).toBe(true);
+    expect(result.fields?.dayOfMonth).toEqual(['L', '15W']);
+    expect(result.fields?.dayOfWeek).toEqual(['5L', '2#3']);
+  });
+});
+
 describe('parse', function () {
   it('returns the decomposed fields for a valid expression', function () {
     const fields = parse('0 30 9 * * *');

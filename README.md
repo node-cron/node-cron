@@ -110,6 +110,8 @@ All events: `task:started`, `task:stopped`, `task:destroyed`, `execution:started
 
 Supports ranges (`1-5`), steps (`*/2`), lists (`1,15`), named months/weekdays, `L` (last day of month), `L-n` (offset from the last day), `#` (nth weekday), `<weekday>L` (last weekday of month), `W` (nearest weekday), and `?` (alias for `*` in the day fields, for Quartz-style expressions). See the [Cron Syntax guide](https://nodecron.com/cron-syntax).
 
+An inverted range wraps around the field instead of being rejected: `22-2` in the hour field means 22:00 through 02:59 (22,23,0,1,2), and `sat-sun` in the day-of-week field means saturday,sunday.
+
 The `W` modifier in the day-of-month field fires on the nearest weekday (Monday-Friday) to a given day, without crossing the month boundary: `15W` is the nearest weekday to the 15th, `1W` the first weekday of the month, and `LW` the last weekday of the month. Only weekends are adjusted for; **there is no holiday awareness**.
 
 The `L-n` form fires `n` days before the last day of the month (`L-3` is the third-to-last day). In months where the offset reaches before the 1st (e.g. `L-29` in February), it simply does not fire that month.
