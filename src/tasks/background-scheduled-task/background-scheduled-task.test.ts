@@ -338,6 +338,71 @@ describe('BackgroundScheduledTask', function() {
       expect(fakeChildProcess.kill).toHaveBeenCalled();
       expect(task.forkProcess).toBeUndefined();
     });
+
+    // M5: 'task:stopped' fires as soon as the daemon stops scheduling new
+    // runs, not when the current run finishes. Killing the fork right there
+    // would abort the in-flight execution mid-run, and the caller (e.g.
+    // shutdown()) would never see its execution:finished/failed.
+    it('defers killing the daemon until an in-flight execution finishes', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:stop') queueMicrotask(() => task.emitter.emit('task:stopped'));
+      });
+
+      await task.start();
+
+      // The daemon reports an execution in progress.
+      task.emitter.emit('execution:started', {} as any);
+
+      const stopPromise = task.stop();
+      await wait(10);
+
+      // stop() itself resolves once the daemon confirms it stopped
+      // scheduling, without waiting for the fork to actually be killed.
+      await stopPromise;
+      expect(fakeChildProcess.kill).not.toHaveBeenCalled();
+      expect(task.forkProcess).toBeDefined();
+
+      // The in-flight execution finishes: only now is the fork killed.
+      task.emitter.emit('execution:finished', { execution: {} } as any);
+
+      expect(fakeChildProcess.kill).toHaveBeenCalledTimes(1);
+      expect(task.forkProcess).toBeUndefined();
+    });
+
+    it('kills immediately when task:stopped arrives and nothing is in flight', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      task.forkProcess = fakeChildProcess as any;
+
+      fakeChildProcess.send.mockImplementation(() => {
+        task.emitter.emit('task:stopped');
+      });
+
+      await task.stop();
+
+      expect(fakeChildProcess.kill).toHaveBeenCalledTimes(1);
+      expect(task.forkProcess).toBeUndefined();
+    });
+
+    it('does not arm the kill wait twice when task:stopped is followed by task:destroyed while busy', function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      task.forkProcess = fakeChildProcess as any;
+
+      // Mirrors what destroy() triggers in the daemon: task:stopped
+      // immediately followed by task:destroyed, both while still busy.
+      task.emitter.emit('execution:started', {} as any);
+      task.emitter.emit('task:stopped');
+      task.emitter.emit('task:destroyed');
+
+      expect(fakeChildProcess.kill).not.toHaveBeenCalled();
+
+      task.emitter.emit('execution:finished', { execution: {} } as any);
+
+      expect(fakeChildProcess.kill).toHaveBeenCalledTimes(1);
+      expect(task.forkProcess).toBeUndefined();
+    });
   });
 
   describe('destroy', function(){

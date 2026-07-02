@@ -37,6 +37,20 @@ class BackgroundScheduledTask implements ScheduledTask{
   // The last actual execution, mirrored in the parent from the daemon's
   // forwarded finished/failed events.
   private _lastRun: LastRun | null = null;
+  // Whether the daemon last reported an execution in progress. Tracked
+  // independently from stateMachine.state: a 'task:stopped'/'task:destroyed'
+  // message overwrites that state (via context.task.state) before this event
+  // fires, so it cannot be used to tell whether the in-flight run that was
+  // just stopped is still running. See killForkWhenSettled below.
+  private executing = false;
+  // Set while killForkWhenSettled is waiting for an in-flight execution to
+  // finish before killing the daemon, so a stop() immediately followed by a
+  // destroy() (as destroy() does internally) does not arm the wait twice.
+  // Cleared (and the wait's listeners removed) by clearPendingKillWait,
+  // called from killFork so a forced kill (e.g. the stop()/destroy() timeout)
+  // never leaves a stale execution:finished/failed listener behind.
+  private killPending = false;
+  private pendingKillCleanup?: () => void;
 
   constructor(cronExpression: string, taskPath: string, options?: TaskOptions){
     this.cronExpression = cronExpression;
@@ -50,11 +64,11 @@ class BackgroundScheduledTask implements ScheduledTask{
     // events so runsLeft() works across the process boundary.
     this.timeMatcher = new TimeMatcher(cronExpression, options?.timezone);
     this.runCount = 0;
-    this.on('execution:started', () => { this.runCount++; });
+    this.on('execution:started', () => { this.runCount++; this.executing = true; });
     // Mirror the last actual execution from the daemon's events. Both carry the
     // execution's own timestamps, so lastRun reflects the real run time.
-    this.on('execution:finished', (context) => { this.recordLastRun(context.execution); });
-    this.on('execution:failed', (context) => { this.recordLastRun(context.execution); });
+    this.on('execution:finished', (context) => { this.executing = false; this.recordLastRun(context.execution); });
+    this.on('execution:failed', (context) => { this.executing = false; this.recordLastRun(context.execution); });
     // The logger lives in the parent process: it cannot cross the fork
     // boundary. The daemon runs with a no-op logger and forwards events, and
     // this process logs from those events using the configured logger.
@@ -63,14 +77,12 @@ class BackgroundScheduledTask implements ScheduledTask{
     this.runCoordinator = options?.distributed ? resolveRunCoordinator(options?.runCoordinator) : undefined;
 
     this.on('task:stopped', () => {
-      this.forkProcess?.kill();
-      this.forkProcess = undefined;
+      this.killForkWhenSettled();
       this.stateMachine.changeState('stopped');
     });
 
     this.on('task:destroyed', () => {
-      this.forkProcess?.kill();
-      this.forkProcess = undefined;
+      this.killForkWhenSettled();
       this.stateMachine.changeState('destroyed');
     });
   }
@@ -134,6 +146,54 @@ class BackgroundScheduledTask implements ScheduledTask{
     this._lastRun = lastRun;
   }
 
+  // Kills the daemon's fork process, or, if an execution is in flight,
+  // defers the kill until it finishes (execution:finished/failed). Without
+  // this, receiving 'task:stopped' (which fires as soon as the daemon stops
+  // scheduling new runs, not when the current run finishes) would kill the
+  // daemon mid-execution, aborting it and the execution:finished/failed event
+  // it would have reported.
+  //
+  // No extra timeout is needed here: if the execution never settles (a truly
+  // stuck daemon), the caller's own stop()/destroy() timeout still forces a
+  // kill, which is the actual safety net.
+  private killForkWhenSettled(): void {
+    if (!this.forkProcess) return;
+
+    if (!this.executing) {
+      this.killFork();
+      return;
+    }
+
+    if (this.killPending) return;
+    this.killPending = true;
+
+    const onSettled = () => this.killFork();
+
+    this.once('execution:finished', onSettled);
+    this.once('execution:failed', onSettled);
+
+    this.pendingKillCleanup = () => {
+      this.off('execution:finished', onSettled);
+      this.off('execution:failed', onSettled);
+    };
+  }
+
+  // Removes the execution:finished/failed listeners armed by
+  // killForkWhenSettled, if any. Called from killFork so a forced kill (the
+  // stop()/destroy() timeout, or a settled execution) never leaves a stale
+  // listener registered for the event that did not fire.
+  private clearPendingKillWait(): void {
+    this.pendingKillCleanup?.();
+    this.pendingKillCleanup = undefined;
+    this.killPending = false;
+  }
+
+  private killFork(): void {
+    this.clearPendingKillWait();
+    this.forkProcess?.kill();
+    this.forkProcess = undefined;
+  }
+
   start(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (this.forkProcess) {
@@ -147,8 +207,7 @@ class BackgroundScheduledTask implements ScheduledTask{
       // schedule on its own, leading to orphaned/duplicate executions.
       const failStart = (error: Error) => {
         clearTimeout(timeout);
-        this.forkProcess?.kill();
-        this.forkProcess = undefined;
+        this.killFork();
         reject(error);
       };
 
@@ -244,16 +303,18 @@ class BackgroundScheduledTask implements ScheduledTask{
       
       const timeoutId = setTimeout(() => {
         clearTimeout(timeoutId);
-        this.forkProcess?.kill();
-        this.forkProcess = undefined;
+        this.killFork();
         reject(new Error('Stop operation timed out'))
       }, 5000);
       
       const cleanupAndResolve = () => {
         clearTimeout(timeoutId);
         this.off('task:stopped', onStopped);
-        
-        this.forkProcess = undefined;
+
+        // forkProcess is not cleared here: killForkWhenSettled (armed by the
+        // 'task:stopped' handler registered in the constructor, which runs
+        // before this listener) owns clearing it, deferring the actual kill
+        // until an in-flight execution finishes so it is not aborted mid-run.
         resolve(undefined);
       };
 
@@ -293,8 +354,7 @@ class BackgroundScheduledTask implements ScheduledTask{
 
       const timeoutId = setTimeout(() => {
         clearTimeout(timeoutId);
-        this.forkProcess?.kill();
-        this.forkProcess = undefined;
+        this.killFork();
         reject(new Error('Destroy operation timed out'))
       }, 5000);
   
