@@ -183,7 +183,7 @@ describe('shutdown', () => {
     await shutdown();
   });
 
-  describe('A1: does not crash on a rejecting stop()/destroy()', () => {
+  describe('does not crash on a rejecting stop()/destroy()', () => {
     it('never surfaces an unhandled rejection when stop() and destroy() reject, and logs the failure', async () => {
       const unhandled: any[] = [];
       const onUnhandledRejection = (reason: any) => unhandled.push(reason);
@@ -192,7 +192,7 @@ describe('shutdown', () => {
       const errorFn = vi.fn();
       setLogger({ error: errorFn, warn() {}, info() {}, debug() {} });
 
-      const id = 'a1-rejecting-task';
+      const id = 'rejecting-task';
       getTasks().set(id, makeRejectingTask(id));
 
       try {
@@ -223,7 +223,7 @@ describe('shutdown', () => {
       const onUnhandledRejection = (reason: any) => unhandled.push(reason);
       process.on('unhandledRejection', onUnhandledRejection);
 
-      const id = 'a1-rejecting-task-non-error';
+      const id = 'rejecting-task-non-error';
       getTasks().set(id, makeRejectingTask(id, 'stop failed', 'destroy failed'));
 
       try {
@@ -237,7 +237,7 @@ describe('shutdown', () => {
     });
   });
 
-  describe('B10: listener cleanup and isBusy() race', () => {
+  describe('listener cleanup and isBusy() race', () => {
     it('removes both the execution:finished and execution:failed listeners it registers', async () => {
       const { task, unblock } = makeBusyTask();
       const emitter = (task as any).emitter;
@@ -287,7 +287,7 @@ describe('shutdown', () => {
     });
   });
 
-  describe('M5: waits for an in-progress background execution before killing the daemon', () => {
+  describe('waits for an in-progress background execution before killing the daemon', () => {
     function makeFakeChild() {
       const child: any = new EventEmitter();
       child.killed = false;
@@ -297,7 +297,7 @@ describe('shutdown', () => {
           queueMicrotask(() => child.emit('message', { event: 'task:started', context: { date: new Date().toISOString() } }));
         }
         if (msg.command === 'task:stop') {
-          // The daemon stops scheduling new runs immediately, but (per M5)
+          // The daemon stops scheduling new runs immediately, but
           // must not report task:stopped as if the in-flight execution were
           // over - execution:finished is reported later, on its own.
           queueMicrotask(() => child.emit('message', {

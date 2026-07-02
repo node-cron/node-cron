@@ -339,7 +339,7 @@ describe('BackgroundScheduledTask', function() {
       expect(task.forkProcess).toBeUndefined();
     });
 
-    // M5: 'task:stopped' fires as soon as the daemon stops scheduling new
+    // 'task:stopped' fires as soon as the daemon stops scheduling new
     // runs, not when the current run finishes. Killing the fork right there
     // would abort the in-flight execution mid-run, and the caller (e.g.
     // shutdown()) would never see its execution:finished/failed.
