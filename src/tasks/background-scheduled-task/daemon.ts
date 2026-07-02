@@ -159,7 +159,7 @@ export function bind(){
       try {
         if (task) await task.execute();
       } catch(error: any){
-        logger.debug('Daemon task:execute falied:', error);
+        logger.debug('Daemon task:execute failed:', error);
       }
       return task;
     }

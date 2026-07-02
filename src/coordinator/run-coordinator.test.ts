@@ -30,7 +30,7 @@ describe('run coordinator', function () {
     let ran = 0;
     let skipped = 0;
     const task = new InlineScheduledTask('* * * * * *', () => { ran++; }, { name: 'job', distributed: true });
-    task.on('execution:skipped', () => skipped++);
+    task.on('execution:skipped', () => { skipped++; });
 
     task.start();
     await wait(1200);
@@ -50,7 +50,7 @@ describe('run coordinator', function () {
     let ran = 0;
     const reasons: string[] = [];
     const task = new InlineScheduledTask('* * * * * *', () => { ran++; }, { name: 'job', distributed: true });
-    task.on('execution:skipped', (ctx) => reasons.push(ctx.reason as string));
+    task.on('execution:skipped', (ctx) => { reasons.push(ctx.reason as string); });
 
     task.start();
     await wait(1200);
@@ -68,7 +68,7 @@ describe('run coordinator', function () {
     let ran = 0;
     const reasons: string[] = [];
     const task = new InlineScheduledTask('* * * * * *', () => { ran++; }, { name: 'job', distributed: true, logger: silent });
-    task.on('execution:skipped', (ctx) => reasons.push(ctx.reason as string));
+    task.on('execution:skipped', (ctx) => { reasons.push(ctx.reason as string); });
 
     task.start();
     await wait(1200);

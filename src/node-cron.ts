@@ -172,8 +172,8 @@ export async function shutdown(timeout = 5000): Promise<void> {
   for (const task of tasks.values()) {
     const busy = task.isBusy();
     const wait = new Promise<void>(resolve => {
-      task.once('execution:finished', resolve);
-      task.once('execution:failed', resolve);
+      task.once('execution:finished', () => resolve());
+      task.once('execution:failed', () => resolve());
     });
     task.stop();
     if (busy) {
