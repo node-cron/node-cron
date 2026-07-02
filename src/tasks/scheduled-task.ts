@@ -26,12 +26,6 @@ export type TaskEvent =
   | 'task:started'
   | 'task:stopped'
   | 'task:destroyed'
-  /**
-   * A background task's daemon process exited on its own (crash, OOM-kill,
-   * signal from outside), not because stop/destroy asked it to. The task is
-   * left 'stopped'; restart it yourself, e.g.
-   * `task.on('task:failed', () => task.start())`. Inline tasks never emit this.
-   */
   | 'task:failed'
   | 'execution:started'
   | 'execution:finished'
