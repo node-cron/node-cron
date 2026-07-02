@@ -170,11 +170,27 @@ export async function shutdown(timeout = 5000): Promise<void> {
   const pending: Promise<any>[] = [];
 
   for (const task of tasks.values()) {
-    const busy = task.isBusy();
+    // Registered before stop() so an execution that finishes in that same
+    // window is still caught, instead of forcing a full-timeout wait for an
+    // event that already fired. Both listeners are removed as soon as either
+    // one settles, so a task never leaks the listener for the event that did
+    // not fire.
     const wait = new Promise<void>(resolve => {
-      task.once('execution:finished', () => resolve());
-      task.once('execution:failed', () => resolve());
+      const onSettled = () => {
+        task.off('execution:finished', onSettled);
+        task.off('execution:failed', onSettled);
+        resolve();
+      };
+      task.once('execution:finished', onSettled);
+      task.once('execution:failed', onSettled);
     });
+
+    // Checked right after the listeners above are armed (so there is no gap
+    // between "is it busy" and "we are listening") and before stop(): stop()
+    // transitions the task's own status away from 'running' immediately, even
+    // for an inline task whose execution is still in flight, so isBusy() can
+    // no longer be trusted once stop() has been called.
+    const busy = task.isBusy();
 
     // A background task's stop() returns a Promise that can reject (e.g.
     // "Stop operation timed out" when the daemon is stuck). Left unhandled

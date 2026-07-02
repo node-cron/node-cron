@@ -230,4 +230,54 @@ describe('shutdown', () => {
       }
     });
   });
+
+  describe('B10: listener cleanup and isBusy() race', () => {
+    it('removes both the execution:finished and execution:failed listeners it registers', async () => {
+      const { task, unblock } = makeBusyTask();
+      const emitter = (task as any).emitter;
+
+      await waitUntilBusy(task);
+      setTimeout(unblock, 10);
+
+      await shutdown(500);
+
+      expect(emitter.listenerCount('execution:finished')).toBe(0);
+      expect(emitter.listenerCount('execution:failed')).toBe(0);
+    });
+
+    it('does not leak a listener when the task fails instead of finishing', async () => {
+      let fail!: () => void;
+      const failing = new Promise((_, reject) => { fail = () => reject(new Error('boom')); });
+      const task = createTask('* * * * * *', () => failing, { logger: noopLogger });
+      task.start();
+      const emitter = (task as any).emitter;
+
+      await waitUntilBusy(task);
+      setTimeout(fail, 10);
+
+      await shutdown(500);
+
+      expect(emitter.listenerCount('execution:finished')).toBe(0);
+      expect(emitter.listenerCount('execution:failed')).toBe(0);
+    });
+
+    it('does not wait the full timeout when the task finishes right after stop() is requested', async () => {
+      const { task, unblock } = makeBusyTask();
+
+      await waitUntilBusy(task);
+
+      // Unblock as soon as possible - the task settles essentially in the
+      // same window shutdown() reads isBusy()/registers its listeners.
+      queueMicrotask(unblock);
+
+      const start = Date.now();
+      await shutdown(2000);
+      const elapsed = Date.now() - start;
+
+      // Resolved because the execution actually finished, not because the
+      // full 2000ms timeout elapsed.
+      expect(elapsed).toBeLessThan(500);
+      expect(task.getStatus()).toBe('destroyed');
+    });
+  });
 });
