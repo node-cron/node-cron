@@ -3,6 +3,7 @@ import logger, { noopLogger } from "../../logger";
 import { InlineScheduledTask } from "../inline-scheduled-task";
 import { TaskContext, TaskEvent, TaskOptions } from "../scheduled-task";
 import { IpcRunCoordinator } from "../../coordinator/ipc-run-coordinator";
+import { createID } from "../../create-id";
 
 export async function startDaemon(message: any): Promise<InlineScheduledTask> {
     const script = await importTaskModule(message.path);
@@ -156,10 +157,22 @@ export function bind(){
       if(task) task.destroy();
       return task;
     case 'task:execute':
+      if (!task) {
+        // No task loaded yet: report it instead of dropping the message, or
+        // the parent's execute() waits for an event that never arrives. Echo the
+        // parent's correlation id so its filtered execute() matches this failure.
+        sendEvent('execution:failed', {
+          date: new Date(),
+          dateLocalIso: new Date().toISOString(),
+          triggeredAt: new Date(),
+          execution: { id: message.executionId ?? createID(), reason: 'invoked', error: new Error('Cannot execute: no task loaded') }
+        });
+        return task;
+      }
       try {
         // Threads the parent's correlation id through so its execute() can
         // match the forwarded event to this call, not a concurrent scheduled fire.
-        if (task) await task.execute(message.executionId);
+        await task.execute(message.executionId);
       } catch(error: any){
         logger.debug('Daemon task:execute failed:', error);
       }

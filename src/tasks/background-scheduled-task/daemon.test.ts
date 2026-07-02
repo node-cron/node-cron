@@ -337,10 +337,27 @@ describe('daemon - register', function () {
   });
 
   it('task:execute is safe when no task has been started', async function () {
+    messages = [];
     bind();
     const onMessage = listeners.filter(l => l.event === 'message').pop();
     const result = await onMessage.fn({ command: 'task:execute' });
     expect(result).toBeUndefined();
+  });
+
+  // The daemon must not silently drop a task:execute that arrives before
+  // task:start has finished loading the task: the parent's execute() waits
+  // for a matching event forever otherwise.
+  it('reports an error instead of hanging when task:execute arrives with no task loaded', async function () {
+    messages = [];
+    bind();
+    const onMessage = listeners.filter(l => l.event === 'message').pop();
+    const result = await onMessage.fn({ command: 'task:execute' });
+
+    expect(result).toBeUndefined();
+    const failedEvent = messages.find(m => m.event === 'execution:failed');
+    expect(failedEvent).toBeDefined();
+    expect(failedEvent.jsonError).toBeDefined();
+    expect(JSON.parse(failedEvent.jsonError).message).toMatch(/no task loaded|not loaded/i);
   });
 
   it('starts a daemon without options', async function () {

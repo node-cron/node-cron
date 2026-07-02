@@ -1,10 +1,13 @@
 
 export default (() => {
     function convertAsterisk(expression, replecement){
-        if(expression.indexOf('*') !== -1){
-            return expression.replace('*', replecement);
-        }
-        return expression;
+        // Convert every comma-separated token, not just the first `*`/`*/n`
+        // found in the whole field, otherwise later tokens (e.g. `*/3` in
+        // `*/2,*/3`) survive as literal text and never match anything.
+        return expression
+            .split(',')
+            .map((token) => token.indexOf('*') !== -1 ? token.replace('*', replecement) : token)
+            .join(',');
     }
 
     function convertAsterisksToRanges(expressions){

@@ -9,6 +9,12 @@ const validationRegex = /^(?:\d+|\*|\*\/\d+)$/;
 // day fields; field-level validation rejects either elsewhere.
 const ALLOWED_CHARS_REGEX = /^[a-zA-Z0-9-*/,#? ]+$/;
 
+// Shared by validate() and validateDetailed() so both agree on field count
+// and on how extra/leading spaces are handled before splitting into fields.
+function splitFields(resolved: string): string[] {
+    return resolved.replace(/\s{2,}/g, ' ').trim().split(' ');
+}
+
 /**
  * @param {string} expression The Cron-Job expression.
  * @param {number} min The minimum value.
@@ -235,7 +241,7 @@ export function validateDetailed(pattern: string): DetailedValidation {
     if (!ALLOWED_CHARS_REGEX.test(resolved))
         return { valid: false, errors: [{ field: 'expression', value: pattern, message: 'pattern includes illegal characters' }] };
 
-    const raw = resolved.replace(/\s{2,}/g, ' ').trim().split(' ');
+    const raw = splitFields(resolved);
     if (raw.length !== 5 && raw.length !== 6)
         return { valid: false, errors: [{ field: 'expression', value: pattern, message: `expected 5 or 6 fields but got ${raw.length}` }] };
 
@@ -298,10 +304,12 @@ function validate(pattern) {
     if (!ALLOWED_CHARS_REGEX.test(resolved))
         throw new TypeError('pattern includes illegal characters!');
 
-    const patterns = resolved.split(' ');
-    const executablePatterns = convertExpression(resolved);
+    const raw = splitFields(resolved);
+    if (raw.length !== 5 && raw.length !== 6)
+        throw new Error(`expected 5 or 6 fields but got ${raw.length}`);
 
-    if (patterns.length === 5) patterns.unshift('0');
+    const patterns = raw.length === 5 ? ['0', ...raw] : raw;
+    const executablePatterns = convertExpression(resolved);
 
     validateFields(patterns, executablePatterns);
 }

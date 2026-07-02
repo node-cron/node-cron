@@ -77,6 +77,36 @@ describe('BackgroundScheduledTask', function() {
       expect(result).toBeUndefined();
     });
 
+    it('memoizes concurrent start() calls until the daemon handshake completes', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+
+      // 'task:started' is only emitted once send() below is manually triggered,
+      // so both calls are in flight together before either can resolve.
+      fakeChildProcess.send.mockImplementation(() => {});
+
+      const first = task.start();
+      const second = task.start();
+
+      expect(fork).toHaveBeenCalledTimes(1);
+
+      let firstSettled = false;
+      let secondSettled = false;
+      first.then(() => { firstSettled = true; });
+      second.then(() => { secondSettled = true; });
+
+      // Neither resolves yet: the daemon has not signalled readiness.
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(firstSettled).toBe(false);
+      expect(secondSettled).toBe(false);
+
+      task.emitter.emit('task:started');
+
+      await expect(first).resolves.toBeUndefined();
+      await expect(second).resolves.toBeUndefined();
+      expect(fork).toHaveBeenCalledTimes(1);
+    });
+
     it('is a no-op when already destroyed', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
       fakeChildProcess.send.mockImplementation((msg: any) => {

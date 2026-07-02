@@ -278,6 +278,22 @@ describe('node-cron', function() {
         it('should fail with a invalid pattern', function() {
             expect(cron.validate('62 * * * * *')).toBe(false);
         });
+
+        it('rejects an expression with too many fields, matching validateDetailed', function() {
+            expect(cron.validate('* * * * * * *')).toBe(false);
+            expect(cron.validateDetailed('* * * * * * *').valid).toBe(false);
+        });
+
+        it('agrees with validateDetailed on an expression with irregular spacing', function() {
+            const expression = '0  30 9 * * *';
+            expect(cron.validate(expression)).toBe(cron.validateDetailed(expression).valid);
+        });
+
+        it('produces a working schedule for multiple asterisk tokens in a comma list', function() {
+            const fields = cron.validateDetailed('*/2,*/3 * * * *').fields;
+            expect(fields?.minute).toEqual(expect.arrayContaining([0, 2, 4, 3, 6, 9]));
+            expect(cron.validate('*/2,*/3 * * * *')).toBe(true);
+        });
     });
 
     describe('validateDetailed', function() {

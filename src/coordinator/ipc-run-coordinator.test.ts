@@ -72,9 +72,36 @@ describe('IpcRunCoordinator', function () {
   });
 
   it('does not throw when the channel has no send (parent gone)', async function () {
-    const coordinator = new IpcRunCoordinator({ on: () => {} });
+    const coordinator = new IpcRunCoordinator({ on: () => {} }, 50);
     await coordinator.onComplete('job:2026');
-    // shouldRun stays pending (no parent to reply); just assert it returns a promise.
-    expect(coordinator.shouldRun('job:2026', 1000)).toBeInstanceOf(Promise);
+    // The parent can never reply, so the bounded timeout is what settles this.
+    const promise = coordinator.shouldRun('job:2026', 1000);
+    expect(promise).toBeInstanceOf(Promise);
+    await expect(promise).rejects.toThrow();
+  });
+
+  it('rejects shouldRun after the timeout when the parent never answers, and clears the pending entry', async function () {
+    const channel = makeChannel();
+    const coordinator = new IpcRunCoordinator(channel, 30);
+
+    let error: Error | undefined;
+    await coordinator.shouldRun('job:2026', 5000).catch((e) => { error = e; });
+
+    expect(error).toBeDefined();
+    expect(error!.message).toMatch(/timed out|timeout/i);
+
+    // A reply that arrives after the timeout must be a no-op: the pending
+    // entry for this reqId is already gone, so nothing should throw.
+    expect(() => channel.reply({ type: 'coordinator:result', reqId: channel.sent[0].reqId, allowed: true })).not.toThrow();
+  });
+
+  it('still resolves normally when the parent answers within the timeout', async function () {
+    const channel = makeChannel();
+    const coordinator = new IpcRunCoordinator(channel, 1000);
+
+    const promise = coordinator.shouldRun('job:2026', 5000);
+    channel.reply({ type: 'coordinator:result', reqId: channel.sent[0].reqId, allowed: true });
+
+    expect(await promise).toBe(true);
   });
 });

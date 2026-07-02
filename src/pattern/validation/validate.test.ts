@@ -1,4 +1,4 @@
-import validate from './pattern-validation';
+import validate, { validateDetailed } from './pattern-validation';
 
 describe('pattern-validation', function() {
     it('should succeed with a valid expression', function() {
@@ -57,6 +57,22 @@ describe('pattern-validation', function() {
         it('still accepts the valid forms it resembles', function() {
             ['0 0 0 1-5 * *', '0 0 0 */2 * *', '0 0 0 5-3 * *', '0 0 0 1,15,L * *', '0 0 0 1-10/2 * *']
                 .forEach((expr) => expect(() => validate(expr), expr).not.toThrow());
+        });
+    });
+
+    describe('agreement with validateDetailed', function() {
+        it('rejects a 7-field expression, same as validateDetailed', function() {
+            expect(() => validate('* * * * * * *')).toThrow(/5 or 6 fields/);
+            expect(validateDetailed('* * * * * * *').valid).toBe(false);
+        });
+
+        it('rejects a 3-field expression, same as validateDetailed', function() {
+            expect(() => validate('* * *')).toThrow(/5 or 6 fields/);
+            expect(validateDetailed('* * *').valid).toBe(false);
+        });
+
+        it('normalizes double spaces before splitting, so field indexing matches validateDetailed', function() {
+            expect(() => validate('60  9 * * *')).toThrow('60 is a invalid expression for minute');
         });
     });
 
