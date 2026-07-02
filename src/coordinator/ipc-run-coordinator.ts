@@ -12,6 +12,11 @@ export type IpcChannel = {
 
 type CoordinatorResult = { type: 'coordinator:result'; reqId: string; allowed: boolean; error?: string };
 
+// Bounds how long a shouldRun ask waits for the parent's reply. Without this a
+// lost message or a blocked parent event loop leaves the promise pending
+// forever, which (with noOverlap) blocks every future fire.
+const DEFAULT_REPLY_TIMEOUT_MS = 5000;
+
 /**
  * A `RunCoordinator` used inside a background task's daemon (child process). The
  * real coordinator lives in the parent (resolved from setRunCoordinator / the
@@ -23,7 +28,7 @@ type CoordinatorResult = { type: 'coordinator:result'; reqId: string; allowed: b
 export class IpcRunCoordinator implements RunCoordinator {
   private pending = new Map<string, (result: CoordinatorResult) => void>();
 
-  constructor(private channel: IpcChannel) {
+  constructor(private channel: IpcChannel, private replyTimeoutMs: number = DEFAULT_REPLY_TIMEOUT_MS) {
     this.channel.on('message', (message: any) => {
       if (message?.type !== 'coordinator:result') return;
       const resolve = this.pending.get(message.reqId);
@@ -37,7 +42,13 @@ export class IpcRunCoordinator implements RunCoordinator {
   shouldRun(key: string, ttlMs: number): Promise<boolean> {
     const reqId = createID();
     return new Promise<boolean>((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        this.pending.delete(reqId);
+        reject(new Error(`Run coordinator reply timed out after ${this.replyTimeoutMs}ms`));
+      }, this.replyTimeoutMs);
+
       this.pending.set(reqId, (result) => {
+        clearTimeout(timeoutId);
         // The parent reports a coordinator error by replying with `error`; reject
         // so the runner fails closed (skips the run), mirroring the inline path.
         if (result.error) reject(new Error(result.error));

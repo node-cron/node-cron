@@ -48,6 +48,10 @@ class BackgroundScheduledTask implements ScheduledTask{
   // Set right before we kill the fork ourselves, so the 'exit' handler can
   // tell an intentional teardown from the daemon dying on its own.
   private killRequested = false;
+  // Memoizes an in-flight start() so a concurrent caller awaits the same
+  // handshake instead of seeing forkProcess set and resolving early, before
+  // the daemon has actually loaded the task.
+  private startPromise?: Promise<void>;
 
   constructor(cronExpression: string, taskPath: string, options?: TaskOptions){
     this.cronExpression = cronExpression;
@@ -214,16 +218,30 @@ class BackgroundScheduledTask implements ScheduledTask{
   }
 
   start(): Promise<void> {
+    // A destroyed task has no daemon to (re-)start; treat it as a safe no-op.
+    if (this.stateMachine.state === 'destroyed') {
+      return Promise.resolve();
+    }
+
+    // A concurrent caller must await the same handshake, not resolve early:
+    // forkProcess is assigned synchronously below, before the daemon has
+    // actually loaded the task.
+    if (this.startPromise) {
+      return this.startPromise;
+    }
+
+    if (this.forkProcess) {
+      return Promise.resolve();
+    }
+
+    this.startPromise = this.forkAndStart().finally(() => {
+      this.startPromise = undefined;
+    });
+    return this.startPromise;
+  }
+
+  private forkAndStart(): Promise<void> {
     return new Promise((resolve, reject) => {
-      // A destroyed task has no daemon to (re-)start; treat it as a safe no-op.
-      if (this.stateMachine.state === 'destroyed') {
-        return resolve(undefined);
-      }
-
-      if (this.forkProcess) {
-        return resolve(undefined);
-      }
-
       const startTimeout = this.options?.startTimeout ?? 5000;
 
       // Any failure to start must also tear down the daemon. Otherwise a daemon

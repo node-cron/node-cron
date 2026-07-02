@@ -3,6 +3,7 @@ import logger, { noopLogger } from "../../logger";
 import { InlineScheduledTask } from "../inline-scheduled-task";
 import { ScheduledTask, TaskContext, TaskEvent, TaskOptions } from "../scheduled-task";
 import { IpcRunCoordinator } from "../../coordinator/ipc-run-coordinator";
+import { createID } from "../../create-id";
 
 export async function startDaemon(message: any): Promise<ScheduledTask> {
     const script = await importTaskModule(message.path);
@@ -156,8 +157,19 @@ export function bind(){
       if(task) task.destroy();
       return task;
     case 'task:execute':
+      if (!task) {
+        // No task loaded yet: report it instead of dropping the message, or
+        // the parent's execute() waits for an event that never arrives.
+        sendEvent('execution:failed', {
+          date: new Date(),
+          dateLocalIso: new Date().toISOString(),
+          triggeredAt: new Date(),
+          execution: { id: createID(), reason: 'invoked', error: new Error('Cannot execute: no task loaded') }
+        });
+        return task;
+      }
       try {
-        if (task) await task.execute();
+        await task.execute();
       } catch(error: any){
         logger.debug('Daemon task:execute failed:', error);
       }
