@@ -312,11 +312,16 @@ class BackgroundScheduledTask implements ScheduledTask{
   }
 
   unref(): void {
-    if (this.forkProcess) this.forkProcess.unref();
+    if (!this.forkProcess) return;
+    this.forkProcess.unref();
+    // The IPC channel itself also holds the parent's event loop open.
+    this.forkProcess.channel?.unref();
   }
 
   ref(): void {
-    if (this.forkProcess) this.forkProcess.ref();
+    if (!this.forkProcess) return;
+    this.forkProcess.ref();
+    this.forkProcess.channel?.ref();
   }
 
   destroy(): Promise<void> {

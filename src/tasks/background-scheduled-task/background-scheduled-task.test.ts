@@ -1205,6 +1205,60 @@ describe('BackgroundScheduledTask', function() {
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
       task.ref();
     });
+
+    it('unref also unrefs the IPC channel, so a lone fork does not keep the process alive', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      const unrefStub = vi.fn();
+      const channelUnrefStub = vi.fn();
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      (fakeChildProcess as any).unref = unrefStub;
+      (fakeChildProcess as any).channel = { unref: channelUnrefStub, ref: vi.fn() };
+
+      await task.start();
+      task.unref();
+
+      expect(unrefStub).toHaveBeenCalledOnce();
+      expect(channelUnrefStub).toHaveBeenCalledOnce();
+      await task.destroy();
+    });
+
+    it('ref also refs the IPC channel back', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      const refStub = vi.fn();
+      const channelRefStub = vi.fn();
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      (fakeChildProcess as any).ref = refStub;
+      (fakeChildProcess as any).channel = { unref: vi.fn(), ref: channelRefStub };
+
+      await task.start();
+      task.ref();
+
+      expect(refStub).toHaveBeenCalledOnce();
+      expect(channelRefStub).toHaveBeenCalledOnce();
+      await task.destroy();
+    });
+
+    it('unref/ref are safe when there is no IPC channel', async function () {
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+      (fakeChildProcess as any).unref = vi.fn();
+      (fakeChildProcess as any).ref = vi.fn();
+      (fakeChildProcess as any).channel = undefined;
+
+      await task.start();
+      expect(() => task.unref()).not.toThrow();
+      expect(() => task.ref()).not.toThrow();
+      await task.destroy();
+    });
   });
 });
 
