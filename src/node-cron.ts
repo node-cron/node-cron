@@ -175,7 +175,15 @@ export async function shutdown(timeout = 5000): Promise<void> {
       task.once('execution:finished', () => resolve());
       task.once('execution:failed', () => resolve());
     });
-    task.stop();
+
+    // A background task's stop() returns a Promise that can reject (e.g.
+    // "Stop operation timed out" when the daemon is stuck). Left unhandled
+    // that becomes an unhandled rejection, which crashes the process by
+    // default; log it instead.
+    Promise.resolve(task.stop()).catch((error: any) => {
+      logger.error(`Error stopping task "${task.name}" during shutdown: ${error?.message ?? error}`);
+    });
+
     if (busy) {
       pending.push(wait);
     }
@@ -189,7 +197,10 @@ export async function shutdown(timeout = 5000): Promise<void> {
   }
 
   for (const task of tasks.values()) {
-    task.destroy();
+    // Same rationale as stop() above: destroy() can also reject.
+    Promise.resolve(task.destroy()).catch((error: any) => {
+      logger.error(`Error destroying task "${task.name}" during shutdown: ${error?.message ?? error}`);
+    });
   }
 }
 
