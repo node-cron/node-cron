@@ -82,9 +82,10 @@ task.on('execution:finished', (ctx) => console.log('result:', ctx.execution?.res
 task.on('execution:failed', (ctx) => console.error('failed:', ctx.execution?.error));
 task.on('execution:overlap', () => console.warn('skipped: previous run still active'));
 task.on('execution:skipped', (ctx) => console.log('not elected:', ctx.reason));
+task.on('task:failed', () => task.start()); // background task's daemon died unexpectedly (crash, OOM-kill); restart manually
 ```
 
-All events: `task:started`, `task:stopped`, `task:destroyed`, `execution:started`, `execution:finished`, `execution:failed`, `execution:missed`, `execution:overlap`, `execution:maxReached`, `execution:skipped`. See [Events & Observability](https://nodecron.com/event-listening).
+All events: `task:started`, `task:stopped`, `task:destroyed`, `task:failed`, `execution:started`, `execution:finished`, `execution:failed`, `execution:missed`, `execution:overlap`, `execution:maxReached`, `execution:skipped`. See [Events & Observability](https://nodecron.com/event-listening).
 
 ## Cron Syntax
 

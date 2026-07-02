@@ -297,6 +297,167 @@ describe('BackgroundScheduledTask', function() {
     });
   });
 
+  describe('daemon dies unexpectedly', function(){
+    async function startedTask(options?: any){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js', options);
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+      });
+      await task.start();
+      return task;
+    }
+
+    it('emits task:failed, moves to stopped and clears the fork on a spontaneous exit', async function(){
+      const task = await startedTask();
+      expect(task.getStatus()).toBe('idle');
+
+      const failedPromise = new Promise<any>(resolve => task.on('task:failed', resolve));
+      fakeChildProcess.emit('exit', null, 'SIGKILL');
+      const ctx: any = await failedPromise;
+
+      expect(ctx.error?.message).toMatch(/daemon exited unexpectedly \(code null, signal SIGKILL\)/);
+      expect(task.getStatus()).toBe('stopped');
+      expect(task.isBusy()).toBe(false);
+      expect(task.forkProcess).toBeUndefined();
+    });
+
+    it('does not fire task:failed on a clean exit (code 0) or SIGTERM', async function(){
+      const task = await startedTask();
+      const failedFn = vi.fn();
+      task.on('task:failed', failedFn);
+
+      fakeChildProcess.emit('exit', 0, null);
+      fakeChildProcess.emit('exit', null, 'SIGTERM');
+      await wait(10);
+
+      expect(failedFn).not.toHaveBeenCalled();
+    });
+
+    it('logs the death as an error via the task logger', async function(){
+      const errorFn = vi.fn();
+      const customLogger = { info() {}, warn() {}, error: errorFn, debug() {} };
+      await startedTask({ logger: customLogger });
+
+      fakeChildProcess.emit('exit', null, 'SIGKILL');
+      await wait(10);
+
+      expect(errorFn).toHaveBeenCalled();
+      expect(errorFn.mock.calls[0][0].message).toMatch(/daemon exited unexpectedly/);
+    });
+
+    it('emits execution:failed for the in-flight run before task:failed, and lastRun reflects it', async function(){
+      const task = await startedTask();
+
+      task.emitter.emit('execution:started', { execution: { id: 'e1', reason: 'scheduled', startedAt: new Date() } } as any);
+
+      const order: string[] = [];
+      task.on('execution:failed', () => { order.push('execution:failed'); });
+      task.on('task:failed', () => { order.push('task:failed'); });
+
+      fakeChildProcess.emit('exit', null, 'SIGKILL');
+      await wait(10);
+
+      expect(order).toEqual(['execution:failed', 'task:failed']);
+      expect(task.isBusy()).toBe(false);
+      expect(task.lastRun()?.error?.message).toMatch(/daemon exited unexpectedly/);
+    });
+
+    it('start() re-forks successfully after a spontaneous death', async function(){
+      const task = await startedTask();
+
+      fakeChildProcess.emit('exit', null, 'SIGKILL');
+      await wait(10);
+      expect(task.getStatus()).toBe('stopped');
+
+      const secondChild = Object.assign(new EventEmitter(), { send: vi.fn(), kill: vi.fn(), killed: false });
+      secondChild.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:start') task.emitter.emit('task:started');
+      });
+      vi.mocked(fork).mockReturnValue(secondChild as any);
+
+      await task.start();
+      expect(task.getStatus()).toBe('idle');
+      expect(task.forkProcess).toBe(secondChild);
+    });
+
+    it('does not fire task:failed when stop() kills the fork', async function(){
+      const task = await startedTask();
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:stop') task.emitter.emit('task:stopped');
+      });
+
+      const failedFn = vi.fn();
+      task.on('task:failed', failedFn);
+
+      await task.stop();
+      fakeChildProcess.emit('exit', null, 'SIGTERM');
+      await wait(10);
+
+      expect(failedFn).not.toHaveBeenCalled();
+    });
+
+    it('does not fire task:failed when destroy() kills the fork', async function(){
+      const task = await startedTask();
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+      });
+
+      const failedFn = vi.fn();
+      task.on('task:failed', failedFn);
+
+      await task.destroy();
+      fakeChildProcess.emit('exit', null, 'SIGTERM');
+      await wait(10);
+
+      expect(failedFn).not.toHaveBeenCalled();
+    });
+
+    it('does not fire task:failed when the stop timeout force-kills the fork', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      task.forkProcess = fakeChildProcess as any;
+
+      const failedFn = vi.fn();
+      task.on('task:failed', failedFn);
+
+      try { await task.stop(); } catch { /* expected timeout */ }
+      fakeChildProcess.emit('exit', null, 'SIGTERM');
+      await wait(10);
+
+      expect(failedFn).not.toHaveBeenCalled();
+    });
+
+    it('still emits task:failed and logs the invalid transition when the state is already destroyed', async function(){
+      const errorFn = vi.fn();
+      const customLogger = { info() {}, warn() {}, error: errorFn, debug() {} };
+      const task = await startedTask({ logger: customLogger });
+
+      // A race: the task was destroyed through another path, leaving the state
+      // machine in its terminal state, but this forkProcess is still around.
+      (task as any).stateMachine.state = 'destroyed';
+
+      const failedPromise = new Promise<any>(resolve => task.on('task:failed', resolve));
+      fakeChildProcess.emit('exit', null, 'SIGKILL');
+      await failedPromise;
+
+      expect(task.getStatus()).toBe('destroyed');
+      expect(errorFn.mock.calls.some(call => /invalid transition/.test(call[0]?.message ?? ''))).toBe(true);
+    });
+
+    it('does not fire task:failed on a failed start (fork exits before task:started)', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      const failedFn = vi.fn();
+      task.on('task:failed', failedFn);
+
+      fakeChildProcess.send.mockImplementation(() => {
+        fakeChildProcess.emit('exit', null, 'SIGKILL');
+      });
+
+      try { await task.start(); } catch { /* expected */ }
+
+      expect(failedFn).not.toHaveBeenCalled();
+    });
+  });
+
   describe('stop', function(){
     it('do not fail if the task is stoped', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');

@@ -42,6 +42,12 @@ class BackgroundScheduledTask implements ScheduledTask{
   private executing = false;
   private killPending = false;
   private pendingKillCleanup?: () => void;
+  // The in-flight execution forwarded by 'execution:started', kept around so a
+  // daemon death mid-run can still report it via 'execution:failed'.
+  private currentExecution?: Execution;
+  // Set right before we kill the fork ourselves, so the 'exit' handler can
+  // tell an intentional teardown from the daemon dying on its own.
+  private killRequested = false;
 
   constructor(cronExpression: string, taskPath: string, options?: TaskOptions){
     this.cronExpression = cronExpression;
@@ -55,11 +61,11 @@ class BackgroundScheduledTask implements ScheduledTask{
     // events so runsLeft() works across the process boundary.
     this.timeMatcher = new TimeMatcher(cronExpression, options?.timezone);
     this.runCount = 0;
-    this.on('execution:started', () => { this.runCount++; this.executing = true; });
+    this.on('execution:started', (context) => { this.runCount++; this.executing = true; this.currentExecution = context?.execution; });
     // Mirror the last actual execution from the daemon's events. Both carry the
     // execution's own timestamps, so lastRun reflects the real run time.
-    this.on('execution:finished', (context) => { this.executing = false; this.recordLastRun(context.execution); });
-    this.on('execution:failed', (context) => { this.executing = false; this.recordLastRun(context.execution); });
+    this.on('execution:finished', (context) => { this.executing = false; this.currentExecution = undefined; this.recordLastRun(context.execution); });
+    this.on('execution:failed', (context) => { this.executing = false; this.currentExecution = undefined; this.recordLastRun(context.execution); });
     // The logger lives in the parent process: it cannot cross the fork
     // boundary. The daemon runs with a no-op logger and forwards events, and
     // this process logs from those events using the configured logger.
@@ -170,7 +176,37 @@ class BackgroundScheduledTask implements ScheduledTask{
 
   private killFork(): void {
     this.clearPendingKillWait();
+    this.killRequested = true;
     this.forkProcess?.kill();
+    this.forkProcess = undefined;
+  }
+
+  // The daemon died on its own after a successful start (crash, OOM-kill, an
+  // outside SIGKILL). Nothing else would ever notice: the task would stay
+  // 'running'/'idle' forever with no event and a hung execute(). Correct the
+  // state, fail any in-flight execution, and surface it as 'task:failed'.
+  private handleUnexpectedExit(code: number | null, signal: NodeJS.Signals | null): void {
+    this.clearPendingKillWait();
+    const erro = new Error(`daemon exited unexpectedly (code ${code}, signal ${signal})`);
+    this.logger.error(erro);
+
+    if (this.executing) {
+      const execution: Execution = { id: createID(), reason: 'scheduled', ...this.currentExecution, error: erro, finishedAt: new Date() };
+      this.emitter.emit('execution:failed', this.createContext(new Date(), execution));
+    }
+
+    try {
+      this.stateMachine.changeState('stopped');
+    } catch (err) {
+      // A race (e.g. destroy() already moved us to 'destroyed') can make this
+      // transition invalid; that state is already terminal, so just log it.
+      this.logger.error(err as Error);
+    }
+
+    const context = this.createContext(new Date());
+    context.error = erro;
+    this.emitter.emit('task:failed', context);
+
     this.forkProcess = undefined;
   }
 
@@ -198,6 +234,11 @@ class BackgroundScheduledTask implements ScheduledTask{
         ));
       }, startTimeout);
 
+      // Reset per-fork so a flag left over from a previous daemon cannot
+      // suppress detection of this one dying.
+      this.killRequested = false;
+      let startSucceeded = false;
+
       try {
         this.forkProcess = fork(daemonPath);
 
@@ -206,7 +247,18 @@ class BackgroundScheduledTask implements ScheduledTask{
         });
 
         this.forkProcess.on('exit', (code, signal) => {
+          if (this.killRequested) {
+            this.killRequested = false;
+            return;
+          }
+
+          // A code-0/SIGTERM exit looks like a graceful shutdown, so it is left
+          // alone here too (matches the intentional-kill case above).
           if (code !== 0 && signal !== 'SIGTERM') {
+            if (startSucceeded) {
+              this.handleUnexpectedExit(code, signal);
+              return;
+            }
             const erro = new Error(`node-cron daemon exited with code ${code || signal}`)
             this.logger.error(erro);
             failStart(erro);
@@ -257,6 +309,7 @@ class BackgroundScheduledTask implements ScheduledTask{
         });
         
         this.once('task:started', () => {
+          startSucceeded = true;
           this.stateMachine.changeState('idle');
           clearTimeout(timeout);
           resolve(undefined);
