@@ -164,6 +164,9 @@ export class InlineScheduledTask implements ScheduledTask {
   }
 
   start(): void {
+    // A destroyed task has no runner to arm; treat it as a safe no-op.
+    if(this.stateMachine.state === 'destroyed') return;
+
     if(this.runner.isStopped()){
       this.runner.start();
       this.stateMachine.changeState('idle');

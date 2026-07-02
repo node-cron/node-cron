@@ -257,6 +257,24 @@ describe('InlineScheduledTask', function() {
     expect(captured.warnings.some(w => w.includes('missed execution'))).toBe(false);
     task.destroy();
   });
+
+  it('start() after destroy() is a no-op and does not arm the runner', async function(){
+    const captured = makeLogger();
+    const task = new InlineScheduledTask('* * * * * *', async () => {}, { logger: captured });
+    task.destroy();
+    task.start();
+    expect(task.runner.isStopped()).toBe(true);
+    expect(task.getStatus()).toBe('destroyed');
+    await wait(1200);
+    expect(captured.errors.length).toBe(0);
+  });
+
+  it('stop() after destroy() is a no-op', function(){
+    const task = new InlineScheduledTask('* * * * * *', ()=> {});
+    task.destroy();
+    task.stop();
+    expect(task.getStatus()).toBe('destroyed');
+  });
 });
 
 function makeLogger(){
