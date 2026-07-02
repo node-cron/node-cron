@@ -103,6 +103,18 @@ describe('validateDetailed', function () {
     expect(result.valid).toBe(false);
     expect(result.errors[0].field).toBe('expression');
   });
+
+  it('reports an impossible day-of-month/month combination', function () {
+    const result = validateDetailed('0 0 30 2 *');
+    expect(result.valid).toBe(false);
+    expect(result.errors[0].field).toBe('dayOfMonth');
+    expect(result.errors[0].message).toMatch(/impossible day of month/);
+  });
+
+  it('accepts Feb 29 as a possible day-of-month/month combination', function () {
+    const result = validateDetailed('0 0 29 2 *');
+    expect(result.valid).toBe(true);
+  });
 });
 
 describe('parse', function () {

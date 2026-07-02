@@ -162,6 +162,50 @@ describe('pattern-validation', function() {
         });
     });
 
+    describe('validate impossible day-of-month/month combinations', function() {
+        it('should fail when the day never occurs in the given month (Feb 30)', function() {
+            expect(() => {
+                validate('0 0 30 2 *');
+            }).toThrow(/30 2 is an impossible day of month for the given month/);
+        });
+
+        it('should not fail with Feb 29 (occurs in leap years)', function() {
+            expect(() => {
+                validate('0 0 29 2 *');
+            }).not.toThrow();
+        });
+
+        it('should not fail when at least one listed month has the day (Jan/Mar 31)', function() {
+            expect(() => {
+                validate('0 0 31 1,3 *');
+            }).not.toThrow();
+        });
+
+        it('should fail when none of several months has the day (Apr/Jun 31)', function() {
+            expect(() => {
+                validate('0 0 31 4,6 *');
+            }).toThrow(/31 4,6 is an impossible day of month for the given month/);
+        });
+
+        it('should not check the combination when day-of-month uses a date-dependent token', function() {
+            expect(() => {
+                validate('0 0 L 2 *');
+            }).not.toThrow();
+            expect(() => {
+                validate('0 0 30W 2 *');
+            }).not.toThrow();
+        });
+
+        it('should not check the combination when day-of-month or month is a wildcard', function() {
+            expect(() => {
+                validate('0 0 30 * *');
+            }).not.toThrow();
+            expect(() => {
+                validate('0 0 * 2 *');
+            }).not.toThrow();
+        });
+    });
+
     describe('validate ? (no-specific-value alias)', function() {
         it('should accept ? in the day-of-month field', function() {
             expect(() => {

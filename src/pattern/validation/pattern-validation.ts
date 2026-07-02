@@ -134,6 +134,28 @@ function isInvalidWeekDay(expression) {
     return !isValidExpression(days, 0, 7);
 }
 
+// The last calendar day (28-31) each month can ever reach, Feb counted as 29
+// (leap years) so a leap-only date like Feb 29 is still accepted.
+const MAX_DAYS_IN_MONTH: Record<number, number> = {
+    1: 31, 2: 29, 3: 31, 4: 30, 5: 31, 6: 30,
+    7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31,
+};
+
+/**
+ * Whether every listed day-of-month exceeds the max day of every listed
+ * month, i.e. the combination can never occur in any year (e.g. day 30 with
+ * month February). Skipped when a day-of-month entry is a date-dependent
+ * token (`L`, `nW`, `LW`, `L-n`) since those always resolve to a real day.
+ *
+ * @param {(number|string)[]} days The executable day-of-month expression.
+ * @param {number[]} months The executable month expression.
+ * @returns {boolean}
+ */
+function isImpossibleDayOfMonth(days, months) {
+    if (days.some((day) => typeof day !== 'number')) return false;
+    return !months.some((month) => days.some((day) => day <= MAX_DAYS_IN_MONTH[month]));
+}
+
 /**
  * @param {string[]} patterns The Cron-Job expression patterns.
  * @param {string[]} executablePatterns The executable Cron-Job expression
@@ -160,6 +182,9 @@ function validateFields(patterns, executablePatterns) {
 
     if (isInvalidWeekDay(executablePatterns[5]))
         throw new Error(`${patterns[5]} is a invalid expression for week day`);
+
+    if (isImpossibleDayOfMonth(executablePatterns[3], executablePatterns[4]))
+        throw new Error(`${patterns[3]} ${patterns[4]} is an impossible day of month for the given month`);
 }
 
 // Field metadata reused by the detailed (non-throwing) API below. Order matches
@@ -223,6 +248,14 @@ export function validateDetailed(pattern: string): DetailedValidation {
         if (f.invalid(executable[i]) || rawWMisuse)
             errors.push({ field: f.key, value: patterns[i], message: `${patterns[i]} is a invalid expression for ${f.label}` });
     });
+
+    if (!errors.length && isImpossibleDayOfMonth(executable[3], executable[4])) {
+        errors.push({
+            field: 'dayOfMonth',
+            value: patterns[3],
+            message: `${patterns[3]} ${patterns[4]} is an impossible day of month for the given month`,
+        });
+    }
 
     if (errors.length) return { valid: false, errors };
 

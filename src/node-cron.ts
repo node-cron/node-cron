@@ -51,10 +51,19 @@ const registry = new TaskRegistry();
  */
 export function schedule(expression:string, func: TaskFn | string, options?: TaskOptions): ScheduledTask {
     const task = createTask(expression, func, options);
+
+    let started: void | Promise<void>;
+    try {
+      started = task.start();
+    } catch (error) {
+      // A synchronous start() failure (e.g. an unresolvable timezone) leaves
+      // no running task behind; do not leave it registered either.
+      registry.remove(task);
+      throw error;
+    }
     // Background tasks start asynchronously and can fail (e.g. the task file
     // cannot be loaded). Route that failure to the logger instead of leaving it
     // as an unhandled rejection.
-    const started = task.start();
     if (started && typeof (started as Promise<void>).catch === 'function') {
       (started as Promise<void>).catch((error: any) => {
         /* v8 ignore next */
@@ -74,6 +83,11 @@ export function schedule(expression:string, func: TaskFn | string, options?: Tas
  * @private
  */
 export function createTask(expression: string, func: TaskFn | string, options?: TaskOptions): ScheduledTask {
+    // Fail fast with the same field-specific error validate()/parse() produce,
+    // instead of letting a bad expression reach the matcher (which can scan
+    // for seconds before giving up with a misleading timeout error).
+    parseExpression(expression);
+
     if (options?.distributed && !options.name) {
       throw new Error('`distributed` requires a `name` (it forms the coordination key shared across instances).');
     }

@@ -188,7 +188,88 @@ describe('node-cron', function() {
             await task.destroy();
         });
     });
-    
+
+    describe('schedule validation', function() {
+        // Previously an out-of-range field was only caught deep inside the
+        // matcher scan (MAX_DAYS candidates), blocking the event loop for
+        // seconds before a misleading timeout error. It must now be rejected
+        // synchronously, before the task is even constructed.
+        it('rejects an out-of-range minute synchronously and fast', { timeout: 2000 }, function() {
+            const start = Date.now();
+            expect(() => cron.schedule('61 * * * *', () => {})).toThrow('61 is a invalid expression for minute');
+            expect(Date.now() - start).toBeLessThan(1000);
+        });
+
+        it('rejects an out-of-range hour', function() {
+            expect(() => cron.schedule('0 24 * * *', () => {})).toThrow('24 is a invalid expression for hour');
+        });
+
+        it('rejects an out-of-range month', function() {
+            expect(() => cron.schedule('0 0 1 13 *', () => {})).toThrow('13 is a invalid expression for month');
+        });
+
+        it('rejects a wrong field count (4 fields) with a clear error instead of a TypeError', function() {
+            let error: any;
+            try {
+                cron.schedule('* * * *', () => {});
+            } catch (e) {
+                error = e;
+            }
+            expect(error).toBeDefined();
+            expect(error).not.toBeInstanceOf(TypeError);
+            expect(error.message).toMatch(/5 or 6 fields/);
+        });
+
+        it('rejects a wrong field count (7 fields) with a clear error instead of a TypeError', function() {
+            let error: any;
+            try {
+                cron.schedule('0 0 0 * * * *', () => {});
+            } catch (e) {
+                error = e;
+            }
+            expect(error).toBeDefined();
+            expect(error).not.toBeInstanceOf(TypeError);
+            expect(error.message).toMatch(/5 or 6 fields/);
+        });
+
+        it('does not register the task when schedule() rejects the expression', function() {
+            const before = cron.getTasks().size;
+            expect(() => cron.schedule('61 * * * *', () => {})).toThrow();
+            expect(cron.getTasks().size).toBe(before);
+        });
+
+        it('does not register the task when createTask() rejects the expression', function() {
+            const before = cron.getTasks().size;
+            expect(() => cron.createTask('61 * * * *', () => {})).toThrow();
+            expect(cron.getTasks().size).toBe(before);
+        });
+
+        it('cleans up the registry when task.start() itself throws', function() {
+            const before = cron.getTasks().size;
+            expect(() => cron.schedule('* * * * *', () => {}, { timezone: 'Not/AZone' })).toThrow();
+            expect(cron.getTasks().size).toBe(before);
+        });
+
+        it('still schedules valid expressions (regression)', function() {
+            const cases: [string, object?][] = [
+                ['* * * * * *', undefined],
+                ['* * * * *', undefined],
+                ['@daily', undefined],
+                ['@hourly', undefined],
+                ['*/5 * * * *', undefined],
+                ['0 0 12 15W * *', undefined],
+                ['0 0 12 L * *', undefined],
+                ['0 0 12 * * 2#3', undefined],
+            ];
+
+            cases.forEach(([expression]) => {
+                const task = cron.schedule(expression, () => {});
+                expect(task).toBeDefined();
+                task.stop();
+            });
+        });
+    });
+
     describe('validate', function() {
         it('should validate a pattern', function() {
             expect(cron.validate('* * * * * *')).toBe(true);
