@@ -37,18 +37,9 @@ class BackgroundScheduledTask implements ScheduledTask{
   // The last actual execution, mirrored in the parent from the daemon's
   // forwarded finished/failed events.
   private _lastRun: LastRun | null = null;
-  // Whether the daemon last reported an execution in progress. Tracked
-  // independently from stateMachine.state: a 'task:stopped'/'task:destroyed'
-  // message overwrites that state (via context.task.state) before this event
-  // fires, so it cannot be used to tell whether the in-flight run that was
-  // just stopped is still running. See killForkWhenSettled below.
+  // Tracked separately from stateMachine.state, which a 'task:stopped' message
+  // overwrites before the kill decision runs, hiding whether a run is still live.
   private executing = false;
-  // Set while killForkWhenSettled is waiting for an in-flight execution to
-  // finish before killing the daemon, so a stop() immediately followed by a
-  // destroy() (as destroy() does internally) does not arm the wait twice.
-  // Cleared (and the wait's listeners removed) by clearPendingKillWait,
-  // called from killFork so a forced kill (e.g. the stop()/destroy() timeout)
-  // never leaves a stale execution:finished/failed listener behind.
   private killPending = false;
   private pendingKillCleanup?: () => void;
 
@@ -146,16 +137,9 @@ class BackgroundScheduledTask implements ScheduledTask{
     this._lastRun = lastRun;
   }
 
-  // Kills the daemon's fork process, or, if an execution is in flight,
-  // defers the kill until it finishes (execution:finished/failed). Without
-  // this, receiving 'task:stopped' (which fires as soon as the daemon stops
-  // scheduling new runs, not when the current run finishes) would kill the
-  // daemon mid-execution, aborting it and the execution:finished/failed event
-  // it would have reported.
-  //
-  // No extra timeout is needed here: if the execution never settles (a truly
-  // stuck daemon), the caller's own stop()/destroy() timeout still forces a
-  // kill, which is the actual safety net.
+  // Defers the kill until an in-flight run settles, so 'task:stopped' does not
+  // abort it mid-execution. A truly stuck daemon is still force-killed by the
+  // caller's stop()/destroy() timeout.
   private killForkWhenSettled(): void {
     if (!this.forkProcess) return;
 
@@ -178,10 +162,6 @@ class BackgroundScheduledTask implements ScheduledTask{
     };
   }
 
-  // Removes the execution:finished/failed listeners armed by
-  // killForkWhenSettled, if any. Called from killFork so a forced kill (the
-  // stop()/destroy() timeout, or a settled execution) never leaves a stale
-  // listener registered for the event that did not fire.
   private clearPendingKillWait(): void {
     this.pendingKillCleanup?.();
     this.pendingKillCleanup = undefined;
@@ -311,10 +291,8 @@ class BackgroundScheduledTask implements ScheduledTask{
         clearTimeout(timeoutId);
         this.off('task:stopped', onStopped);
 
-        // forkProcess is not cleared here: killForkWhenSettled (armed by the
-        // 'task:stopped' handler registered in the constructor, which runs
-        // before this listener) owns clearing it, deferring the actual kill
-        // until an in-flight execution finishes so it is not aborted mid-run.
+        // forkProcess is cleared by killForkWhenSettled, not here, so an
+        // in-flight run is not aborted mid-execution.
         resolve(undefined);
       };
 

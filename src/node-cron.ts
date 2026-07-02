@@ -170,11 +170,7 @@ export async function shutdown(timeout = 5000): Promise<void> {
   const pending: Promise<any>[] = [];
 
   for (const task of tasks.values()) {
-    // Registered before stop() so an execution that finishes in that same
-    // window is still caught, instead of forcing a full-timeout wait for an
-    // event that already fired. Both listeners are removed as soon as either
-    // one settles, so a task never leaks the listener for the event that did
-    // not fire.
+    // Armed before stop() so a run finishing in that window is still caught.
     const wait = new Promise<void>(resolve => {
       const onSettled = () => {
         task.off('execution:finished', onSettled);
@@ -185,17 +181,10 @@ export async function shutdown(timeout = 5000): Promise<void> {
       task.once('execution:failed', onSettled);
     });
 
-    // Checked right after the listeners above are armed (so there is no gap
-    // between "is it busy" and "we are listening") and before stop(): stop()
-    // transitions the task's own status away from 'running' immediately, even
-    // for an inline task whose execution is still in flight, so isBusy() can
-    // no longer be trusted once stop() has been called.
+    // Read before stop(), which flips the status away from 'running' at once.
     const busy = task.isBusy();
 
-    // A background task's stop() returns a Promise that can reject (e.g.
-    // "Stop operation timed out" when the daemon is stuck). Left unhandled
-    // that becomes an unhandled rejection, which crashes the process by
-    // default; log it instead.
+    // A rejected stop()/destroy() left unhandled would crash the process.
     Promise.resolve(task.stop()).catch((error: any) => {
       logger.error(`Error stopping task "${task.name}" during shutdown: ${error?.message ?? error}`);
     });
@@ -213,7 +202,6 @@ export async function shutdown(timeout = 5000): Promise<void> {
   }
 
   for (const task of tasks.values()) {
-    // Same rationale as stop() above: destroy() can also reject.
     Promise.resolve(task.destroy()).catch((error: any) => {
       logger.error(`Error destroying task "${task.name}" during shutdown: ${error?.message ?? error}`);
     });
