@@ -20,6 +20,7 @@
     "test": "vitest run --coverage",
     "test:watch": "vitest",
     "lint": "./node_modules/.bin/eslint ./src",
+    "typecheck": "tsc --noEmit",
     "check": "npm run lint && npm test",
     "build": "rollup -c",
     "dev": "rollup -c -w",

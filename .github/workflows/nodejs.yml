@@ -26,6 +26,28 @@ jobs:
       - name: Lint
         run: node --run lint
 
+  build:
+    name: Build and typecheck
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Typecheck
+        run: npm run typecheck
+
   unit:
     name: Unit tests
     runs-on: ubuntu-24.04-arm
