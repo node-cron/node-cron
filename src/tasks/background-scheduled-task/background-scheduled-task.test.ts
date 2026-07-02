@@ -77,6 +77,22 @@ describe('BackgroundScheduledTask', function() {
       expect(result).toBeUndefined();
     });
 
+    it('is a no-op when already destroyed', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+        else task.emitter.emit('task:started');
+      });
+
+      await task.destroy();
+      vi.mocked(fork).mockClear();
+
+      const result = await task.start();
+      expect(result).toBeUndefined();
+      expect(fork).not.toHaveBeenCalled();
+      expect(task.getStatus()).toBe('destroyed');
+    });
+
     it('fails on fork failure', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
   
@@ -384,6 +400,30 @@ describe('BackgroundScheduledTask', function() {
 
       expect(fakeChildProcess.kill).toHaveBeenCalledTimes(1);
       expect(task.forkProcess).toBeUndefined();
+    });
+
+    it('is a no-op when already destroyed', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      fakeChildProcess.send.mockImplementation((msg: any) => {
+        if (msg.command === 'task:destroy') task.emitter.emit('task:destroyed');
+        else task.emitter.emit('task:started');
+      });
+
+      await task.destroy();
+
+      const result = await task.stop();
+      expect(result).toBeUndefined();
+      expect(task.getStatus()).toBe('destroyed');
+    });
+
+    it('the task:stopped handler does not attempt a state transition once destroyed', async function(){
+      const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+      await task.destroy();
+
+      // A stray 'task:stopped' arriving after destroy (e.g. a late daemon
+      // message) must not throw or move the task out of 'destroyed'.
+      expect(() => task.emitter.emit('task:stopped')).not.toThrow();
+      expect(task.getStatus()).toBe('destroyed');
     });
 
     it('does not arm the kill wait twice when task:stopped is followed by task:destroyed while busy', function(){

@@ -69,7 +69,10 @@ class BackgroundScheduledTask implements ScheduledTask{
 
     this.on('task:stopped', () => {
       this.killForkWhenSettled();
-      this.stateMachine.changeState('stopped');
+      // Destroyed is terminal; a stray stop must not attempt to leave it.
+      if (this.stateMachine.state !== 'destroyed') {
+        this.stateMachine.changeState('stopped');
+      }
     });
 
     this.on('task:destroyed', () => {
@@ -176,6 +179,11 @@ class BackgroundScheduledTask implements ScheduledTask{
 
   start(): Promise<void> {
     return new Promise((resolve, reject) => {
+      // A destroyed task has no daemon to (re-)start; treat it as a safe no-op.
+      if (this.stateMachine.state === 'destroyed') {
+        return resolve(undefined);
+      }
+
       if (this.forkProcess) {
         return resolve(undefined);
       }
@@ -276,6 +284,11 @@ class BackgroundScheduledTask implements ScheduledTask{
 
   stop(): Promise<void> {
     return new Promise((resolve, reject) => {
+      // Mirrors the inline task: stopping a destroyed task is a safe no-op.
+      if (this.stateMachine.state === 'destroyed') {
+        return resolve(undefined);
+      }
+
       if (!this.forkProcess) {
         this.emitter.emit('task:stopped');
         return resolve(undefined);
