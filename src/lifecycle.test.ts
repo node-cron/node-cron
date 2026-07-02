@@ -171,8 +171,8 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
       await task.start();
 
       const events: TaskEvent[] = [];
-      task.on('execution:started', () => events.push('execution:started'));
-      task.on('execution:finished', () => events.push('execution:finished'));
+      task.on('execution:started', () => { events.push('execution:started'); });
+      task.on('execution:finished', () => { events.push('execution:finished'); });
 
       await task.execute();
 
@@ -243,7 +243,7 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
     it('start emits task:started exactly once', async () => {
       task = factory();
       let count = 0;
-      task.on('task:started', () => count++);
+      task.on('task:started', () => { count++; });
       await task.start();
       expect(count).toBe(1);
     });
@@ -252,7 +252,7 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
       task = factory();
       await task.start();
       let count = 0;
-      task.on('task:stopped', () => count++);
+      task.on('task:stopped', () => { count++; });
       await task.stop();
       expect(count).toBe(1);
     });
@@ -261,7 +261,7 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
       task = factory();
       await task.start();
       let count = 0;
-      task.on('task:destroyed', () => count++);
+      task.on('task:destroyed', () => { count++; });
       await task.destroy();
       expect(count).toBe(1);
     });
@@ -271,8 +271,8 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
       await task.start();
       let started = 0;
       let finished = 0;
-      task.on('execution:started', () => started++);
-      task.on('execution:finished', () => finished++);
+      task.on('execution:started', () => { started++; });
+      task.on('execution:finished', () => { finished++; });
       await task.execute();
       expect(started).toBe(1);
       expect(finished).toBe(1);
@@ -283,8 +283,8 @@ function lifecycleSuite(label: string, factory: (opts?: FactoryOpts) => Schedule
       await task.start();
       let started = 0;
       let failed = 0;
-      task.on('execution:started', () => started++);
-      task.on('execution:failed', () => failed++);
+      task.on('execution:started', () => { started++; });
+      task.on('execution:failed', () => { failed++; });
       try { await task.execute(); } catch { /* expected */ }
       expect(started).toBe(1);
       expect(failed).toBe(1);

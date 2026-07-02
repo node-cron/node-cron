@@ -105,8 +105,9 @@ describe('node-cron', function() {
 
             expect(task).toBeDefined();
             expect(task).toBeInstanceOf(InlineScheduledTask);
-            expect(task.runner.noOverlap).toBeDefined();
-            expect(task.runner.noOverlap).toBe(true);
+            const runner = (task as InlineScheduledTask).runner;
+            expect(runner.noOverlap).toBeDefined();
+            expect(runner.noOverlap).toBe(true);
 
             task.stop();
         });
@@ -120,8 +121,9 @@ describe('node-cron', function() {
 
             expect(task).toBeDefined();
             expect(task).toBeInstanceOf(InlineScheduledTask);
-            expect(task.runner.maxExecutions).toBeDefined();
-            expect(task.runner.maxExecutions).toBe(5);
+            const runner = (task as InlineScheduledTask).runner;
+            expect(runner.maxExecutions).toBeDefined();
+            expect(runner.maxExecutions).toBe(5);
 
             task.stop();
         });

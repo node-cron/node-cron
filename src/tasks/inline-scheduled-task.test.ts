@@ -127,8 +127,8 @@ describe('InlineScheduledTask', function() {
     expect(event?.date).toBeDefined()
     expect(event?.triggeredAt).toBeDefined()
     expect(event?.execution).toBeDefined()
-    expect(event?.execution.id).toBeDefined()
-    expect(event?.execution.result).toBeUndefined()
+    expect(event?.execution!.id).toBeDefined()
+    expect(event?.execution!.result).toBeUndefined()
     task.destroy();
   });
 
@@ -144,9 +144,9 @@ describe('InlineScheduledTask', function() {
     expect(event?.date).toBeDefined()
     expect(event?.triggeredAt).toBeDefined()
     expect(event?.execution).toBeDefined()
-    expect(event?.execution.id).toBeDefined()
-    expect(event?.execution.result).toBeDefined()
-    expect(event?.execution.error).toBeUndefined()
+    expect(event?.execution!.id).toBeDefined()
+    expect(event?.execution!.result).toBeDefined()
+    expect(event?.execution!.error).toBeUndefined()
     task.destroy();
   });
 
@@ -162,9 +162,9 @@ describe('InlineScheduledTask', function() {
     expect(event?.date).toBeDefined()
     expect(event?.triggeredAt).toBeDefined()
     expect(event?.execution).toBeDefined()
-    expect(event?.execution.id).toBeDefined()
-    expect(event?.execution.result).toBeUndefined()
-    expect(event?.execution.error).toBeDefined()
+    expect(event?.execution!.id).toBeDefined()
+    expect(event?.execution!.result).toBeUndefined()
+    expect(event?.execution!.error).toBeDefined()
     task.destroy();
   });
 
