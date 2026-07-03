@@ -1,6 +1,5 @@
 import commonjs from "@rollup/plugin-commonjs";
 import resolve from "@rollup/plugin-node-resolve";
-import replace from "@rollup/plugin-replace";
 import typescript from "@rollup/plugin-typescript";
 import { rmSync } from "fs";
 import { builtinModules } from "module";
@@ -32,20 +31,7 @@ const basePlugins = () => [
   }),
 ];
 
-// In the CJS build, ESM-only meta is rewritten to its CommonJS equivalent, and
-// the forked daemon path is pointed at the .cjs artifact.
-const cjsReplace = () =>
-  replace({
-    preventAssignment: true,
-    delimiters: ["", ""],
-    values: {
-      "fileURLToPath(import.meta.url)": "__filename",
-      "'daemon.js'": "'daemon.cjs'",
-    },
-  });
-
 export default [
-  // ESM build: single bundle per entry
   {
     input: {
       "node-cron": "src/node-cron.ts",
@@ -61,36 +47,10 @@ export default [
     external,
     plugins: [cleanDist(), ...basePlugins()],
   },
-  // CJS build: single bundle per entry
-  {
-    input: {
-      "node-cron": "src/node-cron.ts",
-      daemon: "src/tasks/background-scheduled-task/daemon.ts",
-    },
-    output: {
-      dir: "dist",
-      format: "cjs",
-      entryFileNames: "[name].cjs",
-      chunkFileNames: "_shared.cjs",
-      sourcemap: true,
-      exports: "named",
-    },
-    external,
-    plugins: [cjsReplace(), ...basePlugins()],
-  },
-  // Type declarations: separate ESM and CJS-flavored entry declarations.
   {
     input: "src/node-cron.ts",
     output: {
       file: "dist/node-cron.d.ts",
-      format: "es",
-    },
-    plugins: [dts()],
-  },
-  {
-    input: "src/node-cron.ts",
-    output: {
-      file: "dist/node-cron.d.cts",
       format: "es",
     },
     plugins: [dts()],
