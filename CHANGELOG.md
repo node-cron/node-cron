@@ -6,6 +6,45 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- Unreleased changes are staged in the open release-please PR, not here. -->
 
+## [4.6.0](https://github.com/node-cron/node-cron/compare/v4.5.0...v4.6.0) (2026-07-04)
+
+
+### Added
+
+* add cron.shutdown(timeout?) for graceful process teardown ([#589](https://github.com/node-cron/node-cron/issues/589)) ([35f1a61](https://github.com/node-cron/node-cron/commit/35f1a61ba7cef987f7ed342489d8d0f0220553b8))
+* add unref option for heartbeat timers ([#588](https://github.com/node-cron/node-cron/issues/588)) ([35cb140](https://github.com/node-cron/node-cron/commit/35cb140d9c2d790ff295d54fbe82f6eec9b27e33))
+* **day-of-month:** Quartz-style W, L-n and ? modifiers ([#570](https://github.com/node-cron/node-cron/issues/570)) ([cbe379b](https://github.com/node-cron/node-cron/commit/cbe379bce9d770c84328399dca514bd92a467c18))
+* emit task:failed when a background daemon exits unexpectedly ([7bd91d6](https://github.com/node-cron/node-cron/commit/7bd91d62d1472d52f9adbddfddc0c47458623080))
+* support cron expression nicknames ([@yearly](https://github.com/yearly), [@daily](https://github.com/daily), etc.) ([#579](https://github.com/node-cron/node-cron/issues/579)) ([6a6e14e](https://github.com/node-cron/node-cron/commit/6a6e14e43ab4ce5c21b52414a17e3e20311bd7bf))
+
+
+### Fixed
+
+* background task state transition on stop/destroy without fork ([#584](https://github.com/node-cron/node-cron/issues/584)) ([9dbc6de](https://github.com/node-cron/node-cron/commit/9dbc6de269cf5855b0afc037fb4446ef9791d761))
+* clear jitter timeout on runner stop ([#583](https://github.com/node-cron/node-cron/issues/583)) ([28b8146](https://github.com/node-cron/node-cron/commit/28b8146dd164ea992e1d5a649756b2bba4e062c4))
+* CommonJS type resolution ([#608](https://github.com/node-cron/node-cron/issues/608)) ([ee9d294](https://github.com/node-cron/node-cron/commit/ee9d294e71e526edffa2a2f902cad71e1f570d44))
+* correct falied-&gt;failed typo in daemon task error log ([#594](https://github.com/node-cron/node-cron/issues/594)) ([66c6961](https://github.com/node-cron/node-cron/commit/66c6961f2140d84cb71b101013abc170977297eb))
+* correct shutdown listener typing that broke the build ([#595](https://github.com/node-cron/node-cron/issues/595)) ([7aac3ad](https://github.com/node-cron/node-cron/commit/7aac3adc22516faad054f2b3ef7362edf62e20f3))
+* correlate execute() by id, isolate event hooks, and stop counting manual runs toward maxExecutions ([#607](https://github.com/node-cron/node-cron/issues/607)) ([0f039a9](https://github.com/node-cron/node-cron/commit/0f039a94dcaf6221ea406221b1e7c5eb34a47c4b))
+* daemon serialized task state with wrong field name ([#587](https://github.com/node-cron/node-cron/issues/587)) ([688d465](https://github.com/node-cron/node-cron/commit/688d465b82889f07f39dfef9170d808c1f40330e))
+* expand inverted ranges with wrap-around instead of silently swapping ([#602](https://github.com/node-cron/node-cron/issues/602)) ([a10ae53](https://github.com/node-cron/node-cron/commit/a10ae53626f1cc6e426e23266423f5e334a6871e))
+* harden cron.shutdown() teardown ([#598](https://github.com/node-cron/node-cron/issues/598)) ([a0b0d1f](https://github.com/node-cron/node-cron/commit/a0b0d1ff9313d0f8532130e5fcb873f29f48fd1f))
+* kill orphan child process on background task stop/destroy timeout ([#582](https://github.com/node-cron/node-cron/issues/582)) ([8179e10](https://github.com/node-cron/node-cron/commit/8179e105a02b91035bce441309c1cda12aaf4c4a))
+* make concurrent background start() await the daemon and time out coordinator lookups ([#605](https://github.com/node-cron/node-cron/issues/605)) ([446f03a](https://github.com/node-cron/node-cron/commit/446f03ae8f366683c43b186b93bcba5091a00042))
+* make lifecycle calls on a destroyed task safe no-ops ([#600](https://github.com/node-cron/node-cron/issues/600)) ([7fa9795](https://github.com/node-cron/node-cron/commit/7fa979514f9181aa63b0363cddb2acbf045b1f8c))
+* prevent double destroy on registry remove ([#585](https://github.com/node-cron/node-cron/issues/585)) ([8ae9f06](https://github.com/node-cron/node-cron/commit/8ae9f06463954754d4958f9eb478aed73e8adc4d))
+* **release-please:** match existing v-prefixed tags ([#575](https://github.com/node-cron/node-cron/issues/575)) ([e43c152](https://github.com/node-cron/node-cron/commit/e43c152188d993f59a12e3e9e258a695b44ca579))
+* runner promise bugs that could hang scheduling or crash process ([#581](https://github.com/node-cron/node-cron/issues/581)) ([0ae62be](https://github.com/node-cron/node-cron/commit/0ae62be8b3639762f1b09569cbb66503c940d8e5))
+* unref the IPC channel so background tasks let the process exit ([#599](https://github.com/node-cron/node-cron/issues/599)) ([534e593](https://github.com/node-cron/node-cron/commit/534e59344c019bc69869bc33e5cdcf1ff8ae1f1e))
+* validate the cron expression when scheduling a task ([#603](https://github.com/node-cron/node-cron/issues/603)) ([196e6cd](https://github.com/node-cron/node-cron/commit/196e6cd41ac32ab9df56668ac70e1b5232384bb8))
+* validate() consistency and multi-asterisk expansion ([#606](https://github.com/node-cron/node-cron/issues/606)) ([8cf41c4](https://github.com/node-cron/node-cron/commit/8cf41c436f5b544e32908d6e73b2679e973074e3))
+* weekday 7-to-0 conversion corrupting ranges ([#580](https://github.com/node-cron/node-cron/issues/580)) ([c8a3943](https://github.com/node-cron/node-cron/commit/c8a3943817cc1338d4f03dbc7ad52fa34d449134))
+
+
+### Changed
+
+* replace chai and sinon with native vitest assertions ([#590](https://github.com/node-cron/node-cron/issues/590)) ([d29d07a](https://github.com/node-cron/node-cron/commit/d29d07a005911b4ae19ce5a6bb55571018972e1f))
+
 ## [4.5.0] - 2026-06-21
 
 ### Added
