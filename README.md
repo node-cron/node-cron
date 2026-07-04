@@ -55,6 +55,8 @@ Pass a file path instead of a function to run a job in an isolated forked proces
 cron.schedule('0 3 * * *', './tasks/backup.js');
 ```
 
+> **Bundlers:** background tasks fork a helper that node-cron resolves relative to its own files in `node_modules`. If you bundle your app (esbuild, webpack, Rollup, etc.), mark node-cron as external so it stays on disk (`--external:node-cron`, or `externals: ['node-cron']` in webpack). Otherwise the fork fails with `Cannot find module '.../daemon.js'`. Inline function tasks are unaffected.
+
 ## Runtime Control
 
 Every task exposes a single consistent interface for control and inspection:
