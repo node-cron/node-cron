@@ -165,6 +165,13 @@ export interface ScheduledTask {
   msToNext(): number | null;
   /** Whether an execution is currently in progress. */
   isBusy(): boolean;
+  /**
+   * Whether any run is currently in progress, including a manual `execute()`.
+   * Unlike `isBusy()` (which reflects the scheduled lifecycle state), this also
+   * reports invoked runs, so it can be polled for "is anything running right
+   * now" (e.g. graceful shutdown that waits for in-flight work).
+   */
+  isExecuting(): boolean;
   /** Remaining scheduled executions when `maxExecutions` is set, otherwise `undefined`. Manual `execute()` calls do not affect this. */
   runsLeft(): number | undefined;
   /** The original cron expression. */
