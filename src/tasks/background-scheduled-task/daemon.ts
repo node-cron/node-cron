@@ -52,13 +52,9 @@ export async function startDaemon(message: any): Promise<InlineScheduledTask> {
  * (missing file, a runtime that cannot run the file, unsupported TS syntax in
  * strip-only mode, etc.). We must surface the real reason rather than crash.
  *
- * HACK: CJS vs ESM combined with Windows vs Linux path/URL rules:
- *   1. On CJS, require should always receive a path
- *   2. On ESM + Windows, import should always receive a file URL
- *   3. On ESM + Linux, import can receive either a URL or a path
- * We cannot reliably tell at runtime which we are in, so we try the path first
- * and fall back to a file URL. If both fail we throw the FIRST error, which is
- * the meaningful one (the fallback usually fails with an unrelated URL error).
+ * Windows and Linux differ in the path/URL shapes import() accepts, so try the
+ * original specifier first and fall back to a file path. If both fail we throw
+ * the first error, which is usually the meaningful task-loading failure.
  */
 async function importTaskModule(path: string) {
   try {

@@ -6,19 +6,13 @@
   "license": "ISC",
   "homepage": "https://nodecron.com",
   "type": "module",
-  "main": "./dist/node-cron.cjs",
-  "module": "./dist/node-cron.js",
+  "main": "./dist/node-cron.js",
   "types": "./dist/node-cron.d.ts",
   "exports": {
     ".": {
-      "import": {
-        "types": "./dist/node-cron.d.ts",
-        "default": "./dist/node-cron.js"
-      },
-      "require": {
-        "types": "./dist/node-cron.d.cts",
-        "default": "./dist/node-cron.cjs"
-      }
+      "types": "./dist/node-cron.d.ts",
+      "module-sync": "./dist/node-cron.js",
+      "default": "./dist/node-cron.js"
     }
   },
   "scripts": {
@@ -32,7 +26,7 @@
     "prepack": "npm run build"
   },
   "engines": {
-    "node": ">=20"
+    "node": "^20.19.0 || >=22.12.0"
   },
   "files": [
     "dist/"
@@ -71,7 +65,6 @@
     "@eslint/js": "^9.26.0",
     "@rollup/plugin-commonjs": "^29.0.3",
     "@rollup/plugin-node-resolve": "^16.0.3",
-    "@rollup/plugin-replace": "^6.0.3",
     "@rollup/plugin-typescript": "^12.3.0",
     "@types/expect": "^1.20.4",
     "@types/node": "^22.15.3",

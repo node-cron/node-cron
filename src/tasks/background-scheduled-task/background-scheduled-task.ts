@@ -11,9 +11,7 @@ import logger, { Logger } from '../../logger';
 import { TimeMatcher } from '../../time/time-matcher';
 import { RunCoordinator, SkipReason, resolveRunCoordinator } from '../../coordinator/run-coordinator';
 
-// fileURLToPath(import.meta.url) works on every ESM-capable Node (unlike
-// import.meta.dirname, which requires >= 20.11). The CJS build rewrites it to
-// __filename.
+// fileURLToPath(import.meta.url) works on every ESM-capable Node.
 const daemonPath = resolvePath(dirname(fileURLToPath(import.meta.url)), 'daemon.js');
 
 class TaskEmitter extends EventEmitter{}

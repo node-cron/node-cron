@@ -21,9 +21,7 @@ import { setRunCoordinator } from "./coordinator/run-coordinator";
 import path from "path";
 import { pathToFileURL, fileURLToPath } from "url";
 
-// fileURLToPath(import.meta.url) works on every ESM-capable Node (unlike
-// import.meta.filename, which requires >= 20.11). The CJS build rewrites it to
-// __filename.
+// fileURLToPath(import.meta.url) works on every ESM-capable Node.
 const moduleFilename = fileURLToPath(import.meta.url);
 
 /**
