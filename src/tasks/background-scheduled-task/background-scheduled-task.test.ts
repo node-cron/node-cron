@@ -408,6 +408,17 @@ describe('BackgroundScheduledTask', function() {
       expect(task.lastRun()?.error?.message).toMatch(/daemon exited unexpectedly/);
     });
 
+    it('isExecuting() tracks the in-flight run reported by the daemon', async function(){
+      const task = await startedTask();
+      expect(task.isExecuting()).toBe(false);
+
+      task.emitter.emit('execution:started', { execution: { id: 'e1', reason: 'invoked', startedAt: new Date() } } as any);
+      expect(task.isExecuting()).toBe(true);
+
+      task.emitter.emit('execution:finished', { execution: { id: 'e1', reason: 'invoked', finishedAt: new Date() } } as any);
+      expect(task.isExecuting()).toBe(false);
+    });
+
     it('start() re-forks successfully after a spontaneous death', async function(){
       const task = await startedTask();
 

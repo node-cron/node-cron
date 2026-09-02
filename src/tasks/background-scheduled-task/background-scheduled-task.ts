@@ -127,6 +127,10 @@ class BackgroundScheduledTask implements ScheduledTask{
     return this.getStatus() === 'running';
   }
 
+  isExecuting(): boolean {
+    return this.executing;
+  }
+
   runsLeft(): number | undefined {
     if (this.options?.maxExecutions == null) return undefined;
     return Math.max(0, this.options.maxExecutions - this.runCount);
