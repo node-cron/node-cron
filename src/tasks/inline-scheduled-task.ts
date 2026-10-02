@@ -14,9 +14,10 @@ class TaskEmitter extends EventEmitter{}
 // throws synchronously or returns a rejecting promise must not affect the
 // execution it was notified about (see InlineScheduledTask event emission).
 function safeEmit(emitter: TaskEmitter, event: TaskEvent, context: TaskContext, onError: (error: Error) => void): void {
-  for (const listener of emitter.listeners(event)) {
+  // Keep once wrappers so they remove themselves before invoking the listener.
+  for (const listener of emitter.rawListeners(event)) {
     try {
-      Promise.resolve((listener as (context: TaskContext) => any)(context)).catch(onError);
+      Promise.resolve((listener as (context: TaskContext) => any).call(emitter, context)).catch(onError);
     } catch (error: any) {
       onError(error);
     }

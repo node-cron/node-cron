@@ -335,6 +335,64 @@ describe('InlineScheduledTask', function() {
     expect(captured.errors.length).toBeGreaterThan(0);
   });
 
+  it('removes a once listener after its first execution', async function(){
+    const task = new InlineScheduledTask('* * * * * *', async () => 'ok');
+    const listener = vi.fn();
+    task.once('execution:finished', listener);
+
+    await task.execute();
+    await task.execute();
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(task.emitter.listenerCount('execution:finished')).toBe(0);
+  });
+
+  it('removes a once listener before a reentrant event', function(){
+    const task = new InlineScheduledTask('* * * * *', () => {});
+    let calls = 0;
+    task.once('task:started', () => {
+      calls++;
+      if (calls === 1) {
+        task.stop();
+        task.start();
+      }
+    });
+
+    try {
+      task.start();
+      expect(calls).toBe(1);
+      expect(task.emitter.listenerCount('task:started')).toBe(0);
+    } finally {
+      task.destroy();
+    }
+  });
+
+  it.each([false, true])('isolates once listener errors with async=%s', async function(asyncListener){
+    const captured = makeLogger();
+    const task = new InlineScheduledTask('* * * * * *', async () => 'ok', { logger: captured });
+    const error = new Error('once listener boom');
+    const listener = () => { throw error; };
+    task.once('execution:finished', asyncListener ? async () => listener() : listener);
+
+    expect(await task.execute()).toBe('ok');
+    expect(await task.execute()).toBe('ok');
+    await wait(20);
+
+    expect(captured.errors).toEqual([error]);
+    expect(task.lastRun()?.error).toBeUndefined();
+    expect(task.emitter.listenerCount('execution:finished')).toBe(0);
+  });
+
+  it('calls a normal listener with its EventEmitter receiver', async function(){
+    const task = new InlineScheduledTask('* * * * * *', async () => 'ok');
+    const listener = vi.fn();
+    task.on('execution:finished', listener);
+
+    await task.execute();
+
+    expect(listener.mock.contexts).toEqual([task.emitter]);
+  });
+
   it('manual execute() does not count toward maxExecutions or get blocked by it', async function(){
     const task = new InlineScheduledTask('* * * * * *', async () => 'ok', { maxExecutions: 2 });
 
