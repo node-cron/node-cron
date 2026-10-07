@@ -242,7 +242,13 @@ export class InlineScheduledTask implements ScheduledTask {
       this.on('execution:finished', onFinished);
       this.on('execution:failed', onFail);
 
-      this.runner.execute(id);
+      // A failing onError hook (e.g. a throwing logger) rejects here before
+      // execution:failed is emitted, so settle the promise ourselves.
+      this.runner.execute(id).catch((error: any) => {
+        this.off('execution:finished', onFinished);
+        this.off('execution:failed', onFail);
+        reject(error);
+      });
     })
   }
 
