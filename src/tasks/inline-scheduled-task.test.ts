@@ -73,6 +73,25 @@ describe('InlineScheduledTask', function() {
     task.destroy();
   });
 
+  it('execute() settles when the logger throws while reporting a failure', async function(){
+    const logger = {
+      info() {}, warn() {}, debug() {},
+      error() { throw new Error('logger boom'); }
+    };
+    const task = new InlineScheduledTask('* * * * * *', async () => {
+      throw new Error('task boom');
+    }, { logger });
+
+    const outcome = await Promise.race([
+      task.execute().then(() => 'resolved', (error) => error.message),
+      new Promise(resolve => setTimeout(() => resolve('hung'), 500))
+    ]);
+
+    expect(outcome).not.toBe('hung');
+    expect(task.emitter.listenerCount('execution:failed')).toBe(0);
+    task.destroy();
+  });
+
   it('emmits task:started', async function(){
     const task = new InlineScheduledTask('* * * * * *', async ()=> { return "task result" });
     const eventCaught = new Promise<TaskContext>(resolve => {
