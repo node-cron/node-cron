@@ -189,33 +189,35 @@ export class Runner {
 
       const execute = async () => {
         try {
-          this.runCount++;
-          execution.startedAt = new Date();
-          const result = await this.onMatch(date, execution);
-          execution.finishedAt = new Date();
-          execution.result = result;
-        } catch (error: any) {
-          execution.finishedAt = new Date();
-          execution.error = error;
           try {
-            this.onError(date, error, execution);
+            this.runCount++;
+            execution.startedAt = new Date();
+            const result = await this.onMatch(date, execution);
+            execution.finishedAt = new Date();
+            execution.result = result;
+          } catch (error: any) {
+            execution.finishedAt = new Date();
+            execution.error = error;
+            try {
+              this.onError(date, error, execution);
+            } catch (hookError: any) {
+              this.onErrorFallback(date, hookError);
+            }
+            return;
+          }
+
+          // A throwing/rejecting onFinished hook must not reclassify this
+          // successful run as failed.
+          try {
+            await this.onFinished(date, execution);
           } catch (hookError: any) {
             this.onErrorFallback(date, hookError);
           }
-          return;
-        }
-
-        // A throwing/rejecting onFinished hook must not reclassify this
-        // successful run as failed.
-        try {
-          await this.onFinished(date, execution);
-        } catch (hookError: any) {
-          this.onErrorFallback(date, hookError);
-        }
-
-        if (this.maxExecutions && this.runCount >= this.maxExecutions) {
-          this.onMaxExecutions(date);
-          this.stop();
+        } finally {
+          if (this.maxExecutions && this.runCount >= this.maxExecutions) {
+            this.onMaxExecutions(date);
+            this.stop();
+          }
         }
       };
 
