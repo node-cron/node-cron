@@ -386,7 +386,5 @@ function getDelay(nextRun: Date) {
 }
 
 function nowWithoutMs(): Date{
-  const date = new Date();
-  date.setMilliseconds(0);
-  return date;
+  return new Date(Math.floor(Date.now() / 1000) * 1000);
 }
