@@ -385,8 +385,12 @@ function getDelay(nextRun: Date) {
   return Math.max(0, delay);
 }
 
+// Truncate on the epoch, never with setMilliseconds(): that setter goes through
+// the process's local time, and during a DST fall-back the repeated local hour
+// is ambiguous, so it resolves to the *first* occurrence and moves "now" one
+// hour back. That stalled every schedule for the whole repeated hour whenever
+// the process timezone had DST, whatever the task timezone was.
 function nowWithoutMs(): Date{
-  const date = new Date();
-  date.setMilliseconds(0);
-  return date;
+  const now = Date.now();
+  return new Date(now - (now % 1000));
 }
