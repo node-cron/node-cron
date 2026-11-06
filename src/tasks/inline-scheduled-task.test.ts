@@ -1,7 +1,45 @@
 import { InlineScheduledTask } from './inline-scheduled-task';
 import { TaskContext } from './scheduled-task';
+import { vi } from 'vitest';
 
 describe('InlineScheduledTask', function() {
+  it.each(['throw', 'reject'])('destroys a task at maxExecutions after a scheduled %s', async function(failure){
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+    const error = new Error('task failed');
+    const taskFn = vi.fn(() => {
+      if (failure === 'throw') throw error;
+      return Promise.reject(error);
+    });
+    const task = new InlineScheduledTask('* * * * * *', taskFn, {
+      maxExecutions: 1,
+      logger: makeLogger()
+    });
+    const events: string[] = [];
+    let reportedError: Error | undefined;
+    task.on('execution:failed', context => {
+      events.push('failed');
+      reportedError = context.execution?.error;
+    });
+    task.on('execution:finished', () => { events.push('finished'); });
+    task.on('execution:maxReached', () => { events.push('maxReached'); });
+    task.on('task:destroyed', () => { events.push('destroyed'); });
+
+    try {
+      task.start();
+      await vi.advanceTimersByTimeAsync(3000);
+
+      expect(taskFn).toHaveBeenCalledTimes(1);
+      expect(reportedError).toBe(error);
+      expect(events).toEqual(['failed', 'maxReached', 'destroyed']);
+      expect(task.getStatus()).toBe('destroyed');
+      expect(task.runsLeft()).toBe(0);
+    } finally {
+      task.destroy();
+      vi.useRealTimers();
+    }
+  });
+
   it('builds with default values', function(){
     const task = new InlineScheduledTask('* * * * * *', ()=> {});
 

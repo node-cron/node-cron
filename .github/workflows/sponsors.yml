@@ -11,6 +11,8 @@ permissions:
 
 jobs:
   sponsors:
+    # Upstream only: forks inherit the schedule but not SPONSORS_TOKEN.
+    if: github.repository == 'node-cron/node-cron'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
