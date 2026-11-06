@@ -169,8 +169,22 @@ export interface ScheduledTask {
   match(date: Date): boolean;
   /** Milliseconds until the next run, or `null` when the task is stopped. */
   msToNext(): number | null;
-  /** Whether a **scheduled** execution is currently in progress. Manual `execute()` is invisible here. */
+  /** Whether a **scheduled** execution is currently in progress. Manual `execute()` is invisible here; use `isExecuting()` to include it. */
   isBusy(): boolean;
+  /**
+   * Whether any run is currently in progress, scheduled **or** manual
+   * (`execute()`). Read-only: it never changes `getStatus()`, `isBusy()`,
+   * `noOverlap` or `maxExecutions`.
+   *
+   * Relation to `isBusy()`: if `isBusy()` is `true`, `isExecuting()` is
+   * `true` as well, but not the other way around. `isExecuting()` is also
+   * `true` during a manual `execute()` (the task stays `idle`/`stopped`) and
+   * while a scheduled run keeps going after `stop()`.
+   *
+   * Overlapping runs are all tracked: it stays `true` until the last one ends.
+   * Useful for graceful shutdown: wait until it is `false` before exiting.
+   */
+  isExecuting(): boolean;
   /** Remaining scheduled executions when `maxExecutions` is set, otherwise `undefined`. Manual `execute()` calls do not affect this. */
   runsLeft(): number | undefined;
   /** The original cron expression. */

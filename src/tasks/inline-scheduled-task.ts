@@ -37,6 +37,10 @@ export class InlineScheduledTask implements ScheduledTask {
   // The last actual execution. Recorded when a run really finishes or fails,
   // keyed off the execution's own timestamps rather than the tick that armed it.
   private _lastRun: LastRun | null = null;
+  // Number of runs currently in flight, scheduled or invoked. Backs
+  // isExecuting(); kept separate from the lifecycle state so a manual
+  // execute() is observable without altering getStatus()/isBusy().
+  private _runsInFlight = 0;
 
   constructor(cronExpression: string, taskFn: TaskFn, options?: TaskOptions){
     this.emitter = new TaskEmitter();
@@ -59,14 +63,22 @@ export class InlineScheduledTask implements ScheduledTask {
       missedExecutionTolerance: options?.missedExecutionTolerance,
       logger: this.logger,
       beforeRun: (date: Date, execution: Execution) => {
-        if(execution.reason === 'scheduled'){
+        // Track every run (scheduled or invoked) so isExecuting() can report
+        // whether work is in flight. The lifecycle state, by contrast, still
+        // flips only for scheduled runs: a manual execute() deliberately stays
+        // outside the state machine (it can run on a stopped task, does not
+        // count toward maxExecutions, etc). changeState is a no-op until the
+        // task is started.
+        this._runsInFlight++;
+        if (execution.reason === 'scheduled') {
           this.changeState('running');
         }
         this.emit('execution:started', this.createContext(date, execution));
         return true;
       },
       onFinished: (date: Date, execution: Execution) => {
-        if(execution.reason === 'scheduled'){
+        this._runsInFlight--;
+        if (execution.reason === 'scheduled') {
           this.changeState('idle');
         }
         this.recordLastRun(execution);
@@ -74,10 +86,13 @@ export class InlineScheduledTask implements ScheduledTask {
         return true;
       },
       onError: (date: Date, error: Error, execution: Execution) => {
+        this._runsInFlight--;
         this.logger.error(error);
         this.recordLastRun(execution);
         this.emit('execution:failed', this.createContext(date, execution));
-        this.changeState('idle');
+        if (execution.reason === 'scheduled') {
+          this.changeState('idle');
+        }
       },
       onOverlap: (date: Date) => {
         this.emit('execution:overlap', this.createContext(date));
@@ -140,6 +155,10 @@ export class InlineScheduledTask implements ScheduledTask {
 
   isBusy(): boolean {
     return this.getStatus() === 'running';
+  }
+
+  isExecuting(): boolean {
+    return this._runsInFlight > 0;
   }
 
   runsLeft(): number | undefined {

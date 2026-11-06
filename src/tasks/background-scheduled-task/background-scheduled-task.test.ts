@@ -408,6 +408,49 @@ describe('BackgroundScheduledTask', function() {
       expect(task.lastRun()?.error?.message).toMatch(/daemon exited unexpectedly/);
     });
 
+    it('isExecuting() tracks the in-flight run reported by the daemon', async function(){
+      const task = await startedTask();
+      expect(task.isExecuting()).toBe(false);
+
+      task.emitter.emit('execution:started', { execution: { id: 'e1', reason: 'invoked', startedAt: new Date() } } as any);
+      expect(task.isExecuting()).toBe(true);
+
+      task.emitter.emit('execution:finished', { execution: { id: 'e1', reason: 'invoked', finishedAt: new Date() } } as any);
+      expect(task.isExecuting()).toBe(false);
+    });
+
+    it('isExecuting() stays true until the last overlapping run finishes', async function(){
+      const task = await startedTask();
+      const started = (id: string) => task.emitter.emit('execution:started', { execution: { id, reason: 'invoked', startedAt: new Date() } } as any);
+      const finished = (id: string) => task.emitter.emit('execution:finished', { execution: { id, reason: 'invoked', finishedAt: new Date() } } as any);
+
+      started('a');
+      started('b');
+      finished('a');
+      expect(task.isExecuting()).toBe(true);
+
+      finished('a'); // duplicated event must not skew the tracking
+      expect(task.isExecuting()).toBe(true);
+
+      finished('b');
+      expect(task.isExecuting()).toBe(false);
+    });
+
+    it('fails every in-flight run when the daemon dies unexpectedly', async function(){
+      const task = await startedTask();
+      task.emitter.emit('execution:started', { execution: { id: 'a', reason: 'invoked', startedAt: new Date() } } as any);
+      task.emitter.emit('execution:started', { execution: { id: 'b', reason: 'scheduled', startedAt: new Date() } } as any);
+
+      const failed: string[] = [];
+      task.on('execution:failed', (ctx: any) => { failed.push(ctx.execution.id); });
+
+      fakeChildProcess.emit('exit', null, 'SIGKILL');
+      await wait(10);
+
+      expect(failed.sort()).toEqual(['a', 'b']);
+      expect(task.isExecuting()).toBe(false);
+    });
+
     it('start() re-forks successfully after a spontaneous death', async function(){
       const task = await startedTask();
 
