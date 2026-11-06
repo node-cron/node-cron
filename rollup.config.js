@@ -1,4 +1,3 @@
-import commonjs from "@rollup/plugin-commonjs";
 import resolve from "@rollup/plugin-node-resolve";
 import replace from "@rollup/plugin-replace";
 import typescript from "@rollup/plugin-typescript";
@@ -22,7 +21,6 @@ const external = [
 
 const basePlugins = () => [
   resolve(),
-  commonjs(),
   typescript({
     tsconfig: "./tsconfig.json",
     sourceMap: true,
