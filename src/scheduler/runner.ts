@@ -215,7 +215,13 @@ export class Runner {
           }
         } finally {
           if (this.maxExecutions && this.runCount >= this.maxExecutions) {
-            this.onMaxExecutions(date);
+            // Runs inside `finally`: a throwing hook must not replace an
+            // exception already propagating, so route it to the fallback.
+            try {
+              this.onMaxExecutions(date);
+            } catch (hookError: any) {
+              this.onErrorFallback(date, hookError);
+            }
             this.stop();
           }
         }
