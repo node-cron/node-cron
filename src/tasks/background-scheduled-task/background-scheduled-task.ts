@@ -18,6 +18,10 @@ const daemonPath = resolvePath(dirname(fileURLToPath(import.meta.url)), 'daemon.
 
 class TaskEmitter extends EventEmitter{}
 
+// Real events always carry an id; the fallback only keeps tracking sane for a
+// malformed one instead of throwing.
+const executionKey = (execution?: Execution): string => execution?.id ?? '';
+
 class BackgroundScheduledTask implements ScheduledTask{
   emitter: TaskEmitter;
   id: string;
@@ -37,14 +41,14 @@ class BackgroundScheduledTask implements ScheduledTask{
   // The last actual execution, mirrored in the parent from the daemon's
   // forwarded finished/failed events.
   private _lastRun: LastRun | null = null;
-  // Tracked separately from stateMachine.state, which a 'task:stopped' message
-  // overwrites before the kill decision runs, hiding whether a run is still live.
-  private executing = false;
+  // Runs currently in flight, keyed by execution id. Tracked separately from
+  // stateMachine.state, which a 'task:stopped' message overwrites before the
+  // kill decision runs, hiding whether a run is still live. A map (not a
+  // boolean) because runs can overlap: the first to finish must not hide the
+  // others. Keyed by id so a duplicated or lost event cannot leave it skewed.
+  private inFlight = new Map<string, Execution>();
   private killPending = false;
   private pendingKillCleanup?: () => void;
-  // The in-flight execution forwarded by 'execution:started', kept around so a
-  // daemon death mid-run can still report it via 'execution:failed'.
-  private currentExecution?: Execution;
   // Set right before we kill the fork ourselves, so the 'exit' handler can
   // tell an intentional teardown from the daemon dying on its own.
   private killRequested = false;
@@ -69,13 +73,12 @@ class BackgroundScheduledTask implements ScheduledTask{
     // not (see runner.ts execute()).
     this.on('execution:started', (context) => {
       if (context?.execution?.reason === 'scheduled') this.runCount++;
-      this.executing = true;
-      this.currentExecution = context?.execution;
+      this.inFlight.set(executionKey(context?.execution), context?.execution ?? ({ reason: 'scheduled' } as Execution));
     });
     // Mirror the last actual execution from the daemon's events. Both carry the
     // execution's own timestamps, so lastRun reflects the real run time.
-    this.on('execution:finished', (context) => { this.executing = false; this.currentExecution = undefined; this.recordLastRun(context.execution); });
-    this.on('execution:failed', (context) => { this.executing = false; this.currentExecution = undefined; this.recordLastRun(context.execution); });
+    this.on('execution:finished', (context) => { this.inFlight.delete(executionKey(context.execution)); this.recordLastRun(context.execution); });
+    this.on('execution:failed', (context) => { this.inFlight.delete(executionKey(context.execution)); this.recordLastRun(context.execution); });
     // The logger lives in the parent process: it cannot cross the fork
     // boundary. The daemon runs with a no-op logger and forwards events, and
     // this process logs from those events using the configured logger.
@@ -127,6 +130,10 @@ class BackgroundScheduledTask implements ScheduledTask{
     return this.getStatus() === 'running';
   }
 
+  isExecuting(): boolean {
+    return this.inFlight.size > 0;
+  }
+
   runsLeft(): number | undefined {
     if (this.options?.maxExecutions == null) return undefined;
     return Math.max(0, this.options.maxExecutions - this.runCount);
@@ -162,7 +169,7 @@ class BackgroundScheduledTask implements ScheduledTask{
   private killForkWhenSettled(): void {
     if (!this.forkProcess) return;
 
-    if (!this.executing) {
+    if (this.inFlight.size === 0) {
       this.killFork();
       return;
     }
@@ -203,10 +210,12 @@ class BackgroundScheduledTask implements ScheduledTask{
     const erro = new Error(`daemon exited unexpectedly (code ${code}, signal ${signal})`);
     this.logger.error(erro);
 
-    if (this.executing) {
-      const execution: Execution = { id: createID(), reason: 'scheduled', ...this.currentExecution, error: erro, finishedAt: new Date() };
+    // Fail every run that was in flight: the daemon took them all down.
+    for (const inFlight of [...this.inFlight.values()]) {
+      const execution: Execution = { ...inFlight, error: erro, finishedAt: new Date() };
       this.emitter.emit('execution:failed', this.createContext(new Date(), execution));
     }
+    this.inFlight.clear();
 
     try {
       this.stateMachine.changeState('stopped');

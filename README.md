@@ -72,11 +72,23 @@ task.start();         // resume
 task.destroy();       // remove permanently
 task.getStatus();     // 'stopped' | 'idle' | 'running' | 'destroyed'
 task.execute();       // run now (does not affect getStatus / isBusy / noOverlap / maxExecutions)
+task.isExecuting();   // true while any run (scheduled or execute()) is in progress
 task.getNextRun();    // next scheduled Date, or null
 task.lastRun();       // { date, result } or { date, error }, or null
 ```
 
 `execute()` forces the attached function to run immediately. It intentionally stays outside the scheduler state machine: it can run on a stopped task, does not flip `getStatus()` / `isBusy()`, does not participate in `noOverlap`, and does not count toward `maxExecutions`. See [Task Lifecycle](https://nodecron.com/task-lifecycle#execute).
+
+Use `isExecuting()` to know whether the function is running right now, whichever way it was started. It is read-only and never changes `getStatus()`, `isBusy()`, `noOverlap` or `maxExecutions`. If `isBusy()` is `true`, `isExecuting()` is `true` too, but not the other way around:
+
+| Situation | `getStatus()` | `isBusy()` | `isExecuting()` |
+| --- | --- | --- | --- |
+| Scheduled run in progress | `running` | `true` | `true` |
+| Manual `execute()` in progress | unchanged (`idle` / `stopped`) | `false` | `true` |
+| Scheduled run still going after `stop()` | `stopped` | `false` | `true` |
+| Nothing running | `idle` / `stopped` | `false` | `false` |
+
+When runs overlap it stays `true` until the last one ends, which makes it suitable for graceful shutdown: wait for `isExecuting()` to be `false` on every task before exiting.
 
 ## Events
 

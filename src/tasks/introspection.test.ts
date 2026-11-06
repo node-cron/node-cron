@@ -72,6 +72,65 @@ describe('task introspection', function () {
       release();
       task.stop();
     });
+
+    it('stays false for a manually invoked run (execute() is outside the lifecycle)', async function () {
+      // execute() runs with reason 'invoked' and deliberately stays outside the
+      // state machine, so it must NOT flip getStatus()/isBusy(). isExecuting()
+      // is the separate signal that does reflect it (see below).
+      let release!: () => void;
+      const gate = new Promise<void>((r) => { release = r; });
+      const task = new InlineScheduledTask('0 0 12 * * *', async () => { await gate; });
+      const started = new Promise<void>((r) => task.on('execution:started', () => r()));
+
+      task.start();
+      task.execute();
+      await started;
+      expect(task.isBusy()).toBe(false);
+      expect(task.getStatus()).toBe('idle');
+
+      release();
+      task.stop();
+    });
+  });
+
+  describe('isExecuting', function () {
+    it('is true while a manually invoked run is in progress, without touching lifecycle state', async function () {
+      // Gate the handler, fire execute() without awaiting, wait for the run to
+      // start, then assert isExecuting() sees it while isBusy()/getStatus() do
+      // not: the manual run is tracked separately from the lifecycle state.
+      let release!: () => void;
+      const gate = new Promise<void>((r) => { release = r; });
+      const task = new InlineScheduledTask('0 0 12 * * *', async () => { await gate; });
+      const started = new Promise<void>((r) => task.on('execution:started', () => r()));
+
+      task.start();
+      task.execute();
+      await started;
+      expect(task.isExecuting()).toBe(true);
+      expect(task.isBusy()).toBe(false);
+      expect(task.getStatus()).toBe('idle');
+
+      const finished = new Promise<void>((r) => task.on('execution:finished', () => r()));
+      release();
+      await finished;
+      expect(task.isExecuting()).toBe(false);
+      task.stop();
+    });
+
+    it('is true during a scheduled run too', async function () {
+      let release!: () => void;
+      const gate = new Promise<void>((r) => { release = r; });
+      const task = new InlineScheduledTask('* * * * * *', async () => { await gate; });
+      const started = new Promise<void>((r) => task.on('execution:started', () => r()));
+
+      task.start();
+      await started;
+      expect(task.isExecuting()).toBe(true);
+      expect(task.isBusy()).toBe(true);
+
+      release();
+      task.stop();
+    });
   });
 
   describe('runsLeft', function () {
