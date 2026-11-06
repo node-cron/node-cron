@@ -71,9 +71,12 @@ task.stop();          // pause
 task.start();         // resume
 task.destroy();       // remove permanently
 task.getStatus();     // 'stopped' | 'idle' | 'running' | 'destroyed'
+task.execute();       // run now (does not affect getStatus / isBusy / noOverlap / maxExecutions)
 task.getNextRun();    // next scheduled Date, or null
 task.lastRun();       // { date, result } or { date, error }, or null
 ```
+
+`execute()` forces the attached function to run immediately. It intentionally stays outside the scheduler state machine: it can run on a stopped task, does not flip `getStatus()` / `isBusy()`, does not participate in `noOverlap`, and does not count toward `maxExecutions`. See [Task Lifecycle](https://nodecron.com/task-lifecycle#execute).
 
 ## Events
 

@@ -152,8 +152,14 @@ export interface ScheduledTask {
   start(): void | Promise<void>;
   /** Calling this on a destroyed task is a no-op. */
   stop(): void | Promise<void>;
+  /** Scheduler state only. Manual `execute()` runs do not change this. */
   getStatus(): string;
   destroy(): void | Promise<void>;
+  /**
+   * Run the task function immediately, outside the schedule.
+   * Does not flip `getStatus()` / `isBusy()`, does not participate in `noOverlap`,
+   * and does not count toward `maxExecutions`. Can run on a stopped task.
+   */
   execute(): Promise<any>;
   getNextRun(): Date | null;
 
@@ -163,7 +169,7 @@ export interface ScheduledTask {
   match(date: Date): boolean;
   /** Milliseconds until the next run, or `null` when the task is stopped. */
   msToNext(): number | null;
-  /** Whether an execution is currently in progress. */
+  /** Whether a **scheduled** execution is currently in progress. Manual `execute()` is invisible here. */
   isBusy(): boolean;
   /** Remaining scheduled executions when `maxExecutions` is set, otherwise `undefined`. Manual `execute()` calls do not affect this. */
   runsLeft(): number | undefined;
