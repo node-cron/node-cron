@@ -114,6 +114,26 @@ describe('DST & timezone guarantees', function () {
   });
 
   describe('fall-back (overlap)', function () {
+
+    it.each([
+      ['Europe/London', '30 1 * * *', '2025-10-25T12:00:00Z', '2025-10-26T00:30:00.000Z', '2025-10-27T01:30:00.000Z', 60],
+      ['Europe/Berlin', '30 2 * * *', '2025-10-25T12:00:00Z', '2025-10-26T00:30:00.000Z', '2025-10-27T01:30:00.000Z', 60],
+      ['Europe/Helsinki', '30 3 * * *', '2025-10-25T12:00:00Z', '2025-10-26T00:30:00.000Z', '2025-10-27T01:30:00.000Z', 60],
+      ['Australia/Sydney', '30 2 * * *', '2026-04-04T00:00:00Z', '2026-04-04T15:30:00.000Z', '2026-04-05T16:30:00.000Z', 60],
+      ['Pacific/Auckland', '30 2 * * *', '2026-04-04T00:00:00Z', '2026-04-04T13:30:00.000Z', '2026-04-05T14:30:00.000Z', 60],
+      ['Australia/Lord_Howe', '45 1 * * *', '2025-04-05T00:00:00Z', '2025-04-05T14:45:00.000Z', '2025-04-06T15:15:00.000Z', 30],
+      ['Pacific/Chatham', '0 3 * * *', '2025-04-05T00:00:00Z', '2025-04-05T13:15:00.000Z', '2025-04-06T14:15:00.000Z', 60],
+    ] as const)('runs the first occurrence once in %s', function (timezone, expression, base, first, nextDay, shift) {
+      const matcher = new TimeMatcher(expression, timezone);
+      expect(matcher.getNextMatch(new Date(base)).toISOString()).toBe(first);
+      expect(matcher.getNextMatch(new Date(first)).toISOString()).toBe(nextDay);
+      // Even when scheduling starts just before the second occurrence, the
+      // first occurrence has passed and must not be repeated.
+      const beforeSecond = new Date(Date.parse(first) + (shift - 1) * MINUTE);
+      expect(matcher.getNextMatch(beforeSecond).toISOString()).toBe(nextDay);
+    });
+
+
     it('a daily time inside the overlap fires on the first occurrence', function () {
       // 2025-11-02 New York: 02:00 -> 01:00. 01:15 happens twice; fire EDT (first).
       const seq = runs('15 1 * * *', 'America/New_York', '2025-11-01T12:00:00Z', 1);

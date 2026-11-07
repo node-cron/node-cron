@@ -91,3 +91,41 @@ describe('localTimeToTimestamp', function(){
     expect(new Date(ts).toISOString()).toBe('2026-11-01T05:30:00.000Z');
   });
 })
+
+describe('localTimeToTimestamp fall-back disambiguation', function () {
+
+  it('supports the earliest representable UTC date', function () {
+    const timestamp = localTimeToTimestamp({
+      year: -271821, month: 4, day: 20,
+      hour: 0, minute: 0, second: 0, millisecond: 0,
+    }, 'UTC');
+    expect(timestamp).toBe(-8640000000000000);
+  });
+
+
+  it.each([
+    ['Europe/London', '2025-10-26T01:30:00.000', '2025-10-26T00:30:00.000Z'],
+    ['Europe/Berlin', '2025-10-26T02:30:00.000', '2025-10-26T00:30:00.000Z'],
+    ['Europe/Helsinki', '2025-10-26T03:30:00.000', '2025-10-26T00:30:00.000Z'],
+    ['Australia/Sydney', '2026-04-05T02:30:00.000', '2026-04-04T15:30:00.000Z'],
+    ['Pacific/Auckland', '2026-04-05T02:30:00.000', '2026-04-04T13:30:00.000Z'],
+    ['Australia/Lord_Howe', '2025-04-06T01:45:00.000', '2025-04-05T14:45:00.000Z'],
+    ['Pacific/Chatham', '2025-04-06T03:00:00.000', '2025-04-05T13:15:00.000Z'],
+    ['Europe/London', '2025-10-26T01:00:00.000', '2025-10-26T00:00:00.000Z'],
+    ['Europe/London', '2025-10-26T01:59:59.999', '2025-10-26T00:59:59.999Z'],
+    ['Europe/London', '2025-10-26T02:00:00.000', '2025-10-26T02:00:00.000Z'],
+    ['Europe/London', '2025-03-30T01:30:00.000', '2025-03-30T01:30:00.000Z'],
+  ])('resolves %s %s to %s', function (timezone, wallClock, expected) {
+    const date = new Date(wallClock + 'Z');
+    const timestamp = localTimeToTimestamp({
+      year: date.getUTCFullYear(),
+      month: date.getUTCMonth() + 1,
+      day: date.getUTCDate(),
+      hour: date.getUTCHours(),
+      minute: date.getUTCMinutes(),
+      second: date.getUTCSeconds(),
+      millisecond: date.getUTCMilliseconds(),
+    }, timezone);
+    expect(new Date(timestamp).toISOString()).toBe(expected);
+  });
+});

@@ -74,7 +74,8 @@ function readsBackTo(timestamp: number, parts: WallClock, timezone?: string): bo
  * corrects with the offset actually in effect. Away from DST transitions the
  * first correction is exact. Near a transition both the pre- and post-shift
  * offsets are considered and the one that genuinely reads back to the
- * requested wall-clock wins. For a non-existent local time (the spring-forward
+ * requested wall-clock wins, choosing the earlier instant in an overlap.
+ * For a non-existent local time (the spring-forward
  * gap) neither reads back, so we resolve forward to the later instant instead
  * of drifting backwards into the gap (which used to yield a past date).
  */
@@ -86,6 +87,18 @@ export function localTimeToTimestamp(parts: WallClock, timezone?: string): numbe
 
   const firstOffset = getOffsetMinutes(new Date(guess), timezone);
   const candidate1 = guess - firstOffset * 60000;
+
+  // The first correction may already be the second occurrence of a repeated
+  // wall-clock time. Check the offset before the transition as well, and only
+  // accept the earlier candidate if it reads back to the requested fields.
+  const previousDay = new Date(candidate1 - 24 * 60 * 60 * 1000);
+  if (!Number.isNaN(previousDay.getTime())) {
+    const previousOffset = getOffsetMinutes(previousDay, timezone);
+    const earlierCandidate = guess - previousOffset * 60000;
+    if (earlierCandidate < candidate1 && readsBackTo(earlierCandidate, parts, timezone)) {
+      return earlierCandidate;
+    }
+  }
 
   const secondOffset = getOffsetMinutes(new Date(candidate1), timezone);
   if (secondOffset === firstOffset) {
