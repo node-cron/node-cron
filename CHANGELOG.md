@@ -6,6 +6,16 @@ follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 <!-- Unreleased changes are staged in the open release-please PR, not here. -->
 
+## [4.6.1](https://github.com/node-cron/node-cron/compare/v4.6.0...v4.6.1) (2026-11-07)
+
+
+### Fixed
+
+* compute nowWithoutMs() from the epoch so a DST process time zone cannot move "now" back an hour ([#626](https://github.com/node-cron/node-cron/issues/626)) ([80fd20a](https://github.com/node-cron/node-cron/commit/80fd20a3e921549ad2165043b9b137c885f4fde5)), closes [#624](https://github.com/node-cron/node-cron/issues/624)
+* honor maxExecutions for failing scheduled tasks ([#622](https://github.com/node-cron/node-cron/issues/622)) ([011bfbb](https://github.com/node-cron/node-cron/commit/011bfbba5883afef5f7caa2b7235ef02bb646a95))
+* preserve once listeners in inline tasks ([#620](https://github.com/node-cron/node-cron/issues/620)) ([252e5cd](https://github.com/node-cron/node-cron/commit/252e5cd7ee1b22dc11f7fb3c00ad29a21804d245))
+* settle task.execute() when the error hook throws ([#621](https://github.com/node-cron/node-cron/issues/621)) ([da425dd](https://github.com/node-cron/node-cron/commit/da425dd8a314c82ebf32d77f3d64a1a9b97a50ad))
+
 ## [4.6.0](https://github.com/node-cron/node-cron/compare/v4.5.0...v4.6.0) (2026-07-04)
 
 
