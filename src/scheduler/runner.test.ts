@@ -273,6 +273,42 @@ describe('scheduler/runner', function(){
 
   });
 
+  it('re-arms without running when the heartbeat wakes before its slot', async function(){
+    // A timer waking early (e.g. the clock stepped back) must not run the
+    // slot nor report it missed. Fake clock + a forced early reading keep this
+    // deterministic instead of depending on real timer jitter.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'], now: new Date('2026-01-01T00:00:00.000Z') });
+    try {
+      let runs = 0;
+      let missed = 0;
+      const runner = new Runner(new TimeMatcher('* * * * * *', 'UTC'), async () => { runs++; }, {
+        onMissedExecution: () => { missed++; }
+      });
+      runner.start();
+
+      // The heartbeat is armed for 00:00:01. Make its first reading look early.
+      const realNow = Date.now;
+      let early = true;
+      vi.spyOn(Date, 'now').mockImplementation(() => {
+        if (early) { early = false; return new Date('2026-01-01T00:00:00.500Z').getTime(); }
+        return realNow();
+      });
+
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(runs).toBe(0);
+      expect(missed).toBe(0);
+
+      // Once the clock is past the slot, it runs exactly once.
+      await vi.advanceTimersByTimeAsync(1);
+      expect(runs).toBe(1);
+      expect(missed).toBe(0);
+      runner.stop();
+    } finally {
+      vi.restoreAllMocks();
+      vi.useRealTimers();
+    }
+  });
+
   it('clears jitter timeout on stop', async function(){
     const timeMatcher = new TimeMatcher('* * * * * *');
     let taskCalled = false;
