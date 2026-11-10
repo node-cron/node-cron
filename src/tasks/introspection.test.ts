@@ -48,6 +48,14 @@ describe('task introspection', function () {
       const task = new InlineScheduledTask('0 0 12 * * *', () => {});
       expect(task.msToNext()).toBeNull();
     });
+
+    it('returns null once the task is destroyed', function () {
+      const task = new InlineScheduledTask('0 0 12 * * *', () => {}, { timezone: 'Etc/UTC' });
+      task.start();
+      task.destroy();
+      expect(task.getNextRun()).toBeNull();
+      expect(task.msToNext()).toBeNull();
+    });
   });
 
   describe('isBusy', function () {
