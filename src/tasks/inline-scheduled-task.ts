@@ -114,7 +114,7 @@ export class InlineScheduledTask implements ScheduledTask {
   }
 
   getNextRun(): Date | null{
-    if ( this.stateMachine.state !== 'stopped'){
+    if (this.stateMachine.state !== 'stopped' && this.stateMachine.state !== 'destroyed'){
       return this.runner.nextRun();
     }
     return null;

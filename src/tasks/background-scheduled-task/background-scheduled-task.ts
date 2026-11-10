@@ -98,7 +98,7 @@ class BackgroundScheduledTask implements ScheduledTask{
   }
 
   getNextRun(): Date | null {
-    if ( this.stateMachine.state !== 'stopped'){
+    if (this.stateMachine.state !== 'stopped' && this.stateMachine.state !== 'destroyed'){
       return this.timeMatcher.getNextMatch(new Date());
     }
     return null;
