@@ -1,5 +1,7 @@
 import { fork } from 'child_process';
 import { EventEmitter } from 'events';
+import { pathToFileURL } from 'url';
+import path from 'path';
 import cron, { solvePath } from './node-cron';
 import { InlineScheduledTask } from './tasks/inline-scheduled-task';
 
@@ -411,6 +413,24 @@ describe('node-cron', function() {
         expect(solvedPath).toBeDefined();
         expect(solvedPath).toContain(`file:///`);
         expect(solvedPath).toContain(path.slice(1));
+      });
+
+      it('resolves relative tasks from encoded ESM stack URLs', function(){
+        const moduleURL = new URL('./node-cron.ts', import.meta.url).href;
+        const callerURL = pathToFileURL(path.resolve('project space #é%', 'main.mjs')).href;
+        const OrigError = globalThis.Error;
+        const FakeError = class extends OrigError {
+          constructor(msg?: string) {
+            super(msg);
+            this.stack = `Error\n    at solvePath (${moduleURL}:1:1)\n    at createTask (${moduleURL}:2:1)\n    at ${callerURL}:3:1`;
+          }
+        };
+        globalThis.Error = FakeError as any;
+        try {
+          expect(solvePath('./job.mjs')).toBe(pathToFileURL(path.resolve('project space #é%', 'job.mjs')).href);
+        } finally {
+          globalThis.Error = OrigError;
+        }
       });
 
       it('throws when the caller cannot be located in the stack', function(){
