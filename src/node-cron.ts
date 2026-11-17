@@ -125,11 +125,13 @@ export function solvePath(filePath: string): string {
   const stackLines = new Error().stack?.split('\n');
   if(stackLines){
     stackLines?.shift();
-    const callerLine = stackLines?.find((line) => { return line.indexOf(moduleFilename) === -1; });
+    const moduleURL = pathToFileURL(moduleFilename).href;
+    const callerLine = stackLines?.find((line) => !line.includes(moduleFilename) && !line.includes(moduleURL));
     const match = callerLine?.match(/(file:\/\/)?(((\/?)(\w:))?([/\\].+)):\d+:\d+/);
    
     if (match) {
-      const dir = `${match[5] ?? ""}${path.dirname(match[6])}`;
+      const callerPath = match[1] ? fileURLToPath(match[1] + match[2]) : match[2];
+      const dir = path.dirname(callerPath);
       return pathToFileURL(path.resolve(dir, filePath)).href;
     }
   }
