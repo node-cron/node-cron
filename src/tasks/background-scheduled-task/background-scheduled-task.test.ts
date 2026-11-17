@@ -690,6 +690,41 @@ describe('BackgroundScheduledTask', function() {
       expect(result).toBeUndefined();
     });
 
+    it.each(['idle', 'finishes before acknowledgement', 'finishes after acknowledgement', 'already stopping'])(
+      'waits for destroy acknowledgement before killing the daemon (%s)', async function(execution){
+        const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
+        task.forkProcess = fakeChildProcess as any;
+        if (execution !== 'idle') task.emitter.emit('execution:started', {} as any);
+        if (execution === 'already stopping') task.emitter.emit('task:stopped');
+
+        const destroying = task.destroy();
+        try {
+          // The daemon's destroy() calls stop() first; the two IPC events
+          // can arrive separately, with an execution finishing between them.
+          task.emitter.emit('task:stopped');
+          if (execution === 'finishes before acknowledgement' || execution === 'already stopping') {
+            task.emitter.emit('execution:finished', { execution: {} } as any);
+          }
+          expect(fakeChildProcess.kill).not.toHaveBeenCalled();
+
+          task.emitter.emit('task:destroyed');
+          await expect(destroying).resolves.toBeUndefined();
+          expect(task.getStatus()).toBe('destroyed');
+
+          if (execution === 'finishes after acknowledgement') {
+            expect(fakeChildProcess.kill).not.toHaveBeenCalled();
+            task.emitter.emit('execution:finished', { execution: {} } as any);
+          }
+          expect(fakeChildProcess.kill).toHaveBeenCalledTimes(1);
+          expect(task.forkProcess).toBeUndefined();
+        } finally {
+          task.emitter.emit('task:destroyed');
+          task.emitter.emit('execution:finished', { execution: {} } as any);
+          await destroying;
+        }
+      }
+    );
+
     it('fails on destriy timeout', async function(){
       const task = new BackgroundScheduledTask('* * * * * *', './test-assets/dummy-task.js');
       task.forkProcess = fakeChildProcess as any;

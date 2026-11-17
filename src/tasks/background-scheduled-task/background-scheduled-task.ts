@@ -41,6 +41,7 @@ class BackgroundScheduledTask implements ScheduledTask{
   // overwrites before the kill decision runs, hiding whether a run is still live.
   private executing = false;
   private killPending = false;
+  private awaitingDestroy = false;
   private pendingKillCleanup?: () => void;
   // The in-flight execution forwarded by 'execution:started', kept around so a
   // daemon death mid-run can still report it via 'execution:failed'.
@@ -92,6 +93,7 @@ class BackgroundScheduledTask implements ScheduledTask{
     });
 
     this.on('task:destroyed', () => {
+      this.awaitingDestroy = false;
       this.killForkWhenSettled();
       this.stateMachine.changeState('destroyed');
     });
@@ -160,6 +162,9 @@ class BackgroundScheduledTask implements ScheduledTask{
   // abort it mid-execution. A truly stuck daemon is still force-killed by the
   // caller's stop()/destroy() timeout.
   private killForkWhenSettled(): void {
+    // destroy() first emits task:stopped in the daemon. Keep it alive until
+    // task:destroyed arrives, even if the current execution finishes first.
+    if (this.awaitingDestroy) return;
     if (!this.forkProcess) return;
 
     if (!this.executing) {
@@ -170,7 +175,7 @@ class BackgroundScheduledTask implements ScheduledTask{
     if (this.killPending) return;
     this.killPending = true;
 
-    const onSettled = () => this.killFork();
+    const onSettled = () => this.killForkWhenSettled();
 
     this.once('execution:finished', onSettled);
     this.once('execution:failed', onSettled);
@@ -415,7 +420,7 @@ class BackgroundScheduledTask implements ScheduledTask{
   }
 
   destroy(): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       if (this.stateMachine.state === 'destroyed') {
         return resolve(undefined);
       }
@@ -425,6 +430,7 @@ class BackgroundScheduledTask implements ScheduledTask{
         return resolve(undefined);
       }
 
+      this.awaitingDestroy = true;
       const timeoutId = setTimeout(() => {
         clearTimeout(timeoutId);
         this.killFork();
@@ -443,6 +449,8 @@ class BackgroundScheduledTask implements ScheduledTask{
       this.forkProcess.send({
         command: 'task:destroy'
       });
+    }).finally(() => {
+      this.awaitingDestroy = false;
     });
   }
 
