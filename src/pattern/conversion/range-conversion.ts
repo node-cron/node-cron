@@ -16,7 +16,8 @@ export default ( () => {
         { min: 0, max: 23 },
         { min: 1, max: 31 },
         { min: 1, max: 12 },
-        { min: 0, max: 6 },
+        // 7 is also accepted as Sunday.
+        { min: 0, max: 6, highest: 7 },
     ];
 
     function expandRange(initTxt, endTxt, stepTxt, bounds) {
@@ -38,7 +39,11 @@ export default ( () => {
 
         // Inverted range: wrap through the field's upper bound back to its
         // lower bound instead of swapping (e.g. hours `22-2` -> 22,23,0,1,2).
-        const { min, max } = bounds;
+        const { min, max, highest = max } = bounds;
+        // An endpoint outside the field would wrap into valid values (hours
+        // `25-2` -> 1,2) and hide the typo; leave the token for validation to
+        // reject, as an ascending range like `2-25` is.
+        if (first > highest || last < min) return `${initTxt}-${endTxt}/${stepTxt}`;
         const size = max - min + 1;
         const span = ((last - first) % size + size) % size;
         for (let offset = 0; offset <= span; offset += step) {
