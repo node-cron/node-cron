@@ -65,6 +65,7 @@ export class Runner {
   runCount: number;
 
   running: boolean;
+  private generation = 0;
 
   heartBeatTimeout?: NodeJS.Timeout;
   private jitterTimeout?: NodeJS.Timeout;
@@ -158,13 +159,15 @@ export class Runner {
   }
 
   start() {
+    const generation = ++this.generation;
     this.running = true;
+    const isCurrent = () => this.running && generation === this.generation;
     let lastExecution: TrackedPromise<any>;
     // The slot the current heartbeat is armed for.
     let expectedNextExecution: Date = this.timeMatcher.getNextMatch(nowWithoutMs());
 
     const armHeartBeat = () => {
-      if (this.running) {
+      if (isCurrent()) {
         clearTimeout(this.heartBeatTimeout);
         this.heartBeatTimeout = setTimeout(heartBeat, getDelay(expectedNextExecution));
         if (this.unref) this.heartBeatTimeout.unref();
@@ -172,25 +175,33 @@ export class Runner {
     };
 
     const runTask = async (date: Date): Promise<void> => {
+      if (!isCurrent()) return;
+
       const execution: Execution = {
         id: createID(),
         reason: 'scheduled'
       }
 
-      let shouldExecute: boolean;
-      try {
-        shouldExecute = await this.beforeRun(date, execution);
-      } catch (error: any) {
-        this.onError(date, error, execution);
-        return;
-      }
-
-      if (!shouldExecute) return;
+      const canRun = () => isCurrent() &&
+        (!this.maxExecutions || this.runCount < this.maxExecutions);
 
       const execute = async () => {
+        if (!canRun()) return;
+
+        let shouldExecute: boolean;
+        try {
+          shouldExecute = await this.beforeRun(date, execution);
+        } catch (error: any) {
+          this.onError(date, error, execution);
+          return;
+        }
+
+        if (!shouldExecute || !canRun()) return;
+
+        this.runCount++;
+        const reachedMaxExecutions = this.maxExecutions && this.runCount >= this.maxExecutions;
         try {
           try {
-            this.runCount++;
             execution.startedAt = new Date();
             const result = await this.onMatch(date, execution);
             execution.finishedAt = new Date();
@@ -214,9 +225,12 @@ export class Runner {
             this.onErrorFallback(date, hookError);
           }
         } finally {
-          if (this.maxExecutions && this.runCount >= this.maxExecutions) {
-            this.onMaxExecutions(date);
-            this.stop();
+          if (reachedMaxExecutions) {
+            try {
+              this.onMaxExecutions(date);
+            } finally {
+              this.stop();
+            }
           }
         }
       };
@@ -241,6 +255,8 @@ export class Runner {
     }
 
     const heartBeat = async () => {
+      if (!isCurrent()) return;
+
       // ignore milliseconds so the comparison against the matched slot is exact.
       const currentDate = nowWithoutMs();
 
@@ -258,12 +274,14 @@ export class Runner {
       // and explicit suppression and use the task's logger.
       for (const missedSlot of plan.missed) {
         runAsync(this.onMissedExecution, missedSlot, this.onErrorFallback);
+        if (!isCurrent()) return;
       }
 
       if (plan.run) {
         // overlap prevention
         if (lastExecution && lastExecution.getState() === 'pending') {
           runAsync(this.onOverlap, plan.run, this.onErrorFallback);
+          if (!isCurrent()) return;
           if (this.noOverlap) {
             this.logger.warn('task still running, new execution blocked by overlap prevention!');
             armHeartBeat();
@@ -299,6 +317,7 @@ export class Runner {
   }
 
   stop(){
+    this.generation++;
     this.running = false;
     if(this.heartBeatTimeout) {
       clearTimeout(this.heartBeatTimeout);
