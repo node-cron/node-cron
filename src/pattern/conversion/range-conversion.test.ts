@@ -86,6 +86,18 @@ describe('range-conversion', function() {
         expect(conversion(['L-3-5'])[0]).toBe('L-3-5');
     });
 
+    it('should leave an inverted range with an out-of-range endpoint untouched', function() {
+        // Wrapping `25-2` would give hours 1,2 and hide the typo.
+        expect(conversion(['0', '0', '25-2', '1', '1', '0'])[2]).toBe('25-2/1');
+        expect(conversion(['0', '0', '0', '5-0', '1', '0'])[3]).toBe('5-0/1');
+        expect(conversion(['0', '0', '0', '1', '1', '8-2'])[5]).toBe('8-2/1');
+    });
+
+    it('should still wrap an inverted weekday range starting at 7 (Sunday)', function() {
+        const weekdays = conversion(['0', '0', '0', '1', '1', '7-2'])[5].split(',').map(Number);
+        expect(weekdays).toEqual([0, 1, 2]);
+    });
+
     it('should leave a non-positive step untouched (no infinite loop)', function() {
         expect(conversion(['1-5/0'])[0]).toBe('1-5/0');
     });

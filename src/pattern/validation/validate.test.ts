@@ -60,6 +60,34 @@ describe('pattern-validation', function() {
         });
     });
 
+    describe('rejects an inverted range with an out-of-range endpoint', function() {
+        // Wrapping an inverted range must not turn an out-of-range endpoint
+        // into valid values (hours `25-2` used to become 1,2 and silently drop
+        // 23:00 and 0:00).
+        const cases = [
+            ['60-5 * * * *', '60-5 is a invalid expression for minute'],
+            ['0 25-2 * * *', '25-2 is a invalid expression for hour'],
+            ['0 0 32-2 * *', '32-2 is a invalid expression for day of month'],
+            ['0 0 5-0 * *', '5-0 is a invalid expression for day of month'],
+            ['0 0 * 13-2 *', '13-2 is a invalid expression for month'],
+            ['0 0 * 5-0 *', '5-0 is a invalid expression for month'],
+            ['0 0 * * 8-2', '8-2 is a invalid expression for week day'],
+            ['0 22-25/2 * * *', '22-25/2 is a invalid expression for hour'],
+            ['0 25-2/2 * * *', '25-2/2 is a invalid expression for hour'],
+        ];
+
+        cases.forEach(([expr, message]) => {
+            it(`rejects "${expr}"`, function() {
+                expect(() => validate(expr)).toThrow(message);
+            });
+        });
+
+        it('still accepts inverted ranges inside the field, and 7 as Sunday', function() {
+            ['50-10 * * * *', '0 22-2 * * *', '0 0 28-2 * *', '0 0 * 11-2 *', '0 0 * * 7-2', '0 0 * * 6-0', '0 0 * * sat-mon']
+                .forEach((expr) => expect(() => validate(expr), expr).not.toThrow());
+        });
+    });
+
     describe('agreement with validateDetailed', function() {
         it('rejects a 7-field expression, same as validateDetailed', function() {
             expect(() => validate('* * * * * * *')).toThrow(/5 or 6 fields/);
