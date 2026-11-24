@@ -150,3 +150,14 @@ describe('task introspection', function () {
     });
   });
 });
+
+describe('lastRun for falsy rejection reasons', () => {
+    it.each([undefined, null, false, 0, ''])('records rejection %s as an error rather than a success', async (reason) => {
+        const task = new InlineScheduledTask('* * * * * *', () => Promise.reject(reason), {logger: {error() {}, warn() {}, info() {}, debug() {}}});
+        await expect(task.execute()).rejects.toBe(reason);
+        const last = task.lastRun()!;
+        expect(Object.prototype.hasOwnProperty.call(last, 'error')).toBe(true);
+        expect(last.error).toBe(reason);
+        expect(Object.prototype.hasOwnProperty.call(last, 'result')).toBe(false);
+    });
+});
