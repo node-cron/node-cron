@@ -6,7 +6,7 @@ export default (() => {
 
     function convertMonthName(expression, items){
         for(let i = 0; i < items.length; i++){
-            expression = expression.replace(new RegExp(items[i], 'gi'), i + 1);
+            expression = expression.replace(new RegExp(`(^|[^a-zA-Z0-9])${items[i]}(?=$|[^a-zA-Z0-9])`, 'gi'), (_match, prefix) => prefix + (i + 1));
         }
         return expression;
     }
