@@ -21,7 +21,7 @@ export class LocalizedTime {
   constructor(date: Date, timezone?: string){
     this.timestamp = date.getTime();
     this.timezone = timezone;
-    this.parts = buildDateParts(date, timezone);
+    this.parts = buildDateParts(new Date(this.timestamp), timezone);
   }
 
   toDate(): Date{

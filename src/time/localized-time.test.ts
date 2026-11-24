@@ -91,3 +91,13 @@ describe('localTimeToTimestamp', function(){
     expect(new Date(ts).toISOString()).toBe('2026-11-01T05:30:00.000Z');
   });
 })
+
+describe('input Date mutation', () => {
+    it('keeps the offset from construction even if the input date later changes', () => {
+        const date = new Date('2026-01-15T12:00:00.000Z');
+        const local = new LocalizedTime(date, 'America/New_York');
+        date.setUTCMonth(6);
+        expect(local.toISO()).toBe('2026-01-15T07:00:00.000-05:00');
+        expect(local.toDate().toISOString()).toBe('2026-01-15T12:00:00.000Z');
+    });
+});
