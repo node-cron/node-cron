@@ -95,3 +95,20 @@ describe('pattern-validation', function() {
         });
     });
 });
+
+// Names must be complete tokens rather than arbitrary substrings.
+describe('complete symbolic names', () => {
+    it.each(['JanFeb', '1Jan', 'Jan1', 'MonTue', 'SunSun', '1Mon', 'Mon1'])(
+        'rejects concatenated name %s', (token) => {
+            const expression = /Jan|Feb/.test(token) ? `0 0 1 ${token} *` : `0 0 * * ${token}`;
+            expect(() => validate(expression)).toThrow();
+            expect(validateDetailed(expression).valid).toBe(false);
+        }
+    );
+    it.each(['0 0 1 Jan,Feb *', '0 0 1 Jan-Mar *', '0 0 * * Mon-Fri', '0 0 * * Mon#2', '0 0 * * FriL'])(
+        'keeps supported names in %s', (expression) => {
+            expect(() => validate(expression)).not.toThrow();
+            expect(validateDetailed(expression).valid).toBe(true);
+        }
+    );
+});

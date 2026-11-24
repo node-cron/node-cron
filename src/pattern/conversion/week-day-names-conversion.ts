@@ -5,7 +5,7 @@ export default (() => {
 
     function convertWeekDayName(expression, items){
         for(let i = 0; i < items.length; i++){
-            expression = expression.replace(new RegExp(items[i], 'gi'), i);
+            expression = expression.replace(new RegExp(`(^|[^a-zA-Z0-9])${items[i]}(?=$|[^a-zA-Z0-9]|l(?=$|,))`, 'gi'), (_match, prefix) => prefix + i);
         }
         return expression;
     }
