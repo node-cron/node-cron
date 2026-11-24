@@ -163,7 +163,7 @@ export class InlineScheduledTask implements ScheduledTask {
   private recordLastRun(execution: Execution){
     const date = execution.finishedAt!;
     const lastRun: LastRun = { date };
-    if (execution.error) {
+    if (Object.prototype.hasOwnProperty.call(execution, 'error')) {
       lastRun.error = execution.error;
     } else {
       lastRun.result = execution.result;
