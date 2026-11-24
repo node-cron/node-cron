@@ -182,15 +182,20 @@ export const parse = parseExpression;
 export async function shutdown(timeout = 5000): Promise<void> {
   const tasks = registry.all();
   const pending: Promise<any>[] = [];
+  const cleanups: (() => void)[] = [];
 
   for (const task of tasks.values()) {
     // Armed before stop() so a run finishing in that window is still caught.
     const wait = new Promise<void>(resolve => {
-      const onSettled = () => {
+      const cleanup = () => {
         task.off('execution:finished', onSettled);
         task.off('execution:failed', onSettled);
+      };
+      const onSettled = () => {
+        cleanup();
         resolve();
       };
+      cleanups.push(cleanup);
       task.once('execution:finished', onSettled);
       task.once('execution:failed', onSettled);
     });
@@ -208,11 +213,17 @@ export async function shutdown(timeout = 5000): Promise<void> {
     }
   }
 
-  if (pending.length) {
-    await Promise.race([
-      Promise.allSettled(pending),
-      new Promise(r => setTimeout(r, timeout))
-    ]);
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  try {
+    if (pending.length) {
+      await Promise.race([
+        Promise.allSettled(pending),
+        new Promise(r => { timeoutId = setTimeout(r, timeout); })
+      ]);
+    }
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+    cleanups.forEach(cleanup => cleanup());
   }
 
   for (const task of tasks.values()) {

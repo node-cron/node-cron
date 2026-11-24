@@ -376,3 +376,48 @@ describe('shutdown', () => {
 function wait(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+describe('shutdown resource cleanup', () => {
+    afterEach(() => { vi.useRealTimers(); });
+    it('cancels its deadline timer when work finishes early', async () => {
+        vi.useFakeTimers();
+        let finish!: () => void;
+        const task = createTask('* * * * * *', () => new Promise<void>(resolve => { finish = resolve; }), { logger: noopLogger });
+        task.start();
+        await vi.advanceTimersByTimeAsync(1000);
+        expect(task.isBusy()).toBe(true);
+        const closing = shutdown(60000);
+        finish();
+        await closing;
+        expect(vi.getTimerCount()).toBe(0);
+    });
+    it('removes settlement listeners from idle tasks', async () => {
+        const task = idleTask() as any;
+        const finishedBefore = task.emitter.listenerCount('execution:finished');
+        const failedBefore = task.emitter.listenerCount('execution:failed');
+        await shutdown();
+        expect(task.emitter.listenerCount('execution:finished')).toBe(finishedBefore);
+        expect(task.emitter.listenerCount('execution:failed')).toBe(failedBefore);
+    });
+});
+
+it('removes shutdown listeners when a busy task reaches its deadline', async () => {
+    vi.useFakeTimers();
+    let finish!: () => void;
+    const task = createTask('* * * * * *', () => new Promise<void>(resolve => { finish = resolve; }), {logger: noopLogger}) as any;
+    try {
+        task.start();
+        await vi.advanceTimersByTimeAsync(1000);
+        const closing = shutdown(20);
+        await vi.advanceTimersByTimeAsync(20);
+        await closing;
+        expect(task.emitter.listenerCount('execution:finished')).toBe(0);
+        expect(task.emitter.listenerCount('execution:failed')).toBe(0);
+        expect(vi.getTimerCount()).toBe(0);
+        finish();
+        await Promise.resolve();
+    } finally {
+        task.destroy();
+        vi.useRealTimers();
+    }
+});
